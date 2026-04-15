@@ -555,7 +555,6 @@ footer p { color: var(--muted); font-size:0.7rem; letter-spacing:0.1em; }
   </div>
 </div>
 
-<!-- CONTACT -->
 <div class="contact-section" id="contato">
   <div class="contact-inner">
     <div>
@@ -583,49 +582,55 @@ footer p { color: var(--muted); font-size:0.7rem; letter-spacing:0.1em; }
         </div>
       </div>
     </div>
+    
     <div>
-      <div class="form-2col">
-        <div class="form-group">
-          <label>Nome</label>
-          <input type="text" id="fname" placeholder="Seu nome">
+      <form id="contactForm" action="https://api.web3forms.com/submit" method="POST">
+        <input type="hidden" name="access_key" value="a77999ef-85fb-4b59-b837-97497e20f948">
+        <input type="hidden" name="redirect" value="https://polianareboucasadv.github.io/webpage/#contato">
+       
+
+        <div class="form-2col">
+          <div class="form-group">
+            <label>Nome</label>
+            <input type="text" name="name" placeholder="Seu nome" required>
+          </div>
+          <div class="form-group">
+            <label>Telefone</label>
+            <input type="tel" name="telefone" placeholder="(00) 00000-0000">
+          </div>
         </div>
         <div class="form-group">
-          <label>Telefone</label>
-          <input type="tel" id="fphone" placeholder="(00) 00000-0000">
+          <label>E-mail</label>
+          <input type="email" name="email" placeholder="seu@email.com" required>
         </div>
-      </div>
-      <div class="form-group">
-        <label>E-mail</label>
-        <input type="email" id="femail" placeholder="seu@email.com">
-      </div>
-      <div class="form-group">
-        <label>Área de Interesse</label>
-        <select id="farea">
-          <option value="">Selecione uma área</option>
-          <optgroup label="Áreas Tradicionais">
-            <option>Direito Civil</option>
-            <option>Direito Penal</option>
-            <option>Direito do Trabalho</option>
-            <option>Direito Empresarial</option>
-            <option>Direito Tributário</option>
-            <option>Direito Administrativo</option>
-          </optgroup>
-          <optgroup label="Especializações">
-            <option>Direito Digital</option>
-            <option>Compliance e Ética</option>
-            <option>Direito Ambiental</option>
-            <option>Direito do Consumidor</option>
-            <option>Direito Médico e da Saúde</option>
-            <option>Direito Imobiliário</option>
-          </optgroup>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Descreva seu caso</label>
-        <textarea id="fmsg" placeholder="Conte brevemente sobre sua situação..."></textarea>
-      </div>
-      <button class="form-submit" onclick="handleSubmit()">Enviar Consulta →</button>
-      <p class="success-msg" id="successMsg">✓ Mensagem enviada! Entrarei em contato em breve.</p>
+        <div class="form-group">
+          <label>Área de Interesse</label>
+          <select name="area_interesse">
+            <option value="">Selecione uma área</option>
+            <optgroup label="Áreas Tradicionais">
+              <option>Direito Civil</option>
+              <option>Direito Penal</option>
+              <option>Direito do Trabalho</option>
+              <option>Direito Empresarial</option>
+              <option>Direito Tributário</option>
+              <option>Direito Administrativo</option>
+            </optgroup>
+            <optgroup label="Especializações">
+              <option>Direito Digital</option>
+              <option>Compliance e Ética</option>
+              <option>Direito Ambiental</option>
+              <option>Direito do Consumidor</option>
+              <option>Direito Médico e da Saúde</option>
+              <option>Direito Imobiliário</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Descreva seu caso</label>
+        <textarea name="mensagem" required></textarea>
+        </div>
+      <button type="submit" class="form-submit">Enviar Consulta →</button>
+</form>
     </div>
   </div>
 </div>
