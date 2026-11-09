@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Administradores (adicione outros e-mails à lista, se necessário)
+    function isAdmin() {
+      return request.auth != null
+          && (request.auth.token.email.lower() in ['polireboucas@gmail.com']
+              || exists(/databases/$(database)/documents/admins/$(request.auth.token.email.lower())));
+    }
+
+    // Lista de administradores: cada um só consegue ler o próprio documento;
+    // criar/remover administradores é feito apenas pelo console do Firebase
+    match /admins/{adminEmail} {
+      allow get: if request.auth != null && request.auth.token.email.lower() == adminEmail;
+      allow list, write: if false;
+    }
+
+    // Conteúdo do site: qualquer visitante lê, só o admin altera
+    match /site/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Mensagens do formulário: visitante só cria; admin lê, marca como lida e exclui
+    match /mensagens/{msgId} {
+      allow create: if request.resource.data.keys().hasOnly(['name','telefone','email','area','mensagem','createdAt','lida'])
+                    && request.resource.data.name is string && request.resource.data.name.size() <= 200
+                    && request.resource.data.email is string && request.resource.data.email.size() <= 200
+                    && request.resource.data.mensagem is string && request.resource.data.mensagem.size() <= 5000
+                    && request.resource.data.lida == false;
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}

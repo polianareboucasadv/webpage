@@ -586,7 +586,7 @@ const auth = getAuth(app);
 const db   = getFirestore(app);
 isSupported().then(ok => { if (ok) getAnalytics(app); }).catch(() => {});
 
-// Somente estes e-mails veem o modo edição (as regras do Firestore reforçam isso no servidor)
+// Administrador principal. Outros administradores ficam na coleção "admins" do Firestore (as regras reforçam isso no servidor)
 const ADMIN_EMAILS = ['polireboucas@gmail.com'];
 
 /* ---------- Conteúdo padrão (usado até o primeiro "Salvar") ---------- */
@@ -831,8 +831,13 @@ async function loadContent() {
 }
 
 /* ---------- Autenticação ---------- */
-onAuthStateChanged(auth, user => {
-  const ok = !!user && ADMIN_EMAILS.includes((user.email || '').toLowerCase());
+onAuthStateChanged(auth, async user => {
+  const email = (user?.email || '').toLowerCase();
+  let ok = !!user && ADMIN_EMAILS.includes(email);
+  // outros administradores: documento admins/<e-mail> no Firestore
+  if (user && !ok) {
+    try { ok = (await getDoc(doc(db, 'admins', email))).exists(); } catch (err) { ok = false; }
+  }
   if (user && !ok) { signOut(auth); toast('Este usuário não tem permissão de administrador.', true); return; }
   admin = ok;
   $('#adminUser').textContent = ok ? user.email : '';
