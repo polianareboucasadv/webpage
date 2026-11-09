@@ -22,6 +22,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Artigos: visitantes leem só os publicados; admin lê rascunhos e gerencia tudo
+    match /artigos/{artigoId} {
+      allow read: if resource.data.publicado == true || isAdmin();
+      allow write: if isAdmin();
+    }
+
     // Mensagens do formulário: visitante só cria; admin lê, marca como lida e exclui
     match /mensagens/{msgId} {
       allow create: if request.resource.data.keys().hasOnly(['name','telefone','email','area','mensagem','createdAt','lida'])
