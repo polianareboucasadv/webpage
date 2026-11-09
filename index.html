@@ -531,6 +531,32 @@ body.is-admin .hero-tagline, body.is-admin .hero-cta { opacity:1; animation:none
 }
 .art-empty { grid-column:1/-1; text-align:center; color:var(--muted); font-size:.85rem; padding:2rem 0; }
 
+.sub-box { max-width:620px; margin:4rem auto 0; text-align:center; border:1px solid var(--border); padding:2.5rem 2rem; background:var(--navy2); position:relative; }
+.sub-box h3 { font-family:'Cormorant Garamond',serif; font-size:1.9rem; font-weight:400; color:var(--gold); margin-bottom:.6rem; }
+.sub-box p { color:var(--muted); font-size:.85rem; line-height:1.8; margin-bottom:1.5rem; }
+.sub-box .success-msg { margin-bottom:0; }
+.sub-form { display:grid; gap:1rem; text-align:left; }
+.sub-form input[type=text], .sub-form input[type=email] {
+  width:100%; background:transparent; border:none; border-bottom:1px solid var(--border); color:var(--cream);
+  padding:.75rem 0; font-family:'Montserrat',sans-serif; font-size:.88rem; font-weight:300; outline:none; transition:border-color .3s;
+}
+.sub-form input:focus { border-bottom-color:var(--gold); }
+.sub-form input::placeholder { color:rgba(138,128,112,.6); }
+.sub-form .form-submit { justify-self:center; margin-top:.5rem; }
+.sub-add { display:flex; gap:.6rem; flex-wrap:wrap; margin-bottom:1rem; }
+.sub-add input, .sub-search {
+  flex:1; min-width:160px; background:var(--navy); border:1px solid var(--border); color:var(--cream);
+  padding:.6rem .8rem; font-family:'Montserrat',sans-serif; font-size:.82rem; outline:none;
+}
+.sub-search { width:100%; margin-bottom:1rem; }
+.sub-add input:focus, .sub-search:focus { border-color:var(--gold); }
+.sub-row { display:grid; grid-template-columns:1.1fr 1.6fr auto; gap:.8rem; align-items:center; border-bottom:1px solid var(--border); padding:.8rem 0; font-size:.82rem; word-break:break-word; }
+.sub-row small { display:block; color:var(--muted); font-size:.62rem; margin-top:.2rem; letter-spacing:.06em; }
+.sub-row input { width:100%; background:var(--navy); border:1px solid var(--gold); color:var(--cream); padding:.45rem .6rem; font-family:'Montserrat',sans-serif; font-size:.8rem; }
+.sub-actions { display:flex; gap:.4rem; }
+.sub-actions button { background:none; border:1px solid var(--border); color:var(--muted); font-size:.62rem; padding:.35rem .7rem; cursor:pointer; text-transform:uppercase; letter-spacing:.1em; font-family:'Montserrat',sans-serif; }
+.sub-actions button:hover { color:var(--gold); border-color:var(--gold); }
+@media (max-width:600px) { .sub-row { grid-template-columns:1fr; } }
 .fs-modal { position:fixed; inset:0; z-index:10010; background:var(--navy); display:none; overflow:auto; }
 .fs-modal.open { display:block; }
 .fs-modal button.btn {
@@ -626,6 +652,7 @@ body.is-admin .hero-tagline, body.is-admin .hero-cta { opacity:1; animation:none
   <div><span class="who">✎ Modo edição<small id="adminUser"></small></span><span class="dirty" id="dirtyDot">● alterações não salvas</span></div>
   <div class="btns">
     <button data-action="messages">Mensagens<span class="badge" id="msgCount"></span></button>
+    <button data-action="subs">Assinantes<span class="badge" id="subCount"></span></button>
     <button data-action="settings">Configurações</button>
     <button data-action="discard">Descartar</button>
     <button data-action="save" class="primary">Salvar alterações</button>
@@ -666,6 +693,26 @@ body.is-admin .hero-tagline, body.is-admin .hero-cta { opacity:1; animation:none
     <div class="form-group"><label>Chave de acesso Web3Forms (aviso por e-mail)</label><input type="text" id="setKey" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></div>
     <p class="hint">Dica: nos textos do “Sobre mim”, use **texto** para destacar em negrito. Depois de mudar a chave, clique em “Salvar alterações”.</p>
     <div class="modal-actions"><button class="btn primary" data-action="closeModal">Fechar</button></div>
+  </div>
+</div>
+
+<!-- Assinantes -->
+<div class="modal-back" id="subsModal">
+  <div class="modal wide">
+    <button type="button" class="close" data-action="closeModal">×</button>
+    <h3>Assinantes</h3>
+    <p class="hint" id="subsInfo"></p>
+    <form id="subAddForm" class="sub-add">
+      <input type="text" id="subAddName" placeholder="Nome (opcional)" maxlength="150">
+      <input type="email" id="subAddEmail" placeholder="E-mail" required maxlength="200">
+      <button type="submit" class="btn primary">Adicionar</button>
+    </form>
+    <input type="text" id="subSearch" class="sub-search" placeholder="Buscar por nome ou e-mail…">
+    <div id="subsList"></div>
+    <div class="modal-actions">
+      <button class="btn" data-action="subsCopy">Copiar todos os e-mails</button>
+      <button class="btn" data-action="subsCsv">Baixar planilha (CSV)</button>
+    </div>
   </div>
 </div>
 
@@ -776,7 +823,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/fireba
 import { getAnalytics, isSupported } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, addDoc, collection, serverTimestamp, query, orderBy, getDocs, deleteDoc, updateDoc, where }
+import { getFirestore, doc, getDoc, setDoc, addDoc, collection, serverTimestamp, query, orderBy, getDocs, deleteDoc, updateDoc, where, writeBatch }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 /* ---------- Firebase ---------- */
@@ -833,7 +880,8 @@ const DEFAULTS = {
   contact: { eyebrow: 'Contato', heading1: 'Vamos conversar sobre o seu', heading2: 'caso',
              email: 'polireboucas@gmail.com', instagram: '@pollyanarv', location: 'Brasília, Distrito Federal' },
   footer:  { text: '© 2025 Poliana Rebouças · Advocacia e Consultoria Jurídica' },
-  articles:{ eyebrow: 'Artigos', heading1: 'Publicações e', heading2: 'Reflexões' },
+  articles:{ eyebrow: 'Artigos', heading1: 'Publicações e', heading2: 'Reflexões',
+             subTitle: 'Receba novos artigos', subText: 'Cadastre seu e-mail e avisaremos você quando houver novas publicações.' },
   settings:{ web3formsKey: 'a77999ef-85fb-4b59-b837-97497e20f948' }
 };
 
@@ -978,6 +1026,17 @@ function render() {
     <button class="add-btn admin-only" data-action="newArticle">+ Novo artigo</button>
   </div>
   <div class="art-grid" id="articlesGrid">${articleCards()}</div>
+  <div class="sub-box">
+    <h3 data-path="articles.subTitle">${esc(c.articles.subTitle)}</h3>
+    <p data-path="articles.subText">${esc(c.articles.subText)}</p>
+    <form id="subForm" class="sub-form">
+      <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0" aria-hidden="true">
+      <input type="text" name="nome" placeholder="Seu nome (opcional)" maxlength="150">
+      <input type="email" name="email" placeholder="Seu melhor e-mail" required maxlength="200">
+      <button type="submit" class="form-submit" id="subBtn">Quero receber</button>
+    </form>
+    <p class="success-msg" id="subMsg"></p>
+  </div>
 </div>
 
 <div class="contact-section" id="contato">
@@ -1061,7 +1120,7 @@ onAuthStateChanged(auth, async user => {
   admin = ok;
   $('#adminUser').textContent = ok ? user.email : '';
   render();
-  if (ok) countUnread();
+  if (ok) { countUnread(); loadSubs(); }
   loadArticles();
   if (!ok && !hashChecked && location.hash === '#admin') openModal('loginModal');
   hashChecked = true;
@@ -1146,6 +1205,13 @@ document.addEventListener('click', async e => {
         return;
       }
       case 'photo': $('#photoInput').click(); e.preventDefault(); return;
+      case 'subs':      openModal('subsModal'); loadSubs(); return;
+      case 'subEdit':   subEditing = act.dataset.id; renderSubs(); return;
+      case 'subCancel': subEditing = null; renderSubs(); return;
+      case 'subSave':   await saveSub(act.dataset.id, act.closest('.sub-row')); return;
+      case 'subDel':    await delSub(act.dataset.id); return;
+      case 'subsCopy':  copyEmails(); return;
+      case 'subsCsv':   downloadCsv(); return;
       case 'newArticle':  openEditor(null); return;
       case 'editArticle': openEditor(act.dataset.id); return;
       case 'openArticle': openById(act.dataset.id); return;
@@ -1570,6 +1636,112 @@ $('#edCoverInput').addEventListener('change', async e => {
   try { ed.capa = await resizeImage(f, 1000, 700, 0.78); ed.dirty = true; updateCover(); }
   catch { toast('Não foi possível ler essa imagem.', true); }
   e.target.value = '';
+});
+
+/* ---------- Assinantes ---------- */
+let subs = [];
+let subEditing = null;
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+function updateSubCount() {
+  const b = $('#subCount'); if (!b) return;
+  b.textContent = subs.length; b.classList.toggle('on', subs.length > 0);
+}
+async function loadSubs() {
+  try {
+    const snap = await getDocs(collection(db, 'assinantes'));
+    subs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.criadoEm?.seconds || 0) - (a.criadoEm?.seconds || 0));
+  } catch (err) {
+    console.warn('Assinantes:', err); subs = []; updateSubCount();
+    $('#subsList').innerHTML = '<p class="hint">Erro ao carregar assinantes: ' + esc(err.code || err.message) + '</p>';
+    return;
+  }
+  updateSubCount(); renderSubs();
+}
+function renderSubs() {
+  const q = ($('#subSearch').value || '').trim().toLowerCase();
+  const list = subs.filter(s => !q || (s.email || '').includes(q) || (s.nome || '').toLowerCase().includes(q));
+  $('#subsInfo').textContent = subs.length + ' assinante(s) cadastrado(s)' + (q ? ' · ' + list.length + ' encontrado(s)' : '');
+  $('#subsList').innerHTML = list.length ? list.map(s => {
+    if (subEditing === s.id) return `
+      <div class="sub-row"><input class="sub-in-name" value="${esc(s.nome)}" placeholder="Nome"><input class="sub-in-email" type="email" value="${esc(s.email)}">
+      <div class="sub-actions"><button data-action="subSave" data-id="${esc(s.id)}">Salvar</button><button data-action="subCancel">Cancelar</button></div></div>`;
+    return `
+      <div class="sub-row"><div>${esc(s.nome || '—')}<small>${esc(fmtDate(s.criadoEm))}${s.origem === 'admin' ? ' · adicionado por você' : ''}</small></div>
+      <div>${esc(s.email)}</div>
+      <div class="sub-actions"><button data-action="subEdit" data-id="${esc(s.id)}">Editar</button><button data-action="subDel" data-id="${esc(s.id)}">Excluir</button></div></div>`;
+  }).join('') : '<p class="hint">Nenhum assinante encontrado.</p>';
+}
+async function saveSub(id, row) {
+  const nome = row.querySelector('.sub-in-name').value.trim();
+  const email = row.querySelector('.sub-in-email').value.trim().toLowerCase();
+  if (!EMAIL_RE.test(email)) { toast('E-mail inválido.', true); return; }
+  const old = subs.find(x => x.id === id);
+  try {
+    if (email === id) await updateDoc(doc(db, 'assinantes', id), { nome });
+    else {
+      if (subs.some(x => x.id === email)) { toast('Já existe um assinante com esse e-mail.', true); return; }
+      const b = writeBatch(db);
+      b.set(doc(db, 'assinantes', email), { nome, email, origem: old?.origem || 'admin', criadoEm: old?.criadoEm || serverTimestamp() });
+      b.delete(doc(db, 'assinantes', id));
+      await b.commit();
+    }
+    subEditing = null; await loadSubs(); toast('Assinante atualizado.');
+  } catch (err) { toast('Erro ao salvar: ' + (err.code || err.message), true); }
+}
+async function delSub(id) {
+  if (!confirm('Excluir este assinante da lista?')) return;
+  try { await deleteDoc(doc(db, 'assinantes', id)); await loadSubs(); toast('Assinante excluído.'); }
+  catch (err) { toast('Erro ao excluir: ' + (err.code || err.message), true); }
+}
+async function copyEmails() {
+  if (!subs.length) { toast('Nenhum assinante para copiar.', true); return; }
+  const txt = subs.map(x => x.email).join(', ');
+  try { await navigator.clipboard.writeText(txt); toast(subs.length + ' e-mail(s) copiado(s). Cole no campo CCO do seu e-mail.'); }
+  catch { prompt('Copie os e-mails:', txt); }
+}
+function downloadCsv() {
+  const q = v => { let t = String(v ?? ''); if (/^[=+\-@]/.test(t)) t = "'" + t; return '"' + t.replace(/"/g, '""') + '"'; };
+  const rows = [['Nome', 'E-mail', 'Cadastro', 'Origem'], ...subs.map(x => [
+    x.nome || '', x.email, x.criadoEm?.toDate ? x.criadoEm.toDate().toLocaleDateString('pt-BR') : '',
+    x.origem === 'admin' ? 'Adicionado pela administradora' : 'Site'])];
+  const csv = '﻿' + rows.map(r => r.map(q).join(';')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = 'assinantes.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+$('#subSearch').addEventListener('input', renderSubs);
+$('#subAddForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const nome = $('#subAddName').value.trim(), email = $('#subAddEmail').value.trim().toLowerCase();
+  if (!EMAIL_RE.test(email)) { toast('E-mail inválido.', true); return; }
+  if (subs.some(x => x.id === email)) { toast('Este e-mail já está cadastrado.', true); return; }
+  try {
+    await setDoc(doc(db, 'assinantes', email), { nome, email, origem: 'admin', criadoEm: serverTimestamp() });
+    e.target.reset(); await loadSubs(); toast('Assinante adicionado.');
+  } catch (err) { toast('Erro ao adicionar: ' + (err.code || err.message), true); }
+});
+
+/* Inscrição feita pelo visitante */
+document.addEventListener('submit', async e => {
+  if (e.target.id !== 'subForm') return;
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  if (fd.get('website')) return; // honeypot
+  const email = String(fd.get('email') || '').trim().toLowerCase(), nome = String(fd.get('nome') || '').trim();
+  const msg = $('#subMsg'), btn = $('#subBtn');
+  msg.classList.remove('error'); msg.style.display = 'block';
+  if (!EMAIL_RE.test(email)) { msg.textContent = 'Digite um e-mail válido.'; msg.classList.add('error'); return; }
+  btn.disabled = true;
+  try {
+    await setDoc(doc(db, 'assinantes', email), { nome, email, origem: 'site', criadoEm: serverTimestamp() });
+    msg.textContent = 'Cadastro realizado! Você será avisado(a) sobre os novos artigos.'; e.target.reset();
+  } catch (err) {
+    if (err.code === 'permission-denied') msg.textContent = 'Este e-mail já está cadastrado. Obrigado pelo interesse!';
+    else { msg.textContent = 'Não foi possível cadastrar agora. Tente novamente em instantes.'; msg.classList.add('error'); }
+  }
+  btn.disabled = false;
 });
 
 /* ---------- Início ---------- */

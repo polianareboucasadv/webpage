@@ -34,6 +34,20 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Assinantes dos artigos: o visitante só se cadastra (uma vez, o ID é o próprio e-mail);
+    // apenas o admin lista, edita e exclui
+    match /assinantes/{assinanteId} {
+      allow create: if request.resource.data.keys().hasOnly(['nome','email','origem','criadoEm'])
+                    && request.resource.data.email is string
+                    && request.resource.data.email.size() <= 200
+                    && request.resource.data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
+                    && request.resource.data.email == assinanteId
+                    && request.resource.data.nome is string && request.resource.data.nome.size() <= 150
+                    && request.resource.data.origem == 'site'
+                    && request.resource.data.criadoEm == request.time;
+      allow read, write: if isAdmin();
+    }
+
     // Mensagens do formulário: visitante só cria; admin lê, marca como lida e exclui
     match /mensagens/{msgId} {
       allow create: if request.resource.data.keys().hasOnly(['name','telefone','email','area','mensagem','createdAt','lida'])
