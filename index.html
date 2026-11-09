@@ -566,6 +566,12 @@ body.is-admin .hero-tagline, body.is-admin .hero-cta { opacity:1; animation:none
 .article-body hr { border:none; height:1px; background:linear-gradient(to right,transparent,var(--gold),transparent); margin:2.2rem 0; }
 .article-body [style*="xx-large"] { font-size:clamp(1.7rem,4.5vw,2.3rem) !important; }
 .article-body [style*="xxx-large"] { font-size:clamp(2rem,6vw,3rem) !important; }
+.article-body img { display:block; max-width:100%; height:auto; margin:1.6rem auto; border:1px solid var(--border); }
+.article-body img[data-w="40"] { width:40%; min-width:min(100%,220px); }
+.article-body img[data-w="60"] { width:60%; min-width:min(100%,280px); }
+.article-body img[data-w="100"] { width:100%; }
+#edContent img { cursor:pointer; }
+#edContent img.sel { outline:3px solid var(--gold); outline-offset:2px; }
 
 /* Editor */
 .ed-wrap { max-width:900px; margin:0 auto; padding:0 1.5rem 4rem; }
@@ -745,6 +751,12 @@ body.is-admin .hero-tagline, body.is-admin .hero-cta { opacity:1; animation:none
       <button data-cmd="unlink" title="Remover link">Sem link</button>
       <button data-cmd="insertHorizontalRule" title="Linha divisória">―</button>
       <span class="sep"></span>
+      <button data-act="img" title="Inserir imagem no texto">🖼 Imagem</button>
+      <button data-act="imgsize" data-val="40" title="Imagem pequena (clique na imagem antes)">P</button>
+      <button data-act="imgsize" data-val="60" title="Imagem média">M</button>
+      <button data-act="imgsize" data-val="100" title="Imagem grande">G</button>
+      <button data-act="imgdel" title="Remover a imagem selecionada">✕ Imagem</button>
+      <span class="sep"></span>
       <button data-cmd="removeFormat" title="Limpar formatação">Limpar</button>
       <button data-cmd="undo" title="Desfazer">↶</button>
       <button data-cmd="redo" title="Refazer">↷</button>
@@ -754,6 +766,7 @@ body.is-admin .hero-tagline, body.is-admin .hero-cta { opacity:1; animation:none
   </div>
 </div>
 <input type="file" id="edCoverInput" accept="image/*" hidden>
+<input type="file" id="edImgInput" accept="image/*" hidden>
 
 <input type="file" id="photoInput" accept="image/*" hidden>
 <div class="toast" id="toast"></div>
@@ -1292,6 +1305,32 @@ let articles = [];
 let ed = { id: null, capa: '', dirty: false };
 let rdId = null;
 let savedRange = null;
+let selectedImg = null;
+const imgCache = {};
+
+async function hydrateImages(root) {
+  await Promise.all(Array.from(root.querySelectorAll('img[data-img]')).map(async im => {
+    const id = im.getAttribute('data-img');
+    if (imgCache[id] === undefined) {
+      try { const sn = await getDoc(doc(db, 'imagens', id)); imgCache[id] = sn.exists() ? String(sn.data().dados || '') : ''; }
+      catch { imgCache[id] = ''; }
+    }
+    if (imgCache[id].startsWith('data:image/')) im.src = imgCache[id]; else im.alt = 'Imagem indisponível';
+  }));
+}
+async function insertImage(file) {
+  toast('Enviando imagem…');
+  try {
+    const dados = await resizeImage(file, 1000, 1000, 0.75);
+    if (dados.length > 700000) { toast('Imagem muito pesada. Use uma foto menor.', true); return; }
+    const ref = await addDoc(collection(db, 'imagens'), { dados, criadoEm: serverTimestamp() });
+    imgCache[ref.id] = dados;
+    exec('insertHTML', `<img data-img="${ref.id}" data-w="100" src="${dados}" alt=""><p><br></p>`);
+    toast('Imagem inserida. Clique nela para mudar o tamanho (P, M, G).');
+  } catch (err) {
+    toast(err.code === 'permission-denied' ? 'Sem permissão. Publique as regras novas do Firestore.' : 'Erro ao enviar imagem: ' + (err.code || err.message), true);
+  }
+}
 
 const ALLOWED_TAGS = new Set(['P','BR','H1','H2','H3','H4','B','STRONG','I','EM','U','S','STRIKE','SPAN','FONT','DIV','UL','OL','LI','BLOCKQUOTE','A','HR','SUB','SUP']);
 const DROP_TAGS = new Set(['SCRIPT','STYLE','IFRAME','OBJECT','EMBED','LINK','META','SVG','MATH','FORM','INPUT','BUTTON','TEXTAREA','SELECT','IMG','VIDEO','AUDIO','NOSCRIPT','TEMPLATE','HEAD','TITLE']);
@@ -1319,6 +1358,14 @@ function cleanNode(node) {
     if (ch.nodeType === 3) return;
     if (ch.nodeType !== 1) { ch.remove(); return; }
     const tag = ch.tagName;
+    if (tag === 'IMG') {
+      const id = ch.getAttribute('data-img') || '', w = ch.getAttribute('data-w');
+      Array.from(ch.attributes).forEach(a => ch.removeAttribute(a.name));
+      if (!/^[A-Za-z0-9]{10,40}$/.test(id)) { ch.remove(); return; }
+      ch.setAttribute('data-img', id);
+      if (['40', '60', '100'].includes(w)) ch.setAttribute('data-w', w);
+      return;
+    }
     if (DROP_TAGS.has(tag)) { ch.remove(); return; }
     if (!ALLOWED_TAGS.has(tag)) { cleanNode(ch); ch.replaceWith(...Array.from(ch.childNodes)); return; }
     if (tag === 'FONT') {
@@ -1393,7 +1440,7 @@ function showReader(a) {
   $('#rdCover').innerHTML = a.capa ? `<img src="${esc(a.capa)}" alt="">` : '';
   $('#rdMeta').textContent = (a.publicado ? '' : 'Rascunho · ') + fmtDate(a.criadoEm);
   $('#rdTitle').textContent = a.titulo || '';
-  $('#rdBody').innerHTML = sanitize(a.corpo);
+  $('#rdBody').innerHTML = sanitize(a.corpo); hydrateImages($('#rdBody'));
   openFs('readerModal'); $('#readerModal').scrollTop = 0;
   history.replaceState(null, '', '#artigo=' + encodeURIComponent(a.id));
 }
@@ -1441,7 +1488,7 @@ function openEditor(id) {
   $('#edTitle').value = a?.titulo || '';
   $('#edSummary').value = a?.resumo || '';
   $('#edPub').checked = a ? a.publicado !== false : true;
-  $('#edContent').innerHTML = sanitize(a?.corpo || '<p><br></p>');
+  $('#edContent').innerHTML = sanitize(a?.corpo || '<p><br></p>'); selectedImg = null; hydrateImages($('#edContent'));
   $('#edDel').style.display = a ? '' : 'none';
   savedRange = null; updateCover(); openFs('editorModal');
   $('#editorModal').scrollTop = 0;
@@ -1487,7 +1534,25 @@ $('#edToolbar').addEventListener('mousedown', e => { if (e.target.closest('butto
 $('#edToolbar').addEventListener('click', e => {
   const b = e.target.closest('[data-cmd]');
   if (b) { exec(b.dataset.cmd, b.dataset.val); return; }
-  if (e.target.closest('[data-act="link"]')) addLink();
+  const a = e.target.closest('[data-act]'); if (!a) return;
+  switch (a.dataset.act) {
+    case 'link': addLink(); break;
+    case 'img': $('#edImgInput').click(); break;
+    case 'imgsize':
+      if (!selectedImg) { toast('Clique primeiro na imagem dentro do texto.', true); break; }
+      selectedImg.setAttribute('data-w', a.dataset.val); ed.dirty = true; break;
+    case 'imgdel':
+      if (!selectedImg) { toast('Clique primeiro na imagem dentro do texto.', true); break; }
+      selectedImg.remove(); selectedImg = null; ed.dirty = true; break;
+  }
+});
+$('#edContent').addEventListener('click', e => {
+  if (selectedImg) selectedImg.classList.remove('sel');
+  selectedImg = e.target.tagName === 'IMG' ? e.target : null;
+  if (selectedImg) selectedImg.classList.add('sel');
+});
+$('#edImgInput').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (f) await insertImage(f);
 });
 $('#tbBlock').addEventListener('change', e => exec('formatBlock', '<' + e.target.value + '>'));
 $('#tbSize').addEventListener('change', e => { if (e.target.value) exec('fontSize', e.target.value); e.target.value = ''; });
