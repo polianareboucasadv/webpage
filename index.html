@@ -395,7 +395,13 @@ footer p { color: var(--muted); font-size:0.7rem; letter-spacing:0.1em; }
 @media (max-width:900px) {
   nav { padding:1.2rem 1.5rem; }
   nav ul { display:none; }
-  .hero { padding:0 1.5rem 4rem; }
+  .hero { min-height:auto; justify-content:flex-start; padding:8rem 1.5rem 4rem; }
+  .hero-scale-deco { font-size:8rem; top:5.5rem; right:1rem; opacity:.05; }
+  .hero-lines::before { display:none; }
+  .hero-lines::after { left:1.5rem; width:60%; }
+  .scroll-ind { display:none; }
+  .hero-cta { flex-wrap:wrap; gap:.8rem; margin-top:2.5rem; }
+  .btn-gold, .btn-ghost { padding:.9rem 1.6rem; }
   .intro-section { grid-template-columns:1fr; }
   .intro-photo { height:400px; }
   .intro-text { padding:4rem 1.5rem; }
@@ -557,6 +563,23 @@ body.is-admin .hero-tagline, body.is-admin .hero-cta { opacity:1; animation:none
 .sub-actions button { background:none; border:1px solid var(--border); color:var(--muted); font-size:.62rem; padding:.35rem .7rem; cursor:pointer; text-transform:uppercase; letter-spacing:.1em; font-family:'Montserrat',sans-serif; }
 .sub-actions button:hover { color:var(--gold); border-color:var(--gold); }
 @media (max-width:600px) { .sub-row { grid-template-columns:1fr; } }
+.art-admin { position:absolute; top:.7rem; right:.7rem; z-index:3; text-align:right; }
+.art-admin button { background:var(--gold); color:var(--navy); border:none; padding:.4rem .7rem; margin-left:.3rem; margin-bottom:.3rem; font-size:.58rem; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; font-family:'Montserrat',sans-serif; font-weight:600; }
+.art-admin button:hover { background:var(--gold-light); }
+.art-admin button.del { background:#6b2a2a; color:#fff; }
+.art-status { border:1px solid; padding:0 .45rem; }
+.art-status.on { color:#7fc8a9; border-color:#7fc8a9; }
+.art-status.off { color:#e8c97a; border-color:#e8c97a; }
+.art-off { opacity:.65; border-style:dashed; }
+.art-off:hover { opacity:1; }
+.img-bar { flex-basis:100%; display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; border-top:1px solid var(--border); padding-top:.5rem; margin-top:.3rem; font-size:.74rem; color:var(--gold); }
+.img-bar input[type=range] { accent-color:var(--gold); width:160px; }
+@media (max-width:600px) {
+  .admin-bar { padding:.5rem .8rem; }
+  .admin-bar .who small { display:none; }
+  .admin-bar button { padding:.45rem .6rem; font-size:.6rem; }
+  body.is-admin { padding-bottom:130px; }
+}
 .fs-modal { position:fixed; inset:0; z-index:10010; background:var(--navy); display:none; overflow:auto; }
 .fs-modal.open { display:block; }
 .fs-modal button.btn {
@@ -593,9 +616,21 @@ body.is-admin .hero-tagline, body.is-admin .hero-cta { opacity:1; animation:none
 .article-body [style*="xx-large"] { font-size:clamp(1.7rem,4.5vw,2.3rem) !important; }
 .article-body [style*="xxx-large"] { font-size:clamp(2rem,6vw,3rem) !important; }
 .article-body img { display:block; max-width:100%; height:auto; margin:1.6rem auto; border:1px solid var(--border); }
-.article-body img[data-w="40"] { width:40%; min-width:min(100%,220px); }
-.article-body img[data-w="60"] { width:60%; min-width:min(100%,280px); }
+.article-body img[data-w="10"] { width:10%; }
+.article-body img[data-w="20"] { width:20%; }
+.article-body img[data-w="30"] { width:30%; }
+.article-body img[data-w="40"] { width:40%; }
+.article-body img[data-w="50"] { width:50%; }
+.article-body img[data-w="60"] { width:60%; }
+.article-body img[data-w="70"] { width:70%; }
+.article-body img[data-w="80"] { width:80%; }
+.article-body img[data-w="90"] { width:90%; }
 .article-body img[data-w="100"] { width:100%; }
+.article-body img[data-a="left"] { margin-left:0; margin-right:auto; }
+.article-body img[data-a="right"] { margin-left:auto; margin-right:0; }
+@media (max-width:600px) {
+  .article-body img[data-w="10"], .article-body img[data-w="20"], .article-body img[data-w="30"], .article-body img[data-w="40"] { width:55%; }
+}
 #edContent img { cursor:pointer; }
 #edContent img.sel { outline:3px solid var(--gold); outline-offset:2px; }
 
@@ -799,14 +834,21 @@ body.is-admin .hero-tagline, body.is-admin .hero-cta { opacity:1; animation:none
       <button data-cmd="insertHorizontalRule" title="Linha divisória">―</button>
       <span class="sep"></span>
       <button data-act="img" title="Inserir imagem no texto">🖼 Imagem</button>
-      <button data-act="imgsize" data-val="40" title="Imagem pequena (clique na imagem antes)">P</button>
-      <button data-act="imgsize" data-val="60" title="Imagem média">M</button>
-      <button data-act="imgsize" data-val="100" title="Imagem grande">G</button>
-      <button data-act="imgdel" title="Remover a imagem selecionada">✕ Imagem</button>
+      <span class="hint" style="margin:0">(clique na imagem do texto para ajustar)</span>
       <span class="sep"></span>
       <button data-cmd="removeFormat" title="Limpar formatação">Limpar</button>
       <button data-cmd="undo" title="Desfazer">↶</button>
       <button data-cmd="redo" title="Refazer">↷</button>
+      <div class="img-bar" id="imgBar" style="display:none">
+        <span>🖼 Imagem selecionada</span>
+        <span>Tamanho:</span>
+        <input type="range" id="imgW" min="10" max="100" step="10" value="50">
+        <b id="imgWVal">50%</b>
+        <button data-iact="al" data-val="left" title="Alinhar à esquerda">◧ Esquerda</button>
+        <button data-iact="al" data-val="center" title="Centralizar">▣ Centro</button>
+        <button data-iact="al" data-val="right" title="Alinhar à direita">◨ Direita</button>
+        <button data-iact="del" title="Remover imagem">✕ Remover</button>
+      </div>
     </div>
 
     <div id="edContent" class="article-body" contenteditable="true" data-placeholder="Escreva seu artigo aqui…"></div>
@@ -1214,6 +1256,8 @@ document.addEventListener('click', async e => {
       case 'subsCsv':   downloadCsv(); return;
       case 'newArticle':  openEditor(null); return;
       case 'editArticle': openEditor(act.dataset.id); return;
+      case 'togglePub':   await togglePub(act.dataset.id); return;
+      case 'delArticleCard': await removeArticle(act.dataset.id); return;
       case 'openArticle': openById(act.dataset.id); return;
       case 'closeReader': closeReader(); return;
       case 'editFromReader': { const id = rdId; closeReader(); openEditor(id); return; }
@@ -1391,7 +1435,7 @@ async function insertImage(file) {
     if (dados.length > 700000) { toast('Imagem muito pesada. Use uma foto menor.', true); return; }
     const ref = await addDoc(collection(db, 'imagens'), { dados, criadoEm: serverTimestamp() });
     imgCache[ref.id] = dados;
-    exec('insertHTML', `<img data-img="${ref.id}" data-w="100" src="${dados}" alt=""><p><br></p>`);
+    exec('insertHTML', `<img data-img="${ref.id}" data-w="50" src="${dados}" alt=""><p><br></p>`);
     toast('Imagem inserida. Clique nela para mudar o tamanho (P, M, G).');
   } catch (err) {
     toast(err.code === 'permission-denied' ? 'Sem permissão. Publique as regras novas do Firestore.' : 'Erro ao enviar imagem: ' + (err.code || err.message), true);
@@ -1425,11 +1469,12 @@ function cleanNode(node) {
     if (ch.nodeType !== 1) { ch.remove(); return; }
     const tag = ch.tagName;
     if (tag === 'IMG') {
-      const id = ch.getAttribute('data-img') || '', w = ch.getAttribute('data-w');
+      const id = ch.getAttribute('data-img') || '', w = ch.getAttribute('data-w'), al = ch.getAttribute('data-a');
       Array.from(ch.attributes).forEach(a => ch.removeAttribute(a.name));
       if (!/^[A-Za-z0-9]{10,40}$/.test(id)) { ch.remove(); return; }
       ch.setAttribute('data-img', id);
-      if (['40', '60', '100'].includes(w)) ch.setAttribute('data-w', w);
+      if (/^([1-9]0|100)$/.test(w || '')) ch.setAttribute('data-w', w);
+      if (['left', 'center', 'right'].includes(al)) ch.setAttribute('data-a', al);
       return;
     }
     if (DROP_TAGS.has(tag)) { ch.remove(); return; }
@@ -1468,11 +1513,15 @@ function articleCards() {
     return `<p class="art-empty">${admin ? 'Nenhum artigo ainda. Clique em “+ Novo artigo” para publicar o primeiro.' : 'Em breve, novos artigos.'}</p>`;
   }
   return articles.map(a => `
-    <article class="art-card" data-action="openArticle" data-id="${esc(a.id)}">
-      <button class="art-edit admin-only" data-action="editArticle" data-id="${esc(a.id)}">✎ Editar</button>
+    <article class="art-card${a.publicado ? '' : ' art-off'}" data-action="openArticle" data-id="${esc(a.id)}">
+      <div class="art-admin admin-only">
+        <button data-action="editArticle" data-id="${esc(a.id)}">✎ Editar</button>
+        <button data-action="togglePub" data-id="${esc(a.id)}">${a.publicado ? '⏸ Despublicar' : '▶ Publicar'}</button>
+        <button class="del" data-action="delArticleCard" data-id="${esc(a.id)}" title="Excluir">🗑</button>
+      </div>
       <div class="art-cover ${a.capa ? '' : 'art-cover-empty'}">${a.capa ? `<img src="${esc(a.capa)}" alt="" loading="lazy">` : '⚖'}</div>
       <div class="art-info">
-        <div class="art-meta">${a.publicado ? '' : '<span class="art-draft">Rascunho</span>'}<span>${esc(fmtDate(a.criadoEm))}</span></div>
+        <div class="art-meta"><span class="art-status ${a.publicado ? 'on' : 'off'} admin-only">${a.publicado ? 'Publicado' : 'Rascunho'}</span><span>${esc(fmtDate(a.criadoEm))}</span></div>
         <h3>${esc(a.titulo)}</h3>
         <p>${esc(a.resumo)}</p>
         <span class="art-more">Ler artigo →</span>
@@ -1554,7 +1603,7 @@ function openEditor(id) {
   $('#edTitle').value = a?.titulo || '';
   $('#edSummary').value = a?.resumo || '';
   $('#edPub').checked = a ? a.publicado !== false : true;
-  $('#edContent').innerHTML = sanitize(a?.corpo || '<p><br></p>'); selectedImg = null; hydrateImages($('#edContent'));
+  $('#edContent').innerHTML = sanitize(a?.corpo || '<p><br></p>'); selectedImg = null; syncImgBar(); hydrateImages($('#edContent'));
   $('#edDel').style.display = a ? '' : 'none';
   savedRange = null; updateCover(); openFs('editorModal');
   $('#editorModal').scrollTop = 0;
@@ -1584,6 +1633,21 @@ async function saveArticle() {
   }
   btn.disabled = false;
 }
+async function togglePub(id) {
+  const a = articles.find(x => x.id === id); if (!a) return;
+  const nv = !a.publicado;
+  try {
+    await updateDoc(doc(db, 'artigos', id), { publicado: nv, atualizadoEm: serverTimestamp() });
+    await loadArticles();
+    toast(nv ? 'Artigo publicado! Já aparece para os visitantes.' : 'Artigo despublicado. Agora é um rascunho, só você vê.');
+  } catch (err) { toast('Erro: ' + (err.code === 'permission-denied' ? 'sem permissão (confira as regras do Firestore).' : (err.code || err.message)), true); }
+}
+async function removeArticle(id) {
+  const a = articles.find(x => x.id === id); if (!a) return;
+  if (!confirm('Excluir definitivamente o artigo "' + a.titulo + '"?')) return;
+  try { await deleteDoc(doc(db, 'artigos', id)); await loadArticles(); toast('Artigo excluído.'); }
+  catch (err) { toast('Erro ao excluir: ' + (err.code || err.message), true); }
+}
 async function deleteArticle() {
   if (!ed.id || !confirm('Excluir este artigo definitivamente?')) return;
   try { await deleteDoc(doc(db, 'artigos', ed.id)); ed.dirty = false; closeFs('editorModal'); await loadArticles(); toast('Artigo excluído.'); }
@@ -1604,18 +1668,26 @@ $('#edToolbar').addEventListener('click', e => {
   switch (a.dataset.act) {
     case 'link': addLink(); break;
     case 'img': $('#edImgInput').click(); break;
-    case 'imgsize':
-      if (!selectedImg) { toast('Clique primeiro na imagem dentro do texto.', true); break; }
-      selectedImg.setAttribute('data-w', a.dataset.val); ed.dirty = true; break;
-    case 'imgdel':
-      if (!selectedImg) { toast('Clique primeiro na imagem dentro do texto.', true); break; }
-      selectedImg.remove(); selectedImg = null; ed.dirty = true; break;
   }
 });
+function syncImgBar() {
+  $('#imgBar').style.display = selectedImg ? '' : 'none';
+  if (selectedImg) { const w = selectedImg.getAttribute('data-w') || '100'; $('#imgW').value = w; $('#imgWVal').textContent = w + '%'; }
+}
 $('#edContent').addEventListener('click', e => {
   if (selectedImg) selectedImg.classList.remove('sel');
   selectedImg = e.target.tagName === 'IMG' ? e.target : null;
   if (selectedImg) selectedImg.classList.add('sel');
+  syncImgBar();
+});
+$('#imgW').addEventListener('input', e => {
+  if (!selectedImg) return;
+  selectedImg.setAttribute('data-w', e.target.value); $('#imgWVal').textContent = e.target.value + '%'; ed.dirty = true;
+});
+$('#imgBar').addEventListener('click', e => {
+  const b = e.target.closest('[data-iact]'); if (!b || !selectedImg) return;
+  if (b.dataset.iact === 'al') { selectedImg.setAttribute('data-a', b.dataset.val); ed.dirty = true; }
+  else if (b.dataset.iact === 'del') { selectedImg.remove(); selectedImg = null; ed.dirty = true; syncImgBar(); }
 });
 $('#edImgInput').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = ''; if (f) await insertImage(f);
