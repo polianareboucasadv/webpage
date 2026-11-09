@@ -75,10 +75,10 @@ nav a:hover { color: var(--gold); }
 
 /* HERO */
 .hero {
-  min-height:100vh;
+  min-height:min(100vh,900px);
   display:flex; flex-direction:column;
-  justify-content:flex-end;
-  padding: 0 4rem 5rem;
+  justify-content:center;
+  padding: 8rem 4rem 6rem;
   position:relative; overflow:hidden;
 }
 
@@ -97,16 +97,17 @@ nav a:hover { color: var(--gold); }
 }
 .hero-lines::after {
   content:''; position:absolute;
-  top:50%; left:4rem; width:40%; height:1px;
+  top:auto; bottom:3rem; left:4rem; width:40%; height:1px;
   background: linear-gradient(to right, transparent, var(--gold), transparent);
   opacity:0.15;
 }
 
 .hero-scale-deco {
-  position:absolute; top: 12%; right: 5%;
-  opacity:0.04; font-size:22rem; line-height:1;
+  position:absolute; top:50%; right:8%; width:min(26vw,400px);
+  transform:translateY(-50%); color:var(--gold); opacity:0.16;
   pointer-events:none; user-select:none;
 }
+.hero-scale-deco svg { width:100%; height:auto; display:block; }
 
 .hero-content { position:relative; z-index:2; max-width:700px; }
 
@@ -124,7 +125,7 @@ nav a:hover { color: var(--gold); }
 
 .hero-name {
   font-family:'Cormorant Garamond', serif;
-  font-size: clamp(3.5rem, 8vw, 7.5rem);
+  font-size: clamp(3.5rem, 7vw, 6.5rem);
   font-weight:300; line-height:0.95;
   letter-spacing:0.01em; color: var(--cream);
   opacity:0; animation: fadeUp 0.8s 0.4s forwards;
@@ -396,7 +397,7 @@ footer p { color: var(--muted); font-size:0.7rem; letter-spacing:0.1em; }
   nav { padding:1.2rem 1.5rem; }
   nav ul { display:none; }
   .hero { min-height:auto; justify-content:flex-start; padding:8rem 1.5rem 4rem; }
-  .hero-scale-deco { font-size:8rem; top:5.5rem; right:1rem; opacity:.05; }
+  .hero-scale-deco { width:38vw; top:6.5rem; right:1rem; transform:none; opacity:.1; }
   .hero-lines::before { display:none; }
   .hero-lines::after { left:1.5rem; width:60%; }
   .scroll-ind { display:none; }
@@ -1008,7 +1009,17 @@ function render() {
 <div class="hero">
   <div class="hero-bg"></div>
   <div class="hero-lines"></div>
-  <div class="hero-scale-deco">⚖</div>
+  <div class="hero-scale-deco"><svg viewBox="0 0 200 230" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="100" cy="14" r="5"/>
+      <path d="M100 19V196"/>
+      <path d="M30 46H170"/>
+      <path d="M100 46Q100 40 100 46"/>
+      <path d="M30 46L10 124M30 46L50 124"/>
+      <path d="M170 46L150 124M170 46L190 124"/>
+      <path d="M6 124H54Q30 160 6 124Z"/>
+      <path d="M146 124H194Q170 160 146 124Z"/>
+      <path d="M70 212H130M80 196H120L126 212H74Z"/>
+    </svg></div>
   <div class="hero-content">
     <p class="hero-pretitle" data-path="hero.pretitle">${esc(c.hero.pretitle)}</p>
     <h1 class="hero-name"><span data-path="hero.name1">${esc(c.hero.name1)}</span><br><em data-path="hero.name2">${esc(c.hero.name2)}</em></h1>
