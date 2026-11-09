@@ -188,6 +188,7 @@ nav a:hover { color: var(--gold); }
 .intro-photo::after {
   content:''; position:absolute; inset:0;
   background: linear-gradient(to right, transparent 60%, var(--navy) 100%);
+  pointer-events:none;
 }
 
 .photo-caption {
@@ -240,7 +241,7 @@ nav a:hover { color: var(--gold); }
 .tab-nav {
   display:flex; justify-content:center; gap:0;
   margin-bottom:3.5rem; border-bottom:1px solid var(--border);
-  flex-wrap:wrap;
+  flex-wrap:wrap; align-items:center;
 }
 
 .tab-btn {
@@ -345,7 +346,7 @@ blockquote cite {
   font-size:0.88rem; font-weight:300; outline:none;
   transition:border-color 0.3s; appearance:none;
 }
-.form-group select option { background: var(--navy); }
+.form-group select option, .form-group select optgroup { background: var(--navy); color: var(--cream); }
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus { border-bottom-color: var(--gold); }
@@ -361,7 +362,9 @@ blockquote cite {
   transition:background 0.3s, transform 0.2s;
 }
 .form-submit:hover { background: var(--gold-light); transform:translateY(-2px); }
+.form-submit:disabled { opacity:.6; cursor:wait; transform:none; }
 .success-msg { display:none; margin-top:1rem; color: var(--gold); font-size:0.8rem; letter-spacing:0.08em; }
+.success-msg.error { color:#e58b8b; }
 
 /* FOOTER */
 footer {
@@ -369,9 +372,14 @@ footer {
   display:flex; justify-content:space-between; align-items:center;
 }
 footer p { color: var(--muted); font-size:0.7rem; letter-spacing:0.1em; }
-.footer-links { display:flex; gap:2rem; }
-.footer-links a { color: var(--muted); text-decoration:none; font-size:0.68rem; letter-spacing:0.12em; text-transform:uppercase; transition:color 0.3s; }
-.footer-links a:hover { color: var(--gold); }
+.footer-links { display:flex; gap:2rem; align-items:center; }
+.footer-links a, .footer-links button {
+  color: var(--muted); text-decoration:none; font-size:0.68rem; letter-spacing:0.12em;
+  text-transform:uppercase; transition:color 0.3s; background:none; border:none;
+  cursor:pointer; font-family:'Montserrat',sans-serif; font-weight:300;
+}
+.footer-links a:hover, .footer-links button:hover { color: var(--gold); }
+.footer-links .restricted { opacity:.45; }
 
 /* ANIMATIONS */
 @keyframes fadeUp {
@@ -402,14 +410,293 @@ footer p { color: var(--muted); font-size:0.7rem; letter-spacing:0.1em; }
 @media (max-width:600px) {
   .areas-grid { grid-template-columns:1fr; }
 }
+
+/* ============ ÁREA ADMINISTRATIVA ============ */
+.admin-only { display:none !important; }
+body.is-admin .admin-only { display:revert !important; }
+body.is-admin { padding-bottom:70px; }
+
+body.is-admin [contenteditable="true"] {
+  outline:1px dashed rgba(201,168,76,.55); outline-offset:3px; cursor:text; min-width:1ch;
+}
+body.is-admin [contenteditable="true"]:focus {
+  outline:2px solid var(--gold); background:rgba(201,168,76,.07);
+}
+body.is-admin .hero-pretitle, body.is-admin .hero-name,
+body.is-admin .hero-tagline, body.is-admin .hero-cta { opacity:1; animation:none; }
+
+.admin-bar {
+  position:fixed; left:0; right:0; bottom:0; z-index:10001;
+  background:#0a1219; border-top:1px solid var(--gold);
+  padding:.8rem 1.5rem; display:flex; justify-content:space-between;
+  align-items:center; gap:1rem; flex-wrap:wrap;
+  font-size:.72rem; letter-spacing:.06em;
+}
+.admin-bar .who { color:var(--gold); }
+.admin-bar .who small { color:var(--muted); margin-left:.5rem; }
+.admin-bar .dirty { display:none; color:#e8c97a; margin-left:.6rem; }
+.admin-bar .dirty.on { display:inline; }
+.admin-bar .btns { display:flex; gap:.5rem; flex-wrap:wrap; }
+.admin-bar button, .modal button.btn {
+  background:transparent; color:var(--cream); border:1px solid var(--border);
+  padding:.55rem 1rem; font-family:'Montserrat',sans-serif; font-size:.68rem;
+  letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:.2s;
+}
+.admin-bar button:hover, .modal button.btn:hover { border-color:var(--gold); color:var(--gold); }
+.admin-bar button.primary, .modal button.btn.primary { background:var(--gold); color:var(--navy); border-color:var(--gold); font-weight:600; }
+.admin-bar button.primary:hover, .modal button.btn.primary:hover { background:var(--gold-light); color:var(--navy); }
+.badge { background:var(--gold); color:var(--navy); border-radius:20px; padding:0 .45rem; margin-left:.3rem; font-size:.62rem; display:none; }
+.badge.on { display:inline-block; }
+
+.x-btn {
+  background:#3a1f1f; color:#f3b3b3; border:1px solid #6b3a3a; cursor:pointer;
+  width:22px; height:22px; line-height:18px; font-size:.9rem; padding:0; border-radius:50%;
+  font-family:'Montserrat',sans-serif; margin-left:.4rem; vertical-align:middle;
+}
+.x-btn:hover { background:#6b2a2a; }
+.card-x { position:absolute; top:.6rem; right:.6rem; z-index:3; margin:0; }
+.para { position:relative; }
+.para .x-btn { position:absolute; right:-2rem; top:.2rem; }
+.add-btn {
+  background:transparent; color:var(--gold); border:1px dashed var(--gold);
+  padding:.45rem .9rem; margin:.4rem .6rem; cursor:pointer; font-size:.65rem;
+  letter-spacing:.12em; text-transform:uppercase; font-family:'Montserrat',sans-serif;
+}
+.add-btn:hover { background:rgba(201,168,76,.1); }
+.add-card { display:flex; align-items:center; justify-content:center; color:var(--gold); border:1px dashed var(--gold); cursor:pointer; min-height:160px; font-size:.75rem; letter-spacing:.12em; text-transform:uppercase; }
+.photo-edit {
+  position:absolute; top:5.5rem; left:1.5rem; z-index:5; cursor:pointer;
+  background:var(--gold); color:var(--navy); padding:.55rem 1rem; font-size:.65rem;
+  letter-spacing:.12em; text-transform:uppercase; font-weight:600;
+}
+.hint { color:var(--muted); font-size:.68rem; margin:.2rem 0 1rem; }
+
+.modal-back {
+  position:fixed; inset:0; z-index:10010; background:rgba(5,10,15,.82);
+  display:none; align-items:center; justify-content:center; padding:1rem;
+}
+.modal-back.open { display:flex; }
+.modal {
+  background:var(--navy2); border:1px solid var(--border); width:100%; max-width:520px;
+  max-height:88vh; overflow:auto; padding:2rem; position:relative;
+}
+.modal.wide { max-width:760px; }
+.modal h3 { font-family:'Cormorant Garamond',serif; font-weight:400; font-size:1.8rem; color:var(--gold); margin-bottom:1.2rem; }
+.modal .close { position:absolute; top:.8rem; right:1rem; background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer; }
+.modal .form-group input { font-size:.9rem; }
+.modal-actions { display:flex; gap:.6rem; margin-top:1rem; flex-wrap:wrap; }
+.modal .err { color:#e58b8b; font-size:.78rem; margin-top:.8rem; min-height:1em; }
+.modal a { color:var(--gold); }
+.msg-item { border:1px solid var(--border); padding:1rem 1.2rem; margin-bottom:.8rem; background:var(--navy); }
+.msg-item.unread { border-left:3px solid var(--gold); }
+.msg-head { display:flex; justify-content:space-between; gap:1rem; font-size:.7rem; color:var(--muted); margin-bottom:.5rem; flex-wrap:wrap; }
+.msg-item strong { color:var(--cream); font-weight:500; }
+.msg-body { font-size:.85rem; line-height:1.7; white-space:pre-wrap; margin:.6rem 0; color:var(--cream); }
+.msg-actions { display:flex; gap:.5rem; flex-wrap:wrap; }
+.msg-actions button, .msg-actions a {
+  background:none; border:1px solid var(--border); color:var(--muted); font-size:.62rem;
+  padding:.35rem .7rem; cursor:pointer; text-transform:uppercase; letter-spacing:.1em;
+  text-decoration:none; font-family:'Montserrat',sans-serif;
+}
+.msg-actions button:hover, .msg-actions a:hover { color:var(--gold); border-color:var(--gold); }
+.toast {
+  position:fixed; left:50%; bottom:90px; transform:translateX(-50%) translateY(20px);
+  background:var(--gold); color:var(--navy); padding:.8rem 1.5rem; font-size:.78rem;
+  z-index:10020; opacity:0; pointer-events:none; transition:.3s; max-width:90vw; text-align:center;
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+.toast.err { background:#c25a5a; color:#fff; }
 </style>
 </head>
 <body>
 
+<div id="app"></div>
+
+<!-- Barra do administrador -->
+<div class="admin-bar admin-only" id="adminBar">
+  <div><span class="who">✎ Modo edição<small id="adminUser"></small></span><span class="dirty" id="dirtyDot">● alterações não salvas</span></div>
+  <div class="btns">
+    <button data-action="messages">Mensagens<span class="badge" id="msgCount"></span></button>
+    <button data-action="settings">Configurações</button>
+    <button data-action="discard">Descartar</button>
+    <button data-action="save" class="primary">Salvar alterações</button>
+    <button data-action="logout">Sair</button>
+  </div>
+</div>
+
+<!-- Login -->
+<div class="modal-back" id="loginModal">
+  <form class="modal" id="loginForm" autocomplete="on">
+    <button type="button" class="close" data-action="closeModal">×</button>
+    <h3>Área do administrador</h3>
+    <div class="form-group"><label>E-mail</label><input type="email" id="loginEmail" autocomplete="username" required></div>
+    <div class="form-group"><label>Senha</label><input type="password" id="loginPass" autocomplete="current-password" required></div>
+    <div class="modal-actions">
+      <button type="submit" class="btn primary" id="loginBtn">Entrar</button>
+      <button type="button" class="btn" data-action="resetPass">Esqueci a senha</button>
+    </div>
+    <div class="err" id="loginErr"></div>
+  </form>
+</div>
+
+<!-- Mensagens -->
+<div class="modal-back" id="msgModal">
+  <div class="modal wide">
+    <button type="button" class="close" data-action="closeModal">×</button>
+    <h3>Mensagens recebidas</h3>
+    <div id="msgList"></div>
+  </div>
+</div>
+
+<!-- Configurações -->
+<div class="modal-back" id="settingsModal">
+  <div class="modal">
+    <button type="button" class="close" data-action="closeModal">×</button>
+    <h3>Configurações</h3>
+    <p class="hint">Todas as mensagens enviadas pelo formulário são gravadas no Firebase e aparecem em “Mensagens”. Para também receber um aviso por e-mail, informe abaixo a chave gratuita do Web3Forms criada com o e-mail de destino desejado (em web3forms.com, digite o e-mail e receba a chave).</p>
+    <div class="form-group"><label>Chave de acesso Web3Forms (aviso por e-mail)</label><input type="text" id="setKey" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></div>
+    <p class="hint">Dica: nos textos do “Sobre mim”, use **texto** para destacar em negrito. Depois de mudar a chave, clique em “Salvar alterações”.</p>
+    <div class="modal-actions"><button class="btn primary" data-action="closeModal">Fechar</button></div>
+  </div>
+</div>
+
+<input type="file" id="photoInput" accept="image/*" hidden>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAnalytics, isSupported } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail }
+  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, addDoc, collection, serverTimestamp, query, orderBy, getDocs, deleteDoc, updateDoc }
+  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+/* ---------- Firebase ---------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyAReoHhPsxpE4nVVrgt13fbDDkeHK6WUEA",
+  authDomain: "webpagepoliana.firebaseapp.com",
+  projectId: "webpagepoliana",
+  storageBucket: "webpagepoliana.firebasestorage.app",
+  messagingSenderId: "985638470397",
+  appId: "1:985638470397:web:e2e9412c5d9bec0c8b3494",
+  measurementId: "G-GWDYQH80J8"
+};
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+isSupported().then(ok => { if (ok) getAnalytics(app); }).catch(() => {});
+
+// Somente estes e-mails veem o modo edição (as regras do Firestore reforçam isso no servidor)
+const ADMIN_EMAILS = ['polireboucas@gmail.com'];
+
+/* ---------- Conteúdo padrão (usado até o primeiro "Salvar") ---------- */
+const DEFAULTS = {
+  brand:  { initials: 'PR', sub: 'Advocacia' },
+  hero:   { pretitle: 'Advocacia e Consultoria Jurídica', name1: 'Poliana', name2: 'Rebouças',
+            tagline: 'OAB · Brasília, DF · Defesa dos seus direitos', btn1: 'Áreas de Atuação', btn2: 'Fale Comigo' },
+  about:  { eyebrow: 'Sobre Mim', heading1: 'Comprometida com a', heading2: 'justiça que vale',
+            paragraphs: [
+              'Sou **Poliana Rebouças**, advogada com atuação em Brasília/DF, comprometida com a defesa dos direitos dos meus clientes com rigor técnico, ética e dedicação.',
+              'Minha trajetória é guiada pelo princípio de que **a justiça deve ser acessível**, transparente e eficaz — do atendimento inicial ao desfecho de cada causa.',
+              'Atuo em diversas frentes do Direito, tanto nas áreas tradicionais como nas especialidades em ascensão, sempre buscando as melhores estratégias jurídicas para cada caso.'
+            ],
+            photo: 'foto-poliana.jpg', photoName: 'Poliana Rebouças', photoRole: 'Advogada · OAB/DF',
+            oabLabel: 'Registro Profissional', oabValue: 'OAB · Seccional DF' },
+  quote:  { text: '"É justo que muito custe o que muito vale."', author: '— Poliana Rebouças' },
+  areas:  { eyebrow: 'Atuação Profissional', heading1: 'Áreas de', heading2: 'Atuação',
+    tabs: [
+      { name: 'Áreas Tradicionais', items: [
+        { icon:'⚖️', name:'Direito Civil', desc:'A área mais abrangente do Direito, regulando relações entre pessoas físicas e jurídicas. Abrange contratos, responsabilidade civil, família e sucessões com soluções personalizadas para cada demanda.' },
+        { icon:'🔒', name:'Direito Penal', desc:'Atuação na defesa ou representação em crimes e contravenções penais. Assessoria completa desde o inquérito policial até as instâncias recursais, com foco na garantia dos direitos fundamentais.' },
+        { icon:'🤝', name:'Direito do Trabalho', desc:'Regulação das relações entre empregados e empregadores. Defesa de trabalhadores e empresas em reclamações trabalhistas, rescisões, horas extras e demais demandas do cotidiano laboral.' },
+        { icon:'🏢', name:'Direito Empresarial', desc:'Suporte jurídico ao mercado corporativo, contratos comerciais, constituição e dissolução de sociedades, recuperação judicial e falências. Proteção estratégica para o seu negócio.' },
+        { icon:'📊', name:'Direito Tributário', desc:'Planejamento e defesa em matéria fiscal. Tratamento de impostos, tributos, autuações e contenciosos administrativos e judiciais. Uma das áreas mais complexas e de maior impacto financeiro.' },
+        { icon:'🏛️', name:'Direito Administrativo', desc:'Regulação das relações entre cidadãos e o Estado. Contratos públicos, servidores públicos, licitações e atos administrativos — defesa dos seus direitos frente ao poder público.' }
+      ]},
+      { name: 'Especializações', items: [
+        { icon:'💻', name:'Direito Digital', desc:'Questões jurídicas da era digital: LGPD, crimes virtuais, proteção de dados, e-commerce e responsabilidade em redes sociais. Assessoria para pessoas e empresas no ambiente online.' },
+        { icon:'📋', name:'Compliance e Ética', desc:'Alta demanda para garantir que empresas cumpram leis, normas internas e padrões éticos. Prevenção de riscos legais, implantação de programas de integridade e due diligence.' },
+        { icon:'🌿', name:'Direito Ambiental', desc:'Voltado à sustentabilidade e regulação dos recursos naturais. Licenciamento ambiental, responsabilidade por danos, regularização de propriedades e defesa em ações ambientais.' },
+        { icon:'🛡️', name:'Direito do Consumidor', desc:'Defesa dos direitos nas relações de consumo. Ações contra empresas por produtos defeituosos, cobranças indevidas, propaganda enganosa e demais violações ao CDC.' },
+        { icon:'🏥', name:'Direito Médico e da Saúde', desc:'Regulamentação da atuação de profissionais de saúde, hospitais e planos de saúde. Responsabilidade civil médica, erros médicos e defesa de profissionais perante conselhos.' },
+        { icon:'🏠', name:'Direito Imobiliário', desc:'Transações imobiliárias, incorporações, locações e questões de propriedade. Análise contratual, regularização de imóveis, usucapião e resolução de conflitos condominiais.' }
+      ]}
+    ]},
+  contact: { eyebrow: 'Contato', heading1: 'Vamos conversar sobre o seu', heading2: 'caso',
+             email: 'polireboucas@gmail.com', instagram: '@pollyanarv', location: 'Brasília, Distrito Federal' },
+  footer:  { text: '© 2025 Poliana Rebouças · Advocacia e Consultoria Jurídica' },
+  settings:{ web3formsKey: 'a77999ef-85fb-4b59-b837-97497e20f948' }
+};
+
+/* ---------- Estado ---------- */
+let content   = structuredClone(DEFAULTS);
+let admin     = false;
+let dirty     = false;
+let activeTab = 0;
+let hashChecked = false;
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+function merge(d, s) {
+  if (s === undefined || s === null) return d;
+  if (Array.isArray(d) || typeof d !== 'object' || d === null) return s;
+  const o = { ...d };
+  for (const k in s) o[k] = merge(d[k], s[k]);
+  return o;
+}
+function setPath(obj, path, val) {
+  const p = path.split('.'); let o = obj;
+  for (let i = 0; i < p.length - 1; i++) o = o[p[i]];
+  o[p[p.length - 1]] = val;
+}
+function toast(msg, isErr) {
+  const t = $('#toast'); t.textContent = msg; t.className = 'toast show' + (isErr ? ' err' : '');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.className = 'toast', 3500);
+}
+function markDirty(v = true) { dirty = v; $('#dirtyDot').classList.toggle('on', v); }
+
+/* ---------- Renderização ---------- */
+function render() {
+  const c = content, a = c.about, ar = c.areas, ct = c.contact;
+  const igHandle = (ct.instagram || '').replace(/^@/, '').trim();
+  if (activeTab >= ar.tabs.length) activeTab = 0;
+
+  const paragraphs = a.paragraphs.map((p, k) => `
+    <div class="para">
+      <p data-path="about.paragraphs.${k}">${admin ? esc(p) : fmt(p)}</p>
+      <button class="x-btn admin-only" data-action="delPara" data-k="${k}" title="Remover parágrafo">×</button>
+    </div>`).join('');
+
+  const tabBtns = ar.tabs.map((t, i) => `
+    <div class="tab-btn ${i === activeTab ? 'active' : ''}" data-tab="${i}">
+      <span data-path="areas.tabs.${i}.name">${esc(t.name)}</span>
+      <button class="x-btn admin-only" data-action="delTab" data-i="${i}" title="Remover aba">×</button>
+    </div>`).join('');
+
+  const panes = ar.tabs.map((t, i) => `
+    <div class="tab-pane ${i === activeTab ? 'active' : ''}" id="tab-${i}">
+      <div class="areas-grid">
+        ${t.items.map((it, j) => `
+          <div class="area-card">
+            <button class="x-btn card-x admin-only" data-action="delItem" data-i="${i}" data-j="${j}" title="Remover">×</button>
+            <span class="area-icon" data-path="areas.tabs.${i}.items.${j}.icon">${esc(it.icon)}</span>
+            <h3 class="area-name" data-path="areas.tabs.${i}.items.${j}.name">${esc(it.name)}</h3>
+            <p class="area-desc" data-path="areas.tabs.${i}.items.${j}.desc">${esc(it.desc)}</p>
+          </div>`).join('')}
+        <div class="area-card add-card admin-only" data-action="addItem" data-i="${i}">+ Adicionar área</div>
+      </div>
+    </div>`).join('');
+
+  const options = ar.tabs.map(t =>
+    `<optgroup label="${esc(t.name)}">${t.items.map(it => `<option>${esc(it.name)}</option>`).join('')}</optgroup>`).join('');
+
+  $('#app').innerHTML = `
 <nav id="nav">
   <div class="nav-logo">
-    <span class="nav-logo-pr">PR</span>
-    <span class="nav-logo-sub">Advocacia</span>
+    <span class="nav-logo-pr" data-path="brand.initials">${esc(c.brand.initials)}</span>
+    <span class="nav-logo-sub" data-path="brand.sub">${esc(c.brand.sub)}</span>
   </div>
   <ul>
     <li><a href="#sobre">Sobre</a></li>
@@ -418,261 +705,368 @@ footer p { color: var(--muted); font-size:0.7rem; letter-spacing:0.1em; }
   </ul>
 </nav>
 
-<!-- HERO -->
 <div class="hero">
   <div class="hero-bg"></div>
   <div class="hero-lines"></div>
   <div class="hero-scale-deco">⚖</div>
   <div class="hero-content">
-    <p class="hero-pretitle">Advocacia e Consultoria Jurídica</p>
-    <h1 class="hero-name">Poliana<br><em>Rebouças</em></h1>
-    <p class="hero-tagline">OAB · Brasília, DF · Defesa dos seus direitos</p>
+    <p class="hero-pretitle" data-path="hero.pretitle">${esc(c.hero.pretitle)}</p>
+    <h1 class="hero-name"><span data-path="hero.name1">${esc(c.hero.name1)}</span><br><em data-path="hero.name2">${esc(c.hero.name2)}</em></h1>
+    <p class="hero-tagline" data-path="hero.tagline">${esc(c.hero.tagline)}</p>
     <div class="hero-cta">
-      <a href="#areas" class="btn-gold">Áreas de Atuação</a>
-      <a href="#contato" class="btn-ghost">Fale Comigo</a>
+      <a href="#areas" class="btn-gold"><span data-path="hero.btn1">${esc(c.hero.btn1)}</span></a>
+      <a href="#contato" class="btn-ghost"><span data-path="hero.btn2">${esc(c.hero.btn2)}</span></a>
     </div>
   </div>
-  <div class="scroll-ind">
-    <div class="scroll-line"></div>
-    <span>Scroll</span>
-  </div>
+  <div class="scroll-ind"><div class="scroll-line"></div><span>Scroll</span></div>
 </div>
 
-<!-- INTRO -->
 <div class="intro-section" id="sobre">
   <div class="intro-photo">
-    <!-- Substitua pelo caminho real da foto: ex: foto-poliana.jpg -->
-    <img src="foto-poliana.jpg" alt="Poliana Rebouças" onerror="this.style.background='#162030';this.style.minHeight='500px'">
+    <img id="aboutPhoto" src="${esc(a.photo)}" alt="${esc(a.photoName)}" onerror="this.style.background='#162030';this.style.minHeight='500px'">
+    <label class="photo-edit admin-only" data-action="photo">📷 Trocar foto</label>
     <div class="photo-caption">
-      <h3>Poliana Rebouças</h3>
-      <p>Advogada · OAB/DF</p>
+      <h3 data-path="about.photoName">${esc(a.photoName)}</h3>
+      <p data-path="about.photoRole">${esc(a.photoRole)}</p>
     </div>
   </div>
   <div class="intro-text">
-    <div class="section-eyebrow">Sobre Mim</div>
-    <h2 class="section-heading">Comprometida com a<br><em>justiça que vale</em></h2>
-    <p>Sou <strong>Poliana Rebouças</strong>, advogada com atuação em Brasília/DF, comprometida com a defesa dos direitos dos meus clientes com rigor técnico, ética e dedicação.</p>
-    <p>Minha trajetória é guiada pelo princípio de que <strong>a justiça deve ser acessível</strong>, transparente e eficaz — do atendimento inicial ao desfecho de cada causa.</p>
-    <p>Atuo em diversas frentes do Direito, tanto nas áreas tradicionais como nas especialidades em ascensão, sempre buscando as melhores estratégias jurídicas para cada caso.</p>
+    <div class="section-eyebrow" data-path="about.eyebrow">${esc(a.eyebrow)}</div>
+    <h2 class="section-heading"><span data-path="about.heading1">${esc(a.heading1)}</span><br><em data-path="about.heading2">${esc(a.heading2)}</em></h2>
+    ${paragraphs}
+    <div><button class="add-btn admin-only" data-action="addPara">+ Parágrafo</button></div>
     <div class="oab-badge">
       <span>⚖</span>
       <div>
-        <span>Registro Profissional</span><br>
-        <strong>OAB · Seccional DF</strong>
+        <span data-path="about.oabLabel">${esc(a.oabLabel)}</span><br>
+        <strong data-path="about.oabValue">${esc(a.oabValue)}</strong>
       </div>
     </div>
   </div>
 </div>
 
-<!-- QUOTE -->
 <div class="quote-section">
   <blockquote>
-    "É justo que muito custe o que muito vale."
-    <cite>— Poliana Rebouças</cite>
+    <span data-path="quote.text">${esc(c.quote.text)}</span>
+    <cite data-path="quote.author">${esc(c.quote.author)}</cite>
   </blockquote>
 </div>
 
-<!-- AREAS -->
 <div class="areas-section" id="areas">
   <div class="areas-header">
-    <div class="section-eyebrow" style="justify-content:center;">Atuação Profissional</div>
-    <h2 class="section-heading">Áreas de <em>Atuação</em></h2>
+    <div class="section-eyebrow" style="justify-content:center;" data-path="areas.eyebrow">${esc(ar.eyebrow)}</div>
+    <h2 class="section-heading"><span data-path="areas.heading1">${esc(ar.heading1)}</span> <em data-path="areas.heading2">${esc(ar.heading2)}</em></h2>
   </div>
-
-  <div class="tab-nav">
-    <button class="tab-btn active" onclick="switchTab('tradicionais', this)">Áreas Tradicionais</button>
-    <button class="tab-btn" onclick="switchTab('ascensao', this)">Especializações</button>
-  </div>
-
-  <div class="tab-pane active" id="tab-tradicionais">
-    <div class="areas-grid">
-      <div class="area-card">
-        <span class="area-icon">⚖️</span>
-        <h3 class="area-name">Direito Civil</h3>
-        <p class="area-desc">A área mais abrangente do Direito, regulando relações entre pessoas físicas e jurídicas. Abrange contratos, responsabilidade civil, família e sucessões com soluções personalizadas para cada demanda.</p>
-      </div>
-      <div class="area-card">
-        <span class="area-icon">🔒</span>
-        <h3 class="area-name">Direito Penal</h3>
-        <p class="area-desc">Atuação na defesa ou representação em crimes e contravenções penais. Assessoria completa desde o inquérito policial até as instâncias recursais, com foco na garantia dos direitos fundamentais.</p>
-      </div>
-      <div class="area-card">
-        <span class="area-icon">🤝</span>
-        <h3 class="area-name">Direito do Trabalho</h3>
-        <p class="area-desc">Regulação das relações entre empregados e empregadores. Defesa de trabalhadores e empresas em reclamações trabalhistas, rescisões, horas extras e demais demandas do cotidiano laboral.</p>
-      </div>
-      <div class="area-card">
-        <span class="area-icon">🏢</span>
-        <h3 class="area-name">Direito Empresarial</h3>
-        <p class="area-desc">Suporte jurídico ao mercado corporativo, contratos comerciais, constituição e dissolução de sociedades, recuperação judicial e falências. Proteção estratégica para o seu negócio.</p>
-      </div>
-      <div class="area-card">
-        <span class="area-icon">📊</span>
-        <h3 class="area-name">Direito Tributário</h3>
-        <p class="area-desc">Planejamento e defesa em matéria fiscal. Tratamento de impostos, tributos, autuações e contenciosos administrativos e judiciais. Uma das áreas mais complexas e de maior impacto financeiro.</p>
-      </div>
-      <div class="area-card">
-        <span class="area-icon">🏛️</span>
-        <h3 class="area-name">Direito Administrativo</h3>
-        <p class="area-desc">Regulação das relações entre cidadãos e o Estado. Contratos públicos, servidores públicos, licitações e atos administrativos — defesa dos seus direitos frente ao poder público.</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="tab-pane" id="tab-ascensao">
-    <div class="areas-grid">
-      <div class="area-card">
-        <span class="area-icon">💻</span>
-        <h3 class="area-name">Direito Digital</h3>
-        <p class="area-desc">Questões jurídicas da era digital: LGPD, crimes virtuais, proteção de dados, e-commerce e responsabilidade em redes sociais. Assessoria para pessoas e empresas no ambiente online.</p>
-      </div>
-      <div class="area-card">
-        <span class="area-icon">📋</span>
-        <h3 class="area-name">Compliance e Ética</h3>
-        <p class="area-desc">Alta demanda para garantir que empresas cumpram leis, normas internas e padrões éticos. Prevenção de riscos legais, implantação de programas de integridade e due diligence.</p>
-      </div>
-      <div class="area-card">
-        <span class="area-icon">🌿</span>
-        <h3 class="area-name">Direito Ambiental</h3>
-        <p class="area-desc">Voltado à sustentabilidade e regulação dos recursos naturais. Licenciamento ambiental, responsabilidade por danos, regularização de propriedades e defesa em ações ambientais.</p>
-      </div>
-      <div class="area-card">
-        <span class="area-icon">🛡️</span>
-        <h3 class="area-name">Direito do Consumidor</h3>
-        <p class="area-desc">Defesa dos direitos nas relações de consumo. Ações contra empresas por produtos defeituosos, cobranças indevidas, propaganda enganosa e demais violações ao CDC.</p>
-      </div>
-      <div class="area-card">
-        <span class="area-icon">🏥</span>
-        <h3 class="area-name">Direito Médico e da Saúde</h3>
-        <p class="area-desc">Regulamentação da atuação de profissionais de saúde, hospitais e planos de saúde. Responsabilidade civil médica, erros médicos e defesa de profissionais perante conselhos.</p>
-      </div>
-      <div class="area-card">
-        <span class="area-icon">🏠</span>
-        <h3 class="area-name">Direito Imobiliário</h3>
-        <p class="area-desc">Transações imobiliárias, incorporações, locações e questões de propriedade. Análise contratual, regularização de imóveis, usucapião e resolução de conflitos condominiais.</p>
-      </div>
-    </div>
-  </div>
+  <div class="tab-nav">${tabBtns}<button class="add-btn admin-only" data-action="addTab">+ Aba</button></div>
+  ${panes}
 </div>
 
 <div class="contact-section" id="contato">
   <div class="contact-inner">
     <div>
-      <div class="section-eyebrow">Contato</div>
-      <h2 class="section-heading">Vamos conversar sobre o seu <em>caso</em></h2>
+      <div class="section-eyebrow" data-path="contact.eyebrow">${esc(ct.eyebrow)}</div>
+      <h2 class="section-heading"><span data-path="contact.heading1">${esc(ct.heading1)}</span> <em data-path="contact.heading2">${esc(ct.heading2)}</em></h2>
       <div class="contact-info-item">
         <div class="c-icon">✉</div>
-        <div>
-          <h4>E-mail</h4>
-          <a href="mailto:polireboucas@gmail.com">polireboucas@gmail.com</a>
-        </div>
+        <div><h4>E-mail</h4><a href="mailto:${esc(ct.email)}"><span data-path="contact.email">${esc(ct.email)}</span></a></div>
       </div>
       <div class="contact-info-item">
         <div class="c-icon">📸</div>
-        <div>
-          <h4>Instagram</h4>
-          <a href="https://instagram.com/pollyanarv" target="_blank">@pollyanarv</a>
-        </div>
+        <div><h4>Instagram</h4><a href="https://instagram.com/${esc(igHandle)}" target="_blank" rel="noopener"><span data-path="contact.instagram">${esc(ct.instagram)}</span></a></div>
       </div>
       <div class="contact-info-item">
         <div class="c-icon">📍</div>
-        <div>
-          <h4>Localização</h4>
-          <p>Brasília, Distrito Federal</p>
-        </div>
+        <div><h4>Localização</h4><p data-path="contact.location">${esc(ct.location)}</p></div>
       </div>
     </div>
-    
-    <div>
-      <form id="contactForm" action="https://api.web3forms.com/submit" method="POST">
-        <input type="hidden" name="access_key" value="a77999ef-85fb-4b59-b837-97497e20f948">
-        <input type="hidden" name="redirect" value="https://polianareboucasadv.github.io/webpage/#contato">
-       
 
+    <div>
+      <form id="contactForm">
+        <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0" aria-hidden="true">
         <div class="form-2col">
-          <div class="form-group">
-            <label>Nome</label>
-            <input type="text" name="name" placeholder="Seu nome" required>
-          </div>
-          <div class="form-group">
-            <label>Telefone</label>
-            <input type="tel" name="telefone" placeholder="(00) 00000-0000">
-          </div>
+          <div class="form-group"><label>Nome</label><input type="text" name="name" placeholder="Seu nome" required maxlength="150"></div>
+          <div class="form-group"><label>Telefone</label><input type="tel" name="telefone" placeholder="(00) 00000-0000" maxlength="40"></div>
         </div>
-        <div class="form-group">
-          <label>E-mail</label>
-          <input type="email" name="email" placeholder="seu@email.com" required>
-        </div>
+        <div class="form-group"><label>E-mail</label><input type="email" name="email" placeholder="seu@email.com" required maxlength="150"></div>
         <div class="form-group">
           <label>Área de Interesse</label>
-          <select name="area_interesse">
-            <option value="">Selecione uma área</option>
-            <optgroup label="Áreas Tradicionais">
-              <option>Direito Civil</option>
-              <option>Direito Penal</option>
-              <option>Direito do Trabalho</option>
-              <option>Direito Empresarial</option>
-              <option>Direito Tributário</option>
-              <option>Direito Administrativo</option>
-            </optgroup>
-            <optgroup label="Especializações">
-              <option>Direito Digital</option>
-              <option>Compliance e Ética</option>
-              <option>Direito Ambiental</option>
-              <option>Direito do Consumidor</option>
-              <option>Direito Médico e da Saúde</option>
-              <option>Direito Imobiliário</option>
-            </optgroup>
-          </select>
+          <select name="area_interesse"><option value="">Selecione uma área</option>${options}</select>
         </div>
-        <div class="form-group">
-          <label>Descreva seu caso</label>
-        <textarea name="mensagem" required></textarea>
-        </div>
-      <button type="submit" class="form-submit">Enviar Consulta →</button>
-</form>
+        <div class="form-group"><label>Descreva seu caso</label><textarea name="mensagem" required maxlength="4000"></textarea></div>
+        <button type="submit" class="form-submit" id="formBtn">Enviar Consulta →</button>
+        <p class="success-msg" id="successMsg"></p>
+      </form>
     </div>
   </div>
 </div>
 
 <footer>
-  <p>© 2025 Poliana Rebouças · Advocacia e Consultoria Jurídica</p>
+  <p data-path="footer.text">${esc(c.footer.text)}</p>
   <div class="footer-links">
-    <a href="mailto:polireboucas@gmail.com">E-mail</a>
-    <a href="https://instagram.com/pollyanarv" target="_blank">Instagram</a>
+    <a href="mailto:${esc(ct.email)}">E-mail</a>
+    <a href="https://instagram.com/${esc(igHandle)}" target="_blank" rel="noopener">Instagram</a>
+    <button class="restricted" data-action="login">Área restrita</button>
   </div>
-</footer>
+</footer>`;
+  applyEdit();
+}
 
-<script>
-  window.addEventListener('scroll', () => {
-    document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 60);
+function applyEdit() {
+  document.body.classList.toggle('is-admin', admin);
+  document.querySelectorAll('[data-path]').forEach(el => {
+    if (admin) { el.contentEditable = 'true'; el.spellcheck = true; }
+    else el.removeAttribute('contenteditable');
   });
+}
 
-  function switchTab(id, btn) {
-    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + id).classList.add('active');
-    btn.classList.add('active');
+/* ---------- Carregar conteúdo do Firestore ---------- */
+async function loadContent() {
+  try {
+    const snap = await getDoc(doc(db, 'site', 'content'));
+    if (snap.exists()) content = merge(structuredClone(DEFAULTS), snap.data());
+  } catch (err) {
+    console.warn('Não foi possível carregar o conteúdo do Firestore; usando o padrão.', err);
+  }
+  if (!dirty) render();
+}
+
+/* ---------- Autenticação ---------- */
+onAuthStateChanged(auth, user => {
+  const ok = !!user && ADMIN_EMAILS.includes((user.email || '').toLowerCase());
+  if (user && !ok) { signOut(auth); toast('Este usuário não tem permissão de administrador.', true); return; }
+  admin = ok;
+  $('#adminUser').textContent = ok ? user.email : '';
+  render();
+  if (ok) countUnread();
+  if (!ok && !hashChecked && location.hash === '#admin') openModal('loginModal');
+  hashChecked = true;
+});
+
+const authErrors = {
+  'auth/invalid-credential': 'E-mail ou senha incorretos.',
+  'auth/wrong-password': 'E-mail ou senha incorretos.',
+  'auth/user-not-found': 'E-mail ou senha incorretos.',
+  'auth/invalid-email': 'E-mail inválido.',
+  'auth/too-many-requests': 'Muitas tentativas. Aguarde alguns minutos e tente novamente.',
+  'auth/network-request-failed': 'Falha de conexão. Verifique sua internet.',
+  'auth/operation-not-allowed': 'Login por e-mail/senha não está ativado no Firebase.'
+};
+
+$('#loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = $('#loginBtn'); btn.disabled = true; $('#loginErr').textContent = '';
+  try {
+    await signInWithEmailAndPassword(auth, $('#loginEmail').value.trim(), $('#loginPass').value);
+    $('#loginPass').value = ''; closeModals(); toast('Bem-vinda! Clique em qualquer texto para editar.');
+  } catch (err) {
+    $('#loginErr').textContent = authErrors[err.code] || ('Erro ao entrar: ' + err.code);
+  }
+  btn.disabled = false;
+});
+
+/* ---------- Modais ---------- */
+function openModal(id) { $('#' + id).classList.add('open'); }
+function closeModals() { document.querySelectorAll('.modal-back').forEach(m => m.classList.remove('open')); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModals(); });
+document.querySelectorAll('.modal-back').forEach(m => m.addEventListener('mousedown', e => { if (e.target === m) closeModals(); }));
+
+/* ---------- Edição inline ---------- */
+document.addEventListener('input', e => {
+  if (e.target.id === 'setKey') { content.settings.web3formsKey = e.target.value.trim(); markDirty(); return; }
+  const el = e.target.closest?.('[data-path]');
+  if (!admin || !el || !el.isContentEditable) return;
+  setPath(content, el.dataset.path, el.textContent);
+  markDirty();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && admin && e.target.closest?.('[data-path][contenteditable="true"]')) {
+    e.preventDefault(); e.target.blur();
+  }
+});
+document.addEventListener('paste', e => {
+  if (admin && e.target.closest?.('[data-path][contenteditable="true"]')) {
+    e.preventDefault();
+    const t = (e.clipboardData || window.clipboardData).getData('text').replace(/\s+/g, ' ');
+    document.execCommand('insertText', false, t);
+  }
+});
+window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+/* ---------- Cliques ---------- */
+document.addEventListener('click', async e => {
+  // não navegar ao clicar em textos editáveis dentro de links
+  if (admin && e.target.closest('a') && e.target.closest('[data-path]')) e.preventDefault();
+
+  const act = e.target.closest('[data-action]');
+  if (act) {
+    const a = act.dataset.action, i = +act.dataset.i, j = +act.dataset.j, k = +act.dataset.k;
+    const tabs = content.areas.tabs;
+    switch (a) {
+      case 'login':    openModal('loginModal'); return;
+      case 'closeModal': closeModals(); return;
+      case 'logout':
+        if (dirty && !confirm('Há alterações não salvas. Sair mesmo assim?')) return;
+        markDirty(false); await signOut(auth); toast('Sessão encerrada.'); return;
+      case 'save':     await save(); return;
+      case 'discard':
+        if (!dirty || confirm('Descartar todas as alterações não salvas?')) { markDirty(false); content = structuredClone(DEFAULTS); await loadContent(); render(); }
+        return;
+      case 'settings': $('#setKey').value = content.settings.web3formsKey || ''; openModal('settingsModal'); return;
+      case 'messages': openMessages(); return;
+      case 'resetPass': {
+        const em = $('#loginEmail').value.trim();
+        if (!em) { $('#loginErr').textContent = 'Digite seu e-mail acima para receber o link de redefinição.'; return; }
+        try { await sendPasswordResetEmail(auth, em); $('#loginErr').textContent = 'Link de redefinição enviado para o seu e-mail.'; }
+        catch (err) { $('#loginErr').textContent = authErrors[err.code] || err.code; }
+        return;
+      }
+      case 'photo': $('#photoInput').click(); e.preventDefault(); return;
+      case 'addPara': content.about.paragraphs.push('Novo parágrafo. Clique para editar.'); break;
+      case 'delPara': if (!confirm('Remover este parágrafo?')) return; content.about.paragraphs.splice(k, 1); break;
+      case 'addTab':  tabs.push({ name: 'Nova aba', items: [] }); activeTab = tabs.length - 1; break;
+      case 'delTab':
+        if (tabs.length <= 1) { toast('É preciso manter ao menos uma aba.', true); return; }
+        if (!confirm('Remover esta aba e todas as áreas dentro dela?')) return;
+        tabs.splice(i, 1); activeTab = 0; break;
+      case 'addItem': tabs[i].items.push({ icon: '⚖️', name: 'Nova área', desc: 'Descreva esta área de atuação.' }); activeTab = i; break;
+      case 'delItem': if (!confirm('Remover esta área de atuação?')) return; tabs[i].items.splice(j, 1); break;
+      case 'msgRead': await toggleRead(act.dataset.id, act.dataset.read === '1'); return;
+      case 'msgDel':
+        if (!confirm('Excluir esta mensagem definitivamente?')) return;
+        await deleteDoc(doc(db, 'mensagens', act.dataset.id)); openMessages(); countUnread(); return;
+      default: return;
+    }
+    markDirty(); render(); return;
   }
 
-  function handleSubmit() {
-    const name  = document.getElementById('fname').value;
-    const email = document.getElementById('femail').value;
-    const msg   = document.getElementById('fmsg').value;
-    if (!name || !email || !msg) { alert('Por favor, preencha os campos obrigatórios.'); return; }
-    const area  = document.getElementById('farea').value;
-    const phone = document.getElementById('fphone').value;
-    const subject = encodeURIComponent('Consulta Jurídica – ' + (area || 'Geral'));
-    const body = encodeURIComponent(
-      'Nome: ' + name + '\n' +
-      'Telefone: ' + phone + '\n' +
-      'E-mail: ' + email + '\n' +
-      'Área: ' + area + '\n\n' +
-      'Mensagem:\n' + msg
-    );
-    window.location.href = 'mailto:polireboucas@gmail.com?subject=' + subject + '&body=' + body;
-    document.getElementById('successMsg').style.display = 'block';
+  const tab = e.target.closest('[data-tab]');
+  if (tab) {
+    activeTab = +tab.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach((b, n) => b.classList.toggle('active', n === activeTab));
+    document.querySelectorAll('.tab-pane').forEach((p, n) => p.classList.toggle('active', n === activeTab));
   }
+});
+
+window.addEventListener('scroll', () => {
+  document.getElementById('nav')?.classList.toggle('scrolled', window.scrollY > 60);
+});
+
+/* ---------- Foto ---------- */
+function resizeImage(file, maxW = 900, maxH = 1100, q = 0.82) {
+  return new Promise((res, rej) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      const r = Math.min(1, maxW / img.width, maxH / img.height);
+      const cv = document.createElement('canvas');
+      cv.width = Math.round(img.width * r); cv.height = Math.round(img.height * r);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      URL.revokeObjectURL(url); res(cv.toDataURL('image/jpeg', q));
+    };
+    img.onerror = () => rej(new Error('imagem inválida'));
+    img.src = url;
+  });
+}
+$('#photoInput').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const data = await resizeImage(f);
+    content.about.photo = data; $('#aboutPhoto').src = data; markDirty();
+    toast('Foto atualizada. Lembre-se de salvar.');
+  } catch { toast('Não foi possível ler essa imagem.', true); }
+  e.target.value = '';
+});
+
+/* ---------- Salvar ---------- */
+async function save() {
+  try {
+    await setDoc(doc(db, 'site', 'content'), JSON.parse(JSON.stringify(content)));
+    markDirty(false); render(); toast('Alterações salvas! O site já está atualizado.');
+  } catch (err) {
+    console.error(err);
+    toast(err.code === 'permission-denied'
+      ? 'Sem permissão para salvar. Confira as regras do Firestore.'
+      : 'Erro ao salvar: ' + (err.code || err.message), true);
+  }
+}
+
+/* ---------- Formulário de contato ---------- */
+document.addEventListener('submit', async e => {
+  if (e.target.id !== 'contactForm') return;
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  if (fd.get('website')) return; // honeypot
+  const data = {
+    name: fd.get('name').trim(), telefone: (fd.get('telefone') || '').trim(),
+    email: fd.get('email').trim(), area: fd.get('area_interesse') || '', mensagem: fd.get('mensagem').trim()
+  };
+  const btn = $('#formBtn'), msg = $('#successMsg');
+  btn.disabled = true; msg.style.display = 'none'; msg.classList.remove('error');
+  let ok = false;
+  try {
+    await addDoc(collection(db, 'mensagens'), { ...data, createdAt: serverTimestamp(), lida: false });
+    ok = true;
+  } catch (err) { console.error('Firestore:', err); }
+
+  const key = content.settings.web3formsKey;
+  if (key) {
+    try {
+      const r = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          access_key: key, subject: 'Consulta Jurídica – ' + (data.area || 'Geral'),
+          from_name: 'Site Poliana Rebouças', name: data.name, email: data.email,
+          telefone: data.telefone, area_interesse: data.area, message: data.mensagem
+        })
+      });
+      if ((await r.json()).success) ok = true;
+    } catch (err) { console.error('Web3Forms:', err); }
+  }
+
+  msg.textContent = ok ? 'Mensagem enviada com sucesso! Entrarei em contato em breve.'
+                       : 'Não foi possível enviar agora. Tente novamente ou escreva para ' + content.contact.email + '.';
+  msg.classList.toggle('error', !ok); msg.style.display = 'block';
+  if (ok) e.target.reset();
+  btn.disabled = false;
+});
+
+/* ---------- Mensagens (admin) ---------- */
+async function countUnread() {
+  try {
+    const snap = await getDocs(collection(db, 'mensagens'));
+    const n = snap.docs.filter(d => !d.data().lida).length;
+    const b = $('#msgCount'); b.textContent = n; b.classList.toggle('on', n > 0);
+  } catch (err) { console.warn(err); }
+}
+async function openMessages() {
+  openModal('msgModal');
+  const list = $('#msgList'); list.innerHTML = '<p class="hint">Carregando…</p>';
+  try {
+    const snap = await getDocs(query(collection(db, 'mensagens'), orderBy('createdAt', 'desc')));
+    if (snap.empty) { list.innerHTML = '<p class="hint">Nenhuma mensagem recebida ainda.</p>'; return; }
+    list.innerHTML = snap.docs.map(d => {
+      const m = d.data(), dt = m.createdAt?.toDate ? m.createdAt.toDate().toLocaleString('pt-BR') : '';
+      return `<div class="msg-item ${m.lida ? '' : 'unread'}">
+        <div class="msg-head"><span><strong>${esc(m.name)}</strong> · ${esc(m.email)}${m.telefone ? ' · ' + esc(m.telefone) : ''}</span><span>${esc(dt)}</span></div>
+        ${m.area ? `<div class="msg-head"><span>Área: ${esc(m.area)}</span></div>` : ''}
+        <div class="msg-body">${esc(m.mensagem)}</div>
+        <div class="msg-actions">
+          <a href="mailto:${esc(m.email)}?subject=${encodeURIComponent('Re: Consulta Jurídica')}">Responder</a>
+          <button data-action="msgRead" data-id="${d.id}" data-read="${m.lida ? 1 : 0}">${m.lida ? 'Marcar como não lida' : 'Marcar como lida'}</button>
+          <button data-action="msgDel" data-id="${d.id}">Excluir</button>
+        </div></div>`;
+    }).join('');
+  } catch (err) {
+    list.innerHTML = '<p class="hint">Erro ao carregar mensagens: ' + esc(err.code || err.message) + '</p>';
+  }
+}
+async function toggleRead(id, wasRead) {
+  await updateDoc(doc(db, 'mensagens', id), { lida: !wasRead });
+  openMessages(); countUnread();
+}
+
+/* ---------- Início ---------- */
+render();
+loadContent();
 </script>
 </body>
 </html>
