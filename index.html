@@ -925,8 +925,10 @@ const DEFAULTS = {
   footer:  { text: '© 2025 Poliana Rebouças · Advocacia e Consultoria Jurídica' },
   articles:{ eyebrow: 'Artigos', heading1: 'Publicações e', heading2: 'Reflexões',
              subTitle: 'Receba novos artigos', subText: 'Cadastre seu e-mail e avisaremos você quando houver novas publicações.' },
-  settings:{ web3formsKey: 'a77999ef-85fb-4b59-b837-97497e20f948' }
+  settings:{ web3formsKey: '616634a1-25a9-47a1-9b56-7d5e41218dd8' }
 };
+
+const OLD_W3F_KEYS = ['a77999ef-85fb-4b59-b837-97497e20f948'];
 
 /* ---------- Estado ---------- */
 let content   = structuredClone(DEFAULTS);
@@ -1155,6 +1157,8 @@ async function loadContent() {
   try {
     const snap = await getDoc(doc(db, 'site', 'content'));
     if (snap.exists()) content = merge(structuredClone(DEFAULTS), snap.data());
+    // chave antiga (e-mail anterior) salva no Firebase: troca automaticamente pela nova
+    if (OLD_W3F_KEYS.includes(content.settings.web3formsKey)) content.settings.web3formsKey = DEFAULTS.settings.web3formsKey;
   } catch (err) {
     console.warn('Não foi possível carregar o conteúdo do Firestore; usando o padrão.', err);
   }
