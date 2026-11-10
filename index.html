@@ -766,6 +766,29 @@ body.is-admin .share-fab { display:none; }
   .layout-panel { left:.5rem; right:.5rem; width:auto; max-height:55vh; }
   .share-fab { right:1rem; bottom:1rem; }
 }
+
+/* ---- formatos da foto (Sobre) ---- */
+.photo-frame { position:absolute; inset:0; }
+.photo-frame img { position:absolute; inset:0; width:100%; height:100%; }
+.intro-photo.shaped { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1.6rem; padding:6.5rem 1.5rem 3rem; background:transparent; overflow:visible; }
+.intro-photo.shaped::after { display:none; }
+.intro-photo.shaped .photo-frame { position:relative; inset:auto; width:var(--photo-size,80%); aspect-ratio:1/1; overflow:hidden; flex-shrink:0; }
+.intro-photo.shaped.rect .photo-frame { aspect-ratio:3/4; border-radius:4px; }
+.intro-photo.shaped.square .photo-frame { border-radius:4px; }
+.intro-photo.shaped.circle .photo-frame { border-radius:50%; }
+.intro-photo.shaped.ring .photo-frame { box-shadow:0 0 0 4px var(--navy), 0 0 0 6px var(--gold), 0 0 46px rgba(201,168,76,.28); }
+.intro-photo.shaped .photo-caption { position:static; border-left:none; padding-left:0; text-align:center; }
+body.is-admin .intro-photo.shaped { padding-top:9.5rem; }
+.lp-shapes { display:grid; grid-template-columns:repeat(2,1fr); gap:.4rem; margin-bottom:.9rem; }
+.lp-shapes .lp-btn { text-align:center; }
+.lp-shapes .lp-btn.active { background:var(--gold); color:var(--navy); border-color:var(--gold); font-weight:600; }
+.lp-check { display:flex; align-items:center; gap:.5rem; font-size:.72rem; color:var(--cream); margin-bottom:.9rem; cursor:pointer; }
+.lp-check input { accent-color:var(--gold); width:16px; height:16px; }
+.lp-row.off { opacity:.4; }
+@media (max-width:900px) {
+  .intro-photo.shaped { height:auto; padding:5.5rem 1.5rem 2.5rem; }
+  body.is-admin .intro-photo.shaped { padding-top:9rem; }
+}
 </style>
 </head>
 <body>
@@ -1067,7 +1090,8 @@ const DEFAULTS = {
             ],
             photo: 'foto-poliana.jpg', photoName: 'Poliana Rebouças', photoRole: 'Advogada · OAB/DF',
             oabLabel: 'Registro Profissional', oabValue: 'OAB · Seccional DF',
-            photoW: 420, photoH: 80, photoZoom: 100, photoX: 50, photoY: 0 },
+            photoW: 420, photoH: 80, photoZoom: 100, photoX: 50, photoY: 0,
+            photoShape: 'full', photoSize: 80, photoRing: true },
   quote:  { text: '"É justo que muito custe o que muito vale."', author: '— Poliana Rebouças' },
   areas:  { eyebrow: 'Atuação Profissional', heading1: 'Áreas de', heading2: 'Atuação',
     tabs: [
@@ -1211,7 +1235,7 @@ function render() {
 
 <div class="intro-section" id="sobre">
   <div class="intro-photo">
-    <img id="aboutPhoto" src="${esc(a.photo)}" alt="${esc(plainText(a.photoName))}" onerror="this.style.background='#162030';this.style.minHeight='500px'">
+    <div class="photo-frame"><img id="aboutPhoto" src="${esc(a.photo)}" alt="${esc(plainText(a.photoName))}" onerror="this.style.background='#162030'"></div>
     <div class="photo-tools admin-only"><button data-action="photo">📷 Trocar foto</button><button data-action="layout" data-target="photo">⚙ Layout da foto</button></div>
     <div class="photo-caption">
       <h3 data-path="about.photoName">${rich(a.photoName)}</h3>
@@ -1445,6 +1469,7 @@ document.addEventListener('click', async e => {
       case 'layoutUpload': $(LAYOUT[layoutTarget].upload).click(); return;
       case 'layoutRemove': content.hero.cover = ''; applyLayoutLive(); markDirty(); toast('Foto de capa removida.'); return;
       case 'layoutReset':  resetLayout(); return;
+      case 'photoShape':   content.about.photoShape = act.dataset.val; applyLayoutLive(); renderLayout(); markDirty(); return;
       case 'share':        openShare(); return;
       case 'shareClose':   closeShare(); return;
       case 'shareCopy':    shareCopy(); return;
@@ -2092,8 +2117,8 @@ const LAYOUT = {
     hint: 'A foto de capa aparece atrás do título da página inicial. Escureça para o texto continuar legível.',
     sliders: [['hero.coverDim', 'Escurecimento da foto', 0, 90, 5, '%'], ['hero.coverPos', 'Posição vertical da foto', 0, 100, 5, '%'], ['hero.h', 'Altura da seção', 50, 120, 5, 'vh']] },
   photo: { title: 'Foto “Sobre” e layout', upload: '#photoInput', canRemove: false,
-    hint: 'Ajuste o tamanho da coluna, o zoom e o enquadramento da foto. Em celulares a foto ocupa a largura toda.',
-    sliders: [['about.photoW', 'Largura da coluna da foto', 280, 720, 10, 'px'], ['about.photoH', 'Altura da seção', 50, 120, 5, 'vh'],
+    hint: 'Escolha o formato, diminua a foto dentro da coluna e ajuste zoom e enquadramento. Em celulares a foto se adapta à largura da tela.',
+    sliders: [['about.photoW', 'Largura da coluna da foto', 280, 720, 10, 'px'], ['about.photoSize', 'Tamanho da foto na coluna', 20, 100, 5, '%'], ['about.photoH', 'Altura da seção', 50, 120, 5, 'vh'],
       ['about.photoZoom', 'Zoom', 100, 220, 5, '%'], ['about.photoX', 'Posição horizontal', 0, 100, 5, '%'], ['about.photoY', 'Posição vertical', 0, 100, 5, '%']] }
 };
 let layoutTarget = 'cover';
@@ -2105,6 +2130,12 @@ function applyLayoutLive() {
   const cv = $('#heroCover'); if (cv) { cv.style.backgroundImage = h.cover ? 'url("' + h.cover + '")' : 'none'; cv.style.backgroundPosition = 'center ' + h.coverPos + '%'; }
   const dm = $('#heroDim'); if (dm) { dm.style.display = h.cover ? 'block' : 'none'; dm.style.opacity = h.coverDim / 100; }
   const sec = $('#sobre'); if (sec) { sec.style.setProperty('--photo-w', a.photoW + 'px'); sec.style.setProperty('--photo-h', a.photoH + 'vh'); }
+  const ip = $('.intro-photo');
+  if (ip) {
+    ip.classList.remove('shaped', 'rect', 'square', 'circle', 'ring');
+    if (a.photoShape && a.photoShape !== 'full') { ip.classList.add('shaped', a.photoShape); if (a.photoRing) ip.classList.add('ring'); }
+    ip.style.setProperty('--photo-size', a.photoSize + '%');
+  }
   const im = $('#aboutPhoto');
   if (im) { im.style.objectPosition = a.photoX + '% ' + a.photoY + '%'; im.style.transformOrigin = a.photoX + '% ' + a.photoY + '%'; im.style.transform = 'scale(' + (a.photoZoom / 100) + ')'; }
 }
@@ -2117,14 +2148,24 @@ function renderLayout() {
       ${L.canRemove ? '<button class="lp-btn" data-action="layoutRemove">Remover capa</button>' : ''}
     </div>
     <p class="lp-hint">${esc(L.hint)}</p>
-    ${L.sliders.map(([k, label, min, max, step, u]) => `
-      <label class="lp-row"><span>${esc(label)} <b>${getPath(content, k)}${u}</b></span>
-      <input type="range" data-lp="${k}" data-u="${u}" min="${min}" max="${max}" step="${step}" value="${getPath(content, k)}"></label>`).join('')}
+    ${layoutTarget === 'photo' ? `
+      <div class="lp-shapes">
+        ${[['full', '▮ Preenche a coluna'], ['rect', '▭ Retângulo'], ['square', '◻ Quadrado'], ['circle', '◯ Círculo']].map(([v, t]) =>
+          `<button class="lp-btn ${content.about.photoShape === v ? 'active' : ''}" data-action="photoShape" data-val="${v}">${t}</button>`).join('')}
+      </div>
+      <label class="lp-check"><input type="checkbox" data-lp-ring ${content.about.photoRing ? 'checked' : ''}> Moldura dourada em volta da foto</label>` : ''}
+    ${L.sliders.map(([k, label, min, max, step, u]) => {
+      const off = k === 'about.photoSize' && content.about.photoShape === 'full';
+      return `
+      <label class="lp-row ${off ? 'off' : ''}"><span>${esc(label)} <b>${getPath(content, k)}${u}</b></span>
+      <input type="range" data-lp="${k}" data-u="${u}" min="${min}" max="${max}" step="${step}" value="${getPath(content, k)}" ${off ? 'disabled title="Escolha retângulo, quadrado ou círculo para diminuir a foto"' : ''}></label>`;
+    }).join('')}
     <button class="lp-btn" data-action="layoutReset">Restaurar padrão</button>`;
 }
 function openLayout(t) { layoutTarget = t; renderLayout(); $('#layoutPanel').classList.add('open'); }
 function resetLayout() {
   LAYOUT[layoutTarget].sliders.forEach(([k]) => setPath(content, k, getPath(DEFAULTS, k)));
+  if (layoutTarget === 'photo') { content.about.photoShape = DEFAULTS.about.photoShape; content.about.photoRing = DEFAULTS.about.photoRing; }
   applyLayoutLive(); renderLayout(); markDirty();
 }
 document.addEventListener('input', e => {
@@ -2132,6 +2173,10 @@ document.addEventListener('input', e => {
   setPath(content, r.dataset.lp, +r.value);
   r.closest('.lp-row').querySelector('b').textContent = r.value + r.dataset.u;
   applyLayoutLive(); markDirty();
+});
+document.addEventListener('change', e => {
+  if (!e.target.matches?.('[data-lp-ring]')) return;
+  content.about.photoRing = e.target.checked; applyLayoutLive(); markDirty();
 });
 async function fitImage(file, steps, maxLen) {
   let out = '';
