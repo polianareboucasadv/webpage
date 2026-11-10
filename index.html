@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Poliana Rebouças | Advocacia e Consultoria Jurídica</title>
+<meta name="description" content="Poliana Rebouças — Advocacia e assessoria jurídica em Brasília/DF, com atendimento em todo o Brasil.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Poliana Rebouças | Advocacia e Consultoria Jurídica">
+<meta property="og:description" content="Advocacia e assessoria jurídica em Brasília/DF, com atendimento em todo o Brasil.">
+<meta property="og:url" content="https://polianareboucasadv.github.io/webpage/">
+<meta property="og:image" content="https://polianareboucasadv.github.io/webpage/foto-poliana.jpg">
+<meta name="twitter:card" content="summary_large_image">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -75,7 +82,7 @@ nav a:hover { color: var(--gold); }
 
 /* HERO */
 .hero {
-  min-height:min(100vh,900px);
+  min-height:var(--hero-h,min(100vh,900px));
   display:flex; flex-direction:column;
   justify-content:center;
   padding: 8rem 4rem 6rem;
@@ -176,8 +183,8 @@ nav a:hover { color: var(--gold); }
 
 /* INTRO */
 .intro-section {
-  display:grid; grid-template-columns: 420px 1fr;
-  min-height:80vh; border-top: 1px solid var(--border);
+  display:grid; grid-template-columns: var(--photo-w,420px) 1fr;
+  min-height:var(--photo-h,80vh); border-top: 1px solid var(--border);
 }
 
 .intro-photo { position:relative; overflow:hidden; background: var(--navy2); }
@@ -421,7 +428,7 @@ footer p { color: var(--muted); font-size:0.7rem; letter-spacing:0.1em; }
 /* ============ ÁREA ADMINISTRATIVA ============ */
 .admin-only { display:none !important; }
 body.is-admin .admin-only { display:revert !important; }
-body.is-admin { padding-bottom:70px; }
+body.is-admin { padding-bottom:120px; }
 
 body.is-admin [contenteditable="true"] {
   outline:1px dashed rgba(201,168,76,.55); outline-offset:3px; cursor:text; min-width:1ch;
@@ -677,6 +684,88 @@ body.is-admin .hero-tagline, body.is-admin .hero-cta { opacity:1; animation:none
   .article-body h2 { font-size:1.8rem; }
   .ed-toolbar { top:110px; }
 }
+
+/* ============ CAPA, LAYOUT, FORMATAÇÃO E COMPARTILHAR ============ */
+.hero-cover { position:absolute; inset:0; background-size:cover; background-repeat:no-repeat; }
+.hero-dim { position:absolute; inset:0; background:var(--navy); display:none; }
+.hero.has-cover .hero-scale-deco { display:none; }
+.hero-tools { position:absolute; top:6rem; right:2rem; z-index:6; }
+.photo-tools { position:absolute; top:5.5rem; left:1.2rem; z-index:6; }
+.hero-tools button, .photo-tools button {
+  background:var(--gold); color:var(--navy); border:none; padding:.55rem 1rem; margin:0 .4rem .4rem 0;
+  font-size:.65rem; letter-spacing:.12em; text-transform:uppercase; font-weight:600; cursor:pointer; font-family:'Montserrat',sans-serif;
+}
+.hero-tools button:hover, .photo-tools button:hover { background:var(--gold-light); }
+
+.site-fmt { display:none; position:fixed; left:0; right:0; bottom:var(--ab,64px); z-index:10000; background:#0f1a26; border-top:1px solid var(--border); padding:.5rem .8rem; }
+.site-fmt.on { display:block; }
+.sf-in { display:flex; flex-wrap:wrap; gap:.3rem; align-items:center; justify-content:center; }
+.sf-in .sf-label { font-size:.62rem; letter-spacing:.12em; text-transform:uppercase; color:var(--gold); margin-right:.4rem; }
+.sf-in button, .sf-in select, .sf-in label {
+  min-width:32px; height:32px; background:transparent; border:1px solid var(--border); color:var(--cream);
+  font-family:'Montserrat',sans-serif; font-size:.74rem; cursor:pointer; padding:0 .5rem;
+  display:inline-flex; align-items:center; justify-content:center; gap:.3rem;
+}
+.sf-in select { background:var(--navy); }
+.sf-in button:hover, .sf-in label:hover, .sf-in select:hover { border-color:var(--gold); color:var(--gold); }
+.sf-in input[type=color] { width:24px; height:24px; padding:0; border:none; background:none; cursor:pointer; }
+.sf-in .sw { width:22px; min-width:22px; height:22px; padding:0; border-radius:50%; }
+.sf-in .sep { width:1px; height:22px; background:var(--border); margin:0 .25rem; }
+
+.layout-panel { display:none; position:fixed; right:1rem; bottom:calc(var(--ab,64px) + 10px); width:320px; max-height:64vh; overflow:auto; z-index:10003;
+  background:var(--navy2); border:1px solid var(--gold); padding:1rem 1.1rem; box-shadow:0 10px 40px rgba(0,0,0,.55); }
+.layout-panel.open { display:block; }
+.lp-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:.9rem; color:var(--gold); font-size:.74rem; letter-spacing:.12em; text-transform:uppercase; }
+.lp-head button { background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer; line-height:1; }
+.lp-btns { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1rem; }
+.lp-btn { background:transparent; color:var(--cream); border:1px solid var(--border); padding:.5rem .8rem; font-size:.64rem; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; font-family:'Montserrat',sans-serif; }
+.lp-btn:hover { border-color:var(--gold); color:var(--gold); }
+.lp-btn.primary { background:var(--gold); color:var(--navy); border-color:var(--gold); font-weight:600; }
+.lp-row { display:block; margin-bottom:.85rem; font-size:.7rem; color:var(--cream); }
+.lp-row span { display:flex; justify-content:space-between; margin-bottom:.2rem; }
+.lp-row b { color:var(--gold); font-weight:500; }
+.lp-row input { width:100%; accent-color:var(--gold); }
+.lp-hint { color:var(--muted); font-size:.64rem; line-height:1.5; margin-bottom:.8rem; }
+
+.share-fab {
+  position:fixed; right:1.4rem; bottom:1.4rem; z-index:9000; width:48px; height:48px; border-radius:50%;
+  background:var(--gold); color:var(--navy); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  box-shadow:0 6px 22px rgba(0,0,0,.45); transition:transform .2s, background .2s;
+}
+.share-fab:hover { background:var(--gold-light); transform:translateY(-3px); }
+.share-fab svg { width:20px; height:20px; }
+body.is-admin .share-fab { display:none; }
+.share-overlay {
+  position:fixed; inset:0; z-index:10015; display:flex; align-items:center; justify-content:center;
+  background:rgba(5,10,15,.8); backdrop-filter:blur(6px); opacity:0; pointer-events:none; transition:opacity .25s; padding:1rem;
+}
+.share-overlay.open { opacity:1; pointer-events:all; }
+.share-box {
+  background:var(--navy2); border:1px solid var(--border); border-radius:8px; padding:2rem; width:min(360px,92vw);
+  text-align:center; position:relative; transform:translateY(16px) scale(.97); transition:transform .25s; box-shadow:0 20px 60px rgba(0,0,0,.55);
+}
+.share-overlay.open .share-box { transform:none; }
+.share-close { position:absolute; top:.8rem; right:.9rem; background:none; border:none; color:var(--muted); cursor:pointer; font-size:1.1rem; }
+.share-close:hover { color:var(--gold); }
+.share-title { font-size:.74rem; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); margin-bottom:1.2rem; }
+.share-qr { background:#fff; border-radius:8px; padding:.9rem; display:inline-block; margin-bottom:1.1rem; }
+.share-qr img { display:block; width:190px; height:190px; }
+.share-url { font-size:.66rem; color:var(--muted); margin-bottom:1.2rem; word-break:break-all; line-height:1.6; }
+.share-actions { display:flex; gap:.5rem; justify-content:center; flex-wrap:wrap; }
+.share-actions button {
+  display:flex; align-items:center; gap:.4rem; padding:.55rem 1rem; font-size:.72rem; cursor:pointer; transition:.2s;
+  border:1px solid var(--border); background:transparent; color:var(--cream); font-family:'Montserrat',sans-serif;
+}
+.share-actions button:hover { border-color:var(--gold); color:var(--gold); }
+.share-actions button.primary { background:var(--gold); color:var(--navy); border-color:var(--gold); font-weight:600; }
+.share-actions button.primary:hover { background:var(--gold-light); color:var(--navy); }
+.share-actions svg { width:14px; height:14px; flex-shrink:0; }
+.share-copied { font-size:.7rem; color:var(--gold); margin-top:.9rem; min-height:1em; }
+@media (max-width:900px) {
+  .hero-tools { top:5.5rem; right:1rem; }
+  .layout-panel { left:.5rem; right:.5rem; width:auto; max-height:55vh; }
+  .share-fab { right:1rem; bottom:1rem; }
+}
 </style>
 </head>
 <body>
@@ -762,7 +851,7 @@ body.is-admin .hero-tagline, body.is-admin .hero-cta { opacity:1; animation:none
       <h1 id="rdTitle"></h1>
       <div class="article-body" id="rdBody"></div>
       <div class="rd-foot">
-        <button class="btn" data-action="shareArticle">🔗 Copiar link</button>
+        <button class="btn" data-action="shareArticle">🔗 Compartilhar</button>
         <a class="btn-gold" href="#contato" data-action="closeReader">Fale comigo</a>
         <button class="btn admin-only" data-action="editFromReader">✎ Editar artigo</button>
       </div>
@@ -858,6 +947,83 @@ body.is-admin .hero-tagline, body.is-admin .hero-cta { opacity:1; animation:none
 <input type="file" id="edCoverInput" accept="image/*" hidden>
 <input type="file" id="edImgInput" accept="image/*" hidden>
 
+<input type="file" id="coverInput" accept="image/*" hidden>
+
+<!-- Barra de formatação do texto do site (modo edição) -->
+<div class="admin-only">
+  <div class="site-fmt" id="siteFmt">
+    <div class="sf-in">
+      <span class="sf-label">Formatar o trecho selecionado</span>
+      <select id="sfSize" title="Tamanho da letra">
+        <option value="">Tamanho</option>
+        <option value="0.6">Minúsculo</option>
+        <option value="0.75">Muito pequeno</option>
+        <option value="0.9">Pequeno</option>
+        <option value="1">Padrão</option>
+        <option value="1.2">Grande</option>
+        <option value="1.5">Maior</option>
+        <option value="2">Muito grande</option>
+        <option value="2.6">Enorme</option>
+      </select>
+      <span class="sep"></span>
+      <button data-sf="bold" title="Negrito"><b>N</b></button>
+      <button data-sf="italic" title="Itálico"><i>I</i></button>
+      <button data-sf="underline" title="Sublinhado"><u>S</u></button>
+      <button data-sf="strikeThrough" title="Riscado"><s>R</s></button>
+      <span class="sep"></span>
+      <label title="Cor da letra">A <input type="color" id="sfColor" value="#c9a84c"></label>
+      <button class="sw" data-sf="foreColor" data-val="#c9a84c" style="background:#c9a84c" title="Dourado"></button>
+      <button class="sw" data-sf="foreColor" data-val="#f8f5ef" style="background:#f8f5ef" title="Branco"></button>
+      <button class="sw" data-sf="foreColor" data-val="#e58b8b" style="background:#e58b8b" title="Vermelho"></button>
+      <button class="sw" data-sf="foreColor" data-val="#7fc8a9" style="background:#7fc8a9" title="Verde"></button>
+      <button class="sw" data-sf="foreColor" data-val="#7fb4e5" style="background:#7fb4e5" title="Azul"></button>
+      <label title="Cor de destaque (marca-texto)">🖍 <input type="color" id="sfHi" value="#fff3a0"></label>
+      <button data-sf="hiliteColor" data-val="transparent" title="Remover destaque">Sem destaque</button>
+      <span class="sep"></span>
+      <button data-sf="removeFormat" title="Limpar formatação">Limpar</button>
+      <button data-sf="undo" title="Desfazer">↶</button>
+      <button data-sf="redo" title="Refazer">↷</button>
+    </div>
+  </div>
+</div>
+
+<!-- Painel de capa e layout (modo edição) -->
+<div class="admin-only"><div class="layout-panel" id="layoutPanel"></div></div>
+
+<!-- Botão flutuante de compartilhar -->
+<button class="share-fab" data-action="share" aria-label="Compartilhar o site" title="Compartilhar">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+</button>
+
+<!-- Compartilhar -->
+<div class="share-overlay" id="shareModal">
+  <div class="share-box">
+    <button class="share-close" data-action="shareClose" aria-label="Fechar">✕</button>
+    <p class="share-title" id="shareTitle">📱 Compartilhar site</p>
+    <div class="share-qr"><img id="shareQr" src="" alt="QR Code" width="190" height="190"></div>
+    <p class="share-url" id="shareUrl"></p>
+    <div class="share-actions">
+      <button class="primary" data-action="shareCopy">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Copiar link
+      </button>
+      <button data-action="shareWhats">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        WhatsApp
+      </button>
+      <button data-action="shareNative" id="shareNative" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        Compartilhar
+      </button>
+      <button data-action="shareDl">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        QR Code
+      </button>
+    </div>
+    <p class="share-copied" id="shareCopied"></p>
+  </div>
+</div>
+
 <input type="file" id="photoInput" accept="image/*" hidden>
 <div class="toast" id="toast"></div>
 
@@ -891,7 +1057,8 @@ const ADMIN_EMAILS = ['polireboucas@gmail.com'];
 const DEFAULTS = {
   brand:  { initials: 'PR', sub: 'Advocacia' },
   hero:   { pretitle: 'Advocacia e Consultoria Jurídica', name1: 'Poliana', name2: 'Rebouças',
-            tagline: 'OAB · Brasília, DF · Defesa dos seus direitos', btn1: 'Áreas de Atuação', btn2: 'Fale Comigo' },
+            tagline: 'OAB · Brasília, DF · Defesa dos seus direitos', btn1: 'Áreas de Atuação', btn2: 'Fale Comigo',
+            cover: '', coverDim: 55, coverPos: 50, h: 100 },
   about:  { eyebrow: 'Sobre Mim', heading1: 'Comprometida com a', heading2: 'justiça que vale',
             paragraphs: [
               'Sou **Poliana Rebouças**, advogada com atuação em Brasília/DF, comprometida com a defesa dos direitos dos meus clientes com rigor técnico, ética e dedicação.',
@@ -899,7 +1066,8 @@ const DEFAULTS = {
               'Atuo em diversas frentes do Direito, tanto nas áreas tradicionais como nas especialidades em ascensão, sempre buscando as melhores estratégias jurídicas para cada caso.'
             ],
             photo: 'foto-poliana.jpg', photoName: 'Poliana Rebouças', photoRole: 'Advogada · OAB/DF',
-            oabLabel: 'Registro Profissional', oabValue: 'OAB · Seccional DF' },
+            oabLabel: 'Registro Profissional', oabValue: 'OAB · Seccional DF',
+            photoW: 420, photoH: 80, photoZoom: 100, photoX: 50, photoY: 0 },
   quote:  { text: '"É justo que muito custe o que muito vale."', author: '— Poliana Rebouças' },
   areas:  { eyebrow: 'Atuação Profissional', heading1: 'Áreas de', heading2: 'Atuação',
     tabs: [
@@ -940,6 +1108,10 @@ let hashChecked = false;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+// caminhos que ficam como texto simples (são usados em links, listas e ícones)
+const isPlain = path => /^(brand\.|contact\.(email|instagram)$|areas\.tabs\.\d+\.name$|areas\.tabs\.\d+\.items\.\d+\.icon$)/.test(path);
+const rich = v => sanitize(String(v ?? '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'));
+const plainText = v => { const d = document.createElement('div'); d.innerHTML = rich(v); return d.textContent; };
 
 function merge(d, s) {
   if (s === undefined || s === null) return d;
@@ -967,7 +1139,7 @@ function render() {
 
   const paragraphs = a.paragraphs.map((p, k) => `
     <div class="para">
-      <p data-path="about.paragraphs.${k}">${admin ? esc(p) : fmt(p)}</p>
+      <p data-path="about.paragraphs.${k}">${rich(p)}</p>
       <button class="x-btn admin-only" data-action="delPara" data-k="${k}" title="Remover parágrafo">×</button>
     </div>`).join('');
 
@@ -984,15 +1156,15 @@ function render() {
           <div class="area-card">
             <button class="x-btn card-x admin-only" data-action="delItem" data-i="${i}" data-j="${j}" title="Remover">×</button>
             <span class="area-icon" data-path="areas.tabs.${i}.items.${j}.icon">${esc(it.icon)}</span>
-            <h3 class="area-name" data-path="areas.tabs.${i}.items.${j}.name">${esc(it.name)}</h3>
-            <p class="area-desc" data-path="areas.tabs.${i}.items.${j}.desc">${esc(it.desc)}</p>
+            <h3 class="area-name" data-path="areas.tabs.${i}.items.${j}.name">${rich(it.name)}</h3>
+            <p class="area-desc" data-path="areas.tabs.${i}.items.${j}.desc">${rich(it.desc)}</p>
           </div>`).join('')}
         <div class="area-card add-card admin-only" data-action="addItem" data-i="${i}">+ Adicionar área</div>
       </div>
     </div>`).join('');
 
   const options = ar.tabs.map(t =>
-    `<optgroup label="${esc(t.name)}">${t.items.map(it => `<option>${esc(it.name)}</option>`).join('')}</optgroup>`).join('');
+    `<optgroup label="${esc(t.name)}">${t.items.map(it => `<option>${esc(plainText(it.name))}</option>`).join('')}</optgroup>`).join('');
 
   $('#app').innerHTML = `
 <nav id="nav">
@@ -1010,6 +1182,8 @@ function render() {
 
 <div class="hero">
   <div class="hero-bg"></div>
+  <div class="hero-cover" id="heroCover"></div>
+  <div class="hero-dim" id="heroDim"></div>
   <div class="hero-lines"></div>
   <div class="hero-scale-deco"><svg viewBox="0 0 200 230" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <circle cx="100" cy="14" r="5"/>
@@ -1023,36 +1197,37 @@ function render() {
       <path d="M70 212H130M80 196H120L126 212H74Z"/>
     </svg></div>
   <div class="hero-content">
-    <p class="hero-pretitle" data-path="hero.pretitle">${esc(c.hero.pretitle)}</p>
-    <h1 class="hero-name"><span data-path="hero.name1">${esc(c.hero.name1)}</span><br><em data-path="hero.name2">${esc(c.hero.name2)}</em></h1>
-    <p class="hero-tagline" data-path="hero.tagline">${esc(c.hero.tagline)}</p>
+    <p class="hero-pretitle" data-path="hero.pretitle">${rich(c.hero.pretitle)}</p>
+    <h1 class="hero-name"><span data-path="hero.name1">${rich(c.hero.name1)}</span><br><em data-path="hero.name2">${rich(c.hero.name2)}</em></h1>
+    <p class="hero-tagline" data-path="hero.tagline">${rich(c.hero.tagline)}</p>
     <div class="hero-cta">
-      <a href="#areas" class="btn-gold"><span data-path="hero.btn1">${esc(c.hero.btn1)}</span></a>
-      <a href="#contato" class="btn-ghost"><span data-path="hero.btn2">${esc(c.hero.btn2)}</span></a>
+      <a href="#areas" class="btn-gold"><span data-path="hero.btn1">${rich(c.hero.btn1)}</span></a>
+      <a href="#contato" class="btn-ghost"><span data-path="hero.btn2">${rich(c.hero.btn2)}</span></a>
     </div>
   </div>
   <div class="scroll-ind"><div class="scroll-line"></div><span>Scroll</span></div>
+  <div class="hero-tools admin-only"><button data-action="layout" data-target="cover">🖼 Foto de capa e layout</button></div>
 </div>
 
 <div class="intro-section" id="sobre">
   <div class="intro-photo">
-    <img id="aboutPhoto" src="${esc(a.photo)}" alt="${esc(a.photoName)}" onerror="this.style.background='#162030';this.style.minHeight='500px'">
-    <label class="photo-edit admin-only" data-action="photo">📷 Trocar foto</label>
+    <img id="aboutPhoto" src="${esc(a.photo)}" alt="${esc(plainText(a.photoName))}" onerror="this.style.background='#162030';this.style.minHeight='500px'">
+    <div class="photo-tools admin-only"><button data-action="photo">📷 Trocar foto</button><button data-action="layout" data-target="photo">⚙ Layout da foto</button></div>
     <div class="photo-caption">
-      <h3 data-path="about.photoName">${esc(a.photoName)}</h3>
-      <p data-path="about.photoRole">${esc(a.photoRole)}</p>
+      <h3 data-path="about.photoName">${rich(a.photoName)}</h3>
+      <p data-path="about.photoRole">${rich(a.photoRole)}</p>
     </div>
   </div>
   <div class="intro-text">
-    <div class="section-eyebrow" data-path="about.eyebrow">${esc(a.eyebrow)}</div>
-    <h2 class="section-heading"><span data-path="about.heading1">${esc(a.heading1)}</span><br><em data-path="about.heading2">${esc(a.heading2)}</em></h2>
+    <div class="section-eyebrow" data-path="about.eyebrow">${rich(a.eyebrow)}</div>
+    <h2 class="section-heading"><span data-path="about.heading1">${rich(a.heading1)}</span><br><em data-path="about.heading2">${rich(a.heading2)}</em></h2>
     ${paragraphs}
     <div><button class="add-btn admin-only" data-action="addPara">+ Parágrafo</button></div>
     <div class="oab-badge">
       <span>⚖</span>
       <div>
-        <span data-path="about.oabLabel">${esc(a.oabLabel)}</span><br>
-        <strong data-path="about.oabValue">${esc(a.oabValue)}</strong>
+        <span data-path="about.oabLabel">${rich(a.oabLabel)}</span><br>
+        <strong data-path="about.oabValue">${rich(a.oabValue)}</strong>
       </div>
     </div>
   </div>
@@ -1060,15 +1235,15 @@ function render() {
 
 <div class="quote-section">
   <blockquote>
-    <span data-path="quote.text">${esc(c.quote.text)}</span>
-    <cite data-path="quote.author">${esc(c.quote.author)}</cite>
+    <span data-path="quote.text">${rich(c.quote.text)}</span>
+    <cite data-path="quote.author">${rich(c.quote.author)}</cite>
   </blockquote>
 </div>
 
 <div class="areas-section" id="areas">
   <div class="areas-header">
-    <div class="section-eyebrow" style="justify-content:center;" data-path="areas.eyebrow">${esc(ar.eyebrow)}</div>
-    <h2 class="section-heading"><span data-path="areas.heading1">${esc(ar.heading1)}</span> <em data-path="areas.heading2">${esc(ar.heading2)}</em></h2>
+    <div class="section-eyebrow" style="justify-content:center;" data-path="areas.eyebrow">${rich(ar.eyebrow)}</div>
+    <h2 class="section-heading"><span data-path="areas.heading1">${rich(ar.heading1)}</span> <em data-path="areas.heading2">${rich(ar.heading2)}</em></h2>
   </div>
   <div class="tab-nav">${tabBtns}<button class="add-btn admin-only" data-action="addTab">+ Aba</button></div>
   ${panes}
@@ -1076,14 +1251,14 @@ function render() {
 
 <div class="articles-section" id="artigos" style="${admin || articles.length ? '' : 'display:none'}">
   <div class="areas-header">
-    <div class="section-eyebrow" style="justify-content:center;" data-path="articles.eyebrow">${esc(c.articles.eyebrow)}</div>
-    <h2 class="section-heading"><span data-path="articles.heading1">${esc(c.articles.heading1)}</span> <em data-path="articles.heading2">${esc(c.articles.heading2)}</em></h2>
+    <div class="section-eyebrow" style="justify-content:center;" data-path="articles.eyebrow">${rich(c.articles.eyebrow)}</div>
+    <h2 class="section-heading"><span data-path="articles.heading1">${rich(c.articles.heading1)}</span> <em data-path="articles.heading2">${rich(c.articles.heading2)}</em></h2>
     <button class="add-btn admin-only" data-action="newArticle">+ Novo artigo</button>
   </div>
   <div class="art-grid" id="articlesGrid">${articleCards()}</div>
   <div class="sub-box">
-    <h3 data-path="articles.subTitle">${esc(c.articles.subTitle)}</h3>
-    <p data-path="articles.subText">${esc(c.articles.subText)}</p>
+    <h3 data-path="articles.subTitle">${rich(c.articles.subTitle)}</h3>
+    <p data-path="articles.subText">${rich(c.articles.subText)}</p>
     <form id="subForm" class="sub-form">
       <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0" aria-hidden="true">
       <input type="text" name="nome" placeholder="Seu nome (opcional)" maxlength="150">
@@ -1097,8 +1272,8 @@ function render() {
 <div class="contact-section" id="contato">
   <div class="contact-inner">
     <div>
-      <div class="section-eyebrow" data-path="contact.eyebrow">${esc(ct.eyebrow)}</div>
-      <h2 class="section-heading"><span data-path="contact.heading1">${esc(ct.heading1)}</span> <em data-path="contact.heading2">${esc(ct.heading2)}</em></h2>
+      <div class="section-eyebrow" data-path="contact.eyebrow">${rich(ct.eyebrow)}</div>
+      <h2 class="section-heading"><span data-path="contact.heading1">${rich(ct.heading1)}</span> <em data-path="contact.heading2">${rich(ct.heading2)}</em></h2>
       <div class="contact-info-item">
         <div class="c-icon">✉</div>
         <div><h4>E-mail</h4><a href="mailto:${esc(ct.email)}"><span data-path="contact.email">${esc(ct.email)}</span></a></div>
@@ -1109,7 +1284,7 @@ function render() {
       </div>
       <div class="contact-info-item">
         <div class="c-icon">📍</div>
-        <div><h4>Localização</h4><p data-path="contact.location">${esc(ct.location)}</p></div>
+        <div><h4>Localização</h4><p data-path="contact.location">${rich(ct.location)}</p></div>
       </div>
     </div>
 
@@ -1134,18 +1309,21 @@ function render() {
 </div>
 
 <footer>
-  <p data-path="footer.text">${esc(c.footer.text)}</p>
+  <p data-path="footer.text">${rich(c.footer.text)}</p>
   <div class="footer-links">
     <a href="mailto:${esc(ct.email)}">E-mail</a>
     <a href="https://instagram.com/${esc(igHandle)}" target="_blank" rel="noopener">Instagram</a>
+    <button data-action="share">Compartilhar</button>
     <button class="restricted" data-action="login">Área restrita</button>
   </div>
 </footer>`;
   applyEdit();
+  applyLayoutLive();
 }
 
 function applyEdit() {
   document.body.classList.toggle('is-admin', admin);
+  if (!admin) { $('#layoutPanel')?.classList.remove('open'); $('#siteFmt')?.classList.remove('on'); }
   document.querySelectorAll('[data-path]').forEach(el => {
     if (admin) { el.contentEditable = 'true'; el.spellcheck = true; }
     else el.removeAttribute('contenteditable');
@@ -1198,7 +1376,7 @@ $('#loginForm').addEventListener('submit', async e => {
   const btn = $('#loginBtn'); btn.disabled = true; $('#loginErr').textContent = '';
   try {
     await signInWithEmailAndPassword(auth, $('#loginEmail').value.trim(), $('#loginPass').value);
-    $('#loginPass').value = ''; closeModals(); toast('Bem-vinda! Clique em qualquer texto para editar.');
+    $('#loginPass').value = ''; closeModals(); toast('Bem-vinda! Clique em qualquer texto para editar. A barra de formatação aparece embaixo.');
   } catch (err) {
     $('#loginErr').textContent = authErrors[err.code] || ('Erro ao entrar: ' + err.code);
   }
@@ -1216,7 +1394,7 @@ document.addEventListener('input', e => {
   if (e.target.id === 'setKey') { content.settings.web3formsKey = e.target.value.trim(); markDirty(); return; }
   const el = e.target.closest?.('[data-path]');
   if (!admin || !el || !el.isContentEditable) return;
-  setPath(content, el.dataset.path, el.textContent);
+  setPath(content, el.dataset.path, isPlain(el.dataset.path) ? el.textContent : sanitize(el.innerHTML));
   markDirty();
 });
 document.addEventListener('keydown', e => {
@@ -1262,6 +1440,17 @@ document.addEventListener('click', async e => {
         return;
       }
       case 'photo': $('#photoInput').click(); e.preventDefault(); return;
+      case 'layout':       openLayout(act.dataset.target); return;
+      case 'layoutClose':  $('#layoutPanel').classList.remove('open'); return;
+      case 'layoutUpload': $(LAYOUT[layoutTarget].upload).click(); return;
+      case 'layoutRemove': content.hero.cover = ''; applyLayoutLive(); markDirty(); toast('Foto de capa removida.'); return;
+      case 'layoutReset':  resetLayout(); return;
+      case 'share':        openShare(); return;
+      case 'shareClose':   closeShare(); return;
+      case 'shareCopy':    shareCopy(); return;
+      case 'shareWhats':   shareWhats(); return;
+      case 'shareNative':  shareNative(); return;
+      case 'shareDl':      shareDl(); return;
       case 'subs':      openModal('subsModal'); loadSubs(); return;
       case 'subEdit':   subEditing = act.dataset.id; renderSubs(); return;
       case 'subCancel': subEditing = null; renderSubs(); return;
@@ -1330,7 +1519,7 @@ function resizeImage(file, maxW = 900, maxH = 1100, q = 0.82) {
 $('#photoInput').addEventListener('change', async e => {
   const f = e.target.files[0]; if (!f) return;
   try {
-    const data = await resizeImage(f);
+    const data = await fitImage(f, [[900, 1100, 0.82], [800, 1000, 0.7], [700, 900, 0.6]], 350000);
     content.about.photo = data; $('#aboutPhoto').src = data; markDirty();
     toast('Foto atualizada. Lembre-se de salvar.');
   } catch { toast('Não foi possível ler essa imagem.', true); }
@@ -1340,7 +1529,9 @@ $('#photoInput').addEventListener('change', async e => {
 /* ---------- Salvar ---------- */
 async function save() {
   try {
-    await setDoc(doc(db, 'site', 'content'), JSON.parse(JSON.stringify(content)));
+    const json = JSON.stringify(content);
+    if (new TextEncoder().encode(json).length > 1000000) { toast('O conteúdo ficou grande demais (fotos pesadas). Use fotos menores ou remova a foto de capa.', true); return; }
+    await setDoc(doc(db, 'site', 'content'), JSON.parse(json));
     markDirty(false); render(); toast('Alterações salvas! O site já está atualizado.');
   } catch (err) {
     console.error(err);
@@ -1473,7 +1664,7 @@ function cleanStyle(str) {
     else if (p === 'font-size' && SIZE_RE.test(v)) out.push(p + ':' + v);
     else if (p === 'font-weight' && /^(bold|normal|[1-9]00)$/i.test(v)) out.push(p + ':' + v);
     else if (p === 'font-style' && /^(italic|normal)$/i.test(v)) out.push(p + ':' + v);
-    else if (p === 'text-decoration' && /^(underline|line-through|none)( (underline|line-through))?$/i.test(v)) out.push(p + ':' + v);
+    else if ((p === 'text-decoration' || p === 'text-decoration-line') && /^(underline|line-through|none)( (underline|line-through))?$/i.test(v)) out.push(p + ':' + v);
     else if (p === 'text-align' && /^(left|right|center|justify)$/i.test(v)) out.push(p + ':' + v);
   });
   return out.join(';');
@@ -1586,9 +1777,8 @@ function closeReader() {
   closeFs('readerModal');
   history.replaceState(null, '', location.pathname + location.search);
 }
-async function shareArticle() {
-  const url = location.origin + location.pathname + '#artigo=' + encodeURIComponent(rdId);
-  try { await navigator.clipboard.writeText(url); toast('Link copiado!'); } catch { prompt('Copie o link:', url); }
+function shareArticle() {
+  openShare(location.origin + location.pathname + '#artigo=' + encodeURIComponent(rdId), $('#rdTitle').textContent, true);
 }
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && $('#readerModal').classList.contains('open')) closeReader();
@@ -1830,6 +2020,170 @@ document.addEventListener('submit', async e => {
   }
   btn.disabled = false;
 });
+
+/* ---------- Formatação de texto (site inteiro) ---------- */
+let siteSel = null;
+function showFmt(on) { $('#siteFmt').classList.toggle('on', !!on && admin); }
+document.addEventListener('selectionchange', () => {
+  if (!admin) return;
+  const sel = getSelection(); if (!sel.rangeCount) return;
+  const n = sel.anchorNode, node = n && (n.nodeType === 1 ? n : n.parentElement);
+  const el = node?.closest?.('[data-path][contenteditable="true"]');
+  if (el && !isPlain(el.dataset.path)) siteSel = { el, range: sel.getRangeAt(0).cloneRange() };
+});
+document.addEventListener('focusin', e => {
+  if (!admin) return;
+  const el = e.target.closest?.('[data-path][contenteditable="true"]');
+  if (el) showFmt(!isPlain(el.dataset.path));
+});
+document.addEventListener('mousedown', e => {
+  if (admin && !e.target.closest('#siteFmt') && !e.target.closest('[data-path]')) showFmt(false);
+});
+function siteReady() {
+  if (!siteSel || !siteSel.el.isConnected) { toast('Clique no texto e selecione o trecho que deseja formatar.', true); return false; }
+  return true;
+}
+function siteCommit(el) { setPath(content, el.dataset.path, sanitize(el.innerHTML)); markDirty(); }
+function siteExec(cmd, val) {
+  if (!siteReady()) return;
+  const { el, range } = siteSel;
+  if (range.collapsed && !['undo', 'redo'].includes(cmd)) { toast('Selecione o trecho do texto primeiro (arraste com o mouse).', true); return; }
+  el.focus();
+  const s = getSelection(); s.removeAllRanges(); s.addRange(range);
+  document.execCommand('styleWithCSS', false, true);
+  document.execCommand(cmd, false, val ?? null);
+  siteCommit(el);
+}
+function inheritedEm(node, host) {
+  let m = 1, n = node.nodeType === 1 ? node : node.parentElement;
+  while (n && n !== host) { const f = n.style?.fontSize || ''; if (/em$/.test(f) && !/rem$/.test(f)) m *= parseFloat(f) || 1; n = n.parentElement; }
+  return m;
+}
+function siteSize(em) {
+  if (!siteReady()) return;
+  const { el, range } = siteSel;
+  if (range.collapsed) { toast('Selecione o trecho do texto primeiro (arraste com o mouse).', true); return; }
+  el.focus();
+  const rel = em / inheritedEm(range.commonAncestorContainer, el);
+  const frag = range.extractContents();
+  frag.querySelectorAll('[style]').forEach(n => { n.style.removeProperty('font-size'); if (!n.getAttribute('style')) n.removeAttribute('style'); });
+  const nr = document.createRange();
+  if (Math.abs(rel - 1) < 0.001) {
+    const first = frag.firstChild, last = frag.lastChild;
+    range.insertNode(frag);
+    if (first && last) { nr.setStartBefore(first); nr.setEndAfter(last); }
+  } else {
+    const span = document.createElement('span'); span.style.fontSize = rel + 'em'; span.appendChild(frag);
+    range.insertNode(span); nr.selectNodeContents(span);
+  }
+  siteCommit(el);
+  const s = getSelection(); s.removeAllRanges(); s.addRange(nr); siteSel = { el, range: nr.cloneRange() };
+}
+$('#siteFmt').addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });
+$('#siteFmt').addEventListener('click', e => { const b = e.target.closest('[data-sf]'); if (b) siteExec(b.dataset.sf, b.dataset.val); });
+$('#sfSize').addEventListener('change', e => { const v = e.target.value; e.target.value = ''; if (v !== '') siteSize(parseFloat(v)); });
+$('#sfColor').addEventListener('change', e => siteExec('foreColor', e.target.value));
+$('#sfHi').addEventListener('change', e => siteExec('hiliteColor', e.target.value));
+if (window.ResizeObserver) new ResizeObserver(() => document.documentElement.style.setProperty('--ab', ($('#adminBar').offsetHeight || 64) + 'px')).observe($('#adminBar'));
+
+/* ---------- Foto de capa e layout das fotos ---------- */
+const LAYOUT = {
+  cover: { title: 'Foto de capa e layout', upload: '#coverInput', canRemove: true,
+    hint: 'A foto de capa aparece atrás do título da página inicial. Escureça para o texto continuar legível.',
+    sliders: [['hero.coverDim', 'Escurecimento da foto', 0, 90, 5, '%'], ['hero.coverPos', 'Posição vertical da foto', 0, 100, 5, '%'], ['hero.h', 'Altura da seção', 50, 120, 5, 'vh']] },
+  photo: { title: 'Foto “Sobre” e layout', upload: '#photoInput', canRemove: false,
+    hint: 'Ajuste o tamanho da coluna, o zoom e o enquadramento da foto. Em celulares a foto ocupa a largura toda.',
+    sliders: [['about.photoW', 'Largura da coluna da foto', 280, 720, 10, 'px'], ['about.photoH', 'Altura da seção', 50, 120, 5, 'vh'],
+      ['about.photoZoom', 'Zoom', 100, 220, 5, '%'], ['about.photoX', 'Posição horizontal', 0, 100, 5, '%'], ['about.photoY', 'Posição vertical', 0, 100, 5, '%']] }
+};
+let layoutTarget = 'cover';
+const getPath = (o, path) => path.split('.').reduce((x, k) => x?.[k], o);
+function applyLayoutLive() {
+  const h = content.hero, a = content.about;
+  const hero = $('.hero');
+  if (hero) { hero.style.setProperty('--hero-h', h.h == 100 ? 'min(100vh,900px)' : h.h + 'vh'); hero.classList.toggle('has-cover', !!h.cover); }
+  const cv = $('#heroCover'); if (cv) { cv.style.backgroundImage = h.cover ? 'url("' + h.cover + '")' : 'none'; cv.style.backgroundPosition = 'center ' + h.coverPos + '%'; }
+  const dm = $('#heroDim'); if (dm) { dm.style.display = h.cover ? 'block' : 'none'; dm.style.opacity = h.coverDim / 100; }
+  const sec = $('#sobre'); if (sec) { sec.style.setProperty('--photo-w', a.photoW + 'px'); sec.style.setProperty('--photo-h', a.photoH + 'vh'); }
+  const im = $('#aboutPhoto');
+  if (im) { im.style.objectPosition = a.photoX + '% ' + a.photoY + '%'; im.style.transformOrigin = a.photoX + '% ' + a.photoY + '%'; im.style.transform = 'scale(' + (a.photoZoom / 100) + ')'; }
+}
+function renderLayout() {
+  const L = LAYOUT[layoutTarget];
+  $('#layoutPanel').innerHTML = `
+    <div class="lp-head"><b>${esc(L.title)}</b><button data-action="layoutClose" aria-label="Fechar">×</button></div>
+    <div class="lp-btns">
+      <button class="lp-btn primary" data-action="layoutUpload">📷 Trocar foto</button>
+      ${L.canRemove ? '<button class="lp-btn" data-action="layoutRemove">Remover capa</button>' : ''}
+    </div>
+    <p class="lp-hint">${esc(L.hint)}</p>
+    ${L.sliders.map(([k, label, min, max, step, u]) => `
+      <label class="lp-row"><span>${esc(label)} <b>${getPath(content, k)}${u}</b></span>
+      <input type="range" data-lp="${k}" data-u="${u}" min="${min}" max="${max}" step="${step}" value="${getPath(content, k)}"></label>`).join('')}
+    <button class="lp-btn" data-action="layoutReset">Restaurar padrão</button>`;
+}
+function openLayout(t) { layoutTarget = t; renderLayout(); $('#layoutPanel').classList.add('open'); }
+function resetLayout() {
+  LAYOUT[layoutTarget].sliders.forEach(([k]) => setPath(content, k, getPath(DEFAULTS, k)));
+  applyLayoutLive(); renderLayout(); markDirty();
+}
+document.addEventListener('input', e => {
+  const r = e.target.closest?.('[data-lp]'); if (!r) return;
+  setPath(content, r.dataset.lp, +r.value);
+  r.closest('.lp-row').querySelector('b').textContent = r.value + r.dataset.u;
+  applyLayoutLive(); markDirty();
+});
+async function fitImage(file, steps, maxLen) {
+  let out = '';
+  for (const [w, h, q] of steps) { out = await resizeImage(file, w, h, q); if (out.length <= maxLen) break; }
+  return out;
+}
+$('#coverInput').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const data = await fitImage(f, [[1600, 1000, 0.7], [1400, 900, 0.6], [1200, 760, 0.55]], 400000);
+    if (data.length > 450000) { toast('Foto muito pesada. Use uma imagem menor.', true); return; }
+    content.hero.cover = data; applyLayoutLive(); markDirty();
+    toast('Foto de capa atualizada. Ajuste o layout e clique em Salvar alterações.');
+  } catch { toast('Não foi possível ler essa imagem.', true); }
+});
+
+/* ---------- Compartilhar ---------- */
+const shareState = { url: '', title: '' };
+const baseUrl = () => location.origin + location.pathname;
+function openShare(url, title, isArticle) {
+  shareState.url = url || baseUrl();
+  shareState.title = title || document.title;
+  $('#shareQr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=380x380&format=png&color=0d1821&bgcolor=ffffff&qzone=1&data=' + encodeURIComponent(shareState.url);
+  $('#shareUrl').textContent = shareState.url.replace(/^https?:\/\//, '');
+  $('#shareTitle').textContent = isArticle ? '📱 Compartilhar artigo' : '📱 Compartilhar site';
+  $('#shareNative').style.display = navigator.share ? 'flex' : 'none';
+  $('#shareCopied').textContent = '';
+  $('#shareModal').classList.add('open');
+}
+function closeShare() { $('#shareModal').classList.remove('open'); }
+async function shareCopy() {
+  const msg = $('#shareCopied');
+  try { await navigator.clipboard.writeText(shareState.url); msg.textContent = '✅ Link copiado!'; setTimeout(() => { msg.textContent = ''; }, 2200); }
+  catch { prompt('Copie o link:', shareState.url); }
+}
+function shareWhats() {
+  const text = 'Olá! Confira ' + shareState.title + ' 👉 ' + shareState.url;
+  window.open('https://api.whatsapp.com/send/?text=' + encodeURIComponent(text), '_blank', 'noopener');
+}
+function shareNative() {
+  if (navigator.share) navigator.share({ title: shareState.title, text: shareState.title, url: shareState.url }).catch(() => {});
+}
+async function shareDl() {
+  const src = 'https://api.qrserver.com/v1/create-qr-code/?size=600x600&format=png&color=0d1821&bgcolor=ffffff&qzone=2&data=' + encodeURIComponent(shareState.url);
+  try {
+    const blob = await (await fetch(src)).blob();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'qrcode-poliana-reboucas.png'; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+  } catch { window.open(src, '_blank', 'noopener'); }
+}
+$('#shareModal').addEventListener('mousedown', e => { if (e.target.id === 'shareModal') closeShare(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeShare(); });
 
 /* ---------- Início ---------- */
 render();
