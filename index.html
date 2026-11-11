@@ -333,6 +333,12 @@ blockquote cite {
   gap:6rem; align-items:start;
 }
 
+.contact-form-head { margin-bottom:2rem; padding-bottom:1.4rem; border-bottom:1px solid var(--border); }
+.contact-form-head h3 { font-family:'Cormorant Garamond',serif; font-size:1.9rem; font-weight:400; color:var(--cream); margin-bottom:.5rem; }
+.contact-form-head p { font-size:.85rem; line-height:1.7; color:var(--muted); }
+.contact-form-col { position:relative; }
+.contact-form-col::before { content:''; display:block; width:48px; height:2px; background:var(--gold); margin-bottom:1.2rem; }
+@media (max-width:900px) { .contact-form-col { margin-top:1rem; padding-top:2.5rem; border-top:1px solid var(--border); } .contact-form-head h3 { font-size:1.6rem; } }
 .contact-info-item {
   display:flex; align-items:flex-start; gap:1.2rem;
   margin-bottom:2rem; padding-bottom:2rem;
@@ -423,6 +429,9 @@ footer p { color: var(--muted); font-size:0.7rem; letter-spacing:0.1em; }
   .contact-inner { grid-template-columns:1fr; gap:3rem; }
   .contact-section { padding:5rem 1.5rem; }
   footer { flex-direction:column; gap:1rem; text-align:center; padding:2rem 1.5rem; }
+  footer { padding-bottom:6rem; }
+  .footer-links { flex-wrap:wrap; justify-content:center; gap:.8rem 1.6rem; }
+  .footer-links a, .footer-links button { white-space:nowrap; }
   .quote-section { padding:4rem 1.5rem; }
   .form-2col { grid-template-columns:1fr; }
 }
@@ -802,6 +811,8 @@ body.is-admin .intro-photo.shaped { padding-top:9.5rem; }
   --on-gold:#0d1821; --gold-rgb:201,168,76; --navy-rgb:13,24,33; --border:rgba(201,168,76,.2);
 }
 .palette-panel { width:390px; max-height:72vh; }
+.pal-reset { width:100%; margin-bottom:.8rem; padding:.55rem; background:transparent; border:1px solid var(--gold); color:var(--gold); font:600 .66rem 'Montserrat',sans-serif; letter-spacing:.08em; text-transform:uppercase; cursor:pointer; }
+.pal-reset:hover { background:var(--gold); color:var(--on-gold); }
 .pal-grid { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; margin-bottom:1rem; }
 .pal-card { display:flex; flex-direction:column; gap:.3rem; text-align:left; background:transparent; border:1px solid var(--border); padding:.5rem; cursor:pointer; color:var(--cream); font-family:'Montserrat',sans-serif; }
 .pal-card:hover { border-color:var(--gold); }
@@ -1141,7 +1152,8 @@ const DEFAULTS = {
       ]}
     ]},
   contact: { eyebrow: 'Contato', heading1: 'Vamos conversar sobre o seu', heading2: 'caso',
-             email: 'polireboucas@gmail.com', instagram: '@pollyanarv', location: 'Brasília, Distrito Federal' },
+             email: 'polireboucas@gmail.com', instagram: '@pollyanarv', location: 'Brasília, Distrito Federal',
+             formTitle: 'Envie sua mensagem', formText: 'Preencha os dados abaixo e entrarei em contato o mais breve possível.' },
   footer:  { text: '© 2025 Poliana Rebouças · Advocacia e Consultoria Jurídica' },
   theme:   { id: 'advocaticia', custom: { bg: '#0d1821', bg2: '#162030', accent: '#c9a84c', text: '#f8f5ef' } },
   articles:{ eyebrow: 'Artigos', heading1: 'Publicações e', heading2: 'Reflexões',
@@ -1341,7 +1353,11 @@ function render() {
       </div>
     </div>
 
-    <div>
+    <div class="contact-form-col">
+      <div class="contact-form-head">
+        <h3 data-path="contact.formTitle">${rich(ct.formTitle)}</h3>
+        <p data-path="contact.formText">${rich(ct.formText)}</p>
+      </div>
       <form id="contactForm">
         <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0" aria-hidden="true">
         <div class="form-2col">
@@ -1498,6 +1514,7 @@ document.addEventListener('click', async e => {
       case 'palette':      openPalette(); return;
       case 'paletteClose': $('#palettePanel').classList.remove('open'); return;
       case 'palettePick':  pickPalette(act.dataset.id); return;
+      case 'paletteReset': content.theme.custom = { ...DEFAULTS.theme.custom }; pickPalette('advocaticia'); toast('Paleta padrão restaurada. Clique em Salvar alterações para confirmar.'); return;
       case 'layoutClose':  $('#layoutPanel').classList.remove('open'); return;
       case 'layoutUpload': $(LAYOUT[layoutTarget].upload).click(); return;
       case 'layoutRemove': content.hero.cover = ''; applyLayoutLive(); markDirty(); toast('Foto de capa removida.'); return;
@@ -2321,6 +2338,7 @@ function renderPalette() {
   $('#palettePanel').innerHTML = `
     <div class="lp-head"><b>🎨 Paleta de cores</b><button data-action="paletteClose" aria-label="Fechar">×</button></div>
     <p class="lp-hint">Clique em uma paleta para ver o site mudar na hora. Depois clique em “Salvar alterações”.</p>
+    <button class="pal-reset" data-action="paletteReset">↺ Restaurar paleta padrão (Advocatícia)</button>
     <div class="pal-grid">
       ${PALETTES.map(p => paletteCard(p.id, p.name, p.desc, p)).join('')}
       ${paletteCard('custom', 'Personalizada', 'Escolha as suas próprias cores', { bg: c.bg, bg2: c.bg2, accent: c.accent, text: c.text })}
