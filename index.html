@@ -789,7 +789,8 @@ body.is-admin .hero-tagline, body.is-admin .hero-cta { opacity:1; animation:none
 .inst-steps li::before { content:counter(st); position:absolute; left:0; top:.55rem; width:1.5rem; height:1.5rem; border-radius:50%; background:var(--gold); color:var(--on-gold); font-size:.7rem; font-weight:700; display:flex; align-items:center; justify-content:center; }
 .inst-steps b { color:var(--gold); font-weight:600; }
 .inst-note { font-size:.68rem; color:var(--muted); margin-top:.8rem; line-height:1.5; }
-html.is-app .install-link, html.is-app .install-banner { display:none !important; }
+html.is-app .install-banner { display:none !important; }
+.install-link.ok { color:var(--gold); }
 .install-banner { position:fixed; left:1rem; right:5rem; bottom:1rem; z-index:850; display:none; align-items:center; gap:.7rem; background:#162030; border:1px solid rgba(201,168,76,.4); padding:.6rem .7rem; box-shadow:0 8px 30px rgba(0,0,0,.4); color:#f8f5ef; font-family:'Montserrat',sans-serif; }
 .install-banner.show { display:flex; }
 .install-banner img { border-radius:9px; }
@@ -1470,6 +1471,7 @@ function render() {
   applyEdit();
   applyLayoutLive();
   applyTheme();
+  updateInstallUI();
 }
 
 function applyEdit() {
@@ -1605,7 +1607,7 @@ document.addEventListener('click', async e => {
       case 'install':      closeShare(); openInstall(); return;
       case 'navToggle':    { const n = $('#nav'); const o = n.classList.toggle('open'); act.setAttribute('aria-expanded', o); act.setAttribute('aria-label', o ? 'Fechar menu' : 'Abrir menu'); return; }
       case 'installClose': $('#installModal').classList.remove('open'); return;
-      case 'installBannerClose': $('#installBanner').classList.remove('show'); try { localStorage.setItem('pr_inst_x', '1'); } catch { /* ok */ } return;
+      case 'installBannerClose': $('#installBanner').classList.remove('show'); lsSet('pr_inst_x', String(Date.now())); return;
       case 'shareClose':   closeShare(); return;
       case 'shareCopy':    shareCopy(); return;
       case 'shareWhats':   shareWhats(); return;
@@ -2463,16 +2465,46 @@ const isSafari = /^((?!chrome|crios|fxios|edgios|android).)*safari/i.test(UA);
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
-function showInstallBanner() {
-  try { if (localStorage.getItem('pr_inst_x') || isStandalone()) return; } catch { /* sem storage */ }
-  setTimeout(() => $('#installBanner')?.classList.add('show'), 3000);
+/* estado da instalação: 'app' (aberto como app), 'installed' (já instalado neste aparelho) ou 'none' */
+const lsGet = k => { try { return localStorage.getItem(k); } catch { return null; } };
+const lsSet = (k, v) => { try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch { /* sem storage */ } };
+let installedRelated = null; // resultado de getInstalledRelatedApps (null = sem suporte)
+function installState() {
+  if (isStandalone()) return 'app';
+  // o aviso do navegador (beforeinstallprompt) apaga a marca quando o app foi desinstalado
+  return installedRelated || lsGet('pr_installed') ? 'installed' : 'none';
 }
-window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; showInstallBanner(); });
-window.addEventListener('appinstalled', () => { deferredInstall = null; document.documentElement.classList.add('is-app'); $('#installModal')?.classList.remove('open'); toast('App instalado! Procure o ícone na sua tela inicial.'); });
+function updateInstallUI() {
+  const st = installState();
+  document.querySelectorAll('.install-link').forEach(b => {
+    b.classList.toggle('ok', st !== 'none');
+    const t = st === 'app' ? '✓ App instalado' : st === 'installed' ? '✓ App instalado · abrir' : 'Instalar app';
+    const sv = b.querySelector('svg'); b.textContent = t; if (sv) b.prepend(sv, ' ');
+  });
+}
+if (isStandalone()) lsSet('pr_installed', '1');
+if (navigator.getInstalledRelatedApps) {
+  navigator.getInstalledRelatedApps().then(a => { installedRelated = a.length > 0; if (installedRelated) lsSet('pr_installed', '1'); updateInstallUI(); }).catch(() => {});
+}
+function showInstallBanner() {
+  const x = Number(lsGet('pr_inst_x') || 0); // dispensado: volta a aparecer depois de 7 dias
+  if (Date.now() - x < 7 * 864e5 || installState() !== 'none') return;
+  setTimeout(() => { if (installState() === 'none') $('#installBanner')?.classList.add('show'); }, 3000);
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; installedRelated = false; lsSet('pr_installed', null); updateInstallUI(); showInstallBanner(); });
+window.addEventListener('appinstalled', () => { deferredInstall = null; lsSet('pr_installed', '1'); installedRelated = true; $('#installBanner')?.classList.remove('show'); $('#installModal')?.classList.remove('open'); updateInstallUI(); toast('App instalado! Procure o ícone na sua tela inicial.'); });
 if (isIOS) showInstallBanner();
 const ICON_SHARE = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><path d="M12 3v12M8 7l4-4 4 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>';
 async function openInstall() {
   $('#installBanner')?.classList.remove('show');
+  const st = installState();
+  if (st !== 'none' && !deferredInstall) {
+    $('#installBody').innerHTML = st === 'app'
+      ? `<p class="inst-note" style="font-size:.85rem;color:var(--cream)">✓ Você já está usando o app instalado.</p>`
+      : `<p class="inst-note" style="font-size:.85rem;color:var(--cream)">✓ O app já está instalado neste aparelho.</p><ol class="inst-steps"><li>Abra pelo <b>ícone na tela inicial</b> ou na lista de aplicativos.</li><li>No computador, você também pode clicar em <b>Abrir no app</b> na barra de endereço do navegador.</li></ol>`;
+    $('#installModal').classList.add('open');
+    return;
+  }
   if (deferredInstall) {
     deferredInstall.prompt();
     const r = await deferredInstall.userChoice.catch(() => null);
