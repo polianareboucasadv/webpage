@@ -103,7 +103,7 @@ nav.open .nav-toggle span:nth-child(3) { transform:translateY(-6.5px) rotate(-45
 
 /* HERO */
 .hero {
-  --sw: clamp(260px, 24vw, 420px);   /* largura da foto / bloco à direita */
+  --sd: clamp(130px, 11vw, 200px);   /* largura da balança */
   --sr: 8vw;                          /* distância da balança à borda direita */
   min-height:var(--hero-h,min(100vh,900px));
   display:flex; flex-direction:column;
@@ -122,8 +122,8 @@ nav.open .nav-toggle span:nth-child(3) { transform:translateY(-6.5px) rotate(-45
 .hero-lines::before {
   content:''; position:absolute;
   /* no vão entre o texto (4rem + 700px) e a balança */
-  left: calc(100vw - var(--sr) - var(--sw) - 3rem); top:48%; width:1px;
-  height: calc(var(--sw) * 1.45); transform:translateY(-50%);
+  left: calc(100vw - var(--sr) - var(--sd) - 4rem); top:56%; width:1px;
+  height: calc(var(--sd) * 1.5); transform:translateY(-50%);
   background: linear-gradient(to bottom, transparent, var(--gold), transparent);
   opacity:0.35;
 }
@@ -135,25 +135,13 @@ nav.open .nav-toggle span:nth-child(3) { transform:translateY(-6.5px) rotate(-45
 }
 
 .hero-scale-deco {
-  position:absolute; top:48%; right:calc(var(--sr) + var(--sw) * .2); width:calc(var(--sw) * .6);
+  position:absolute; top:56%; right:var(--sr); width:var(--sd);
   transform:translateY(-50%); color:var(--gold); opacity:0.6;
   pointer-events:none; user-select:none;
 }
 .hero-scale-deco svg { width:100%; height:auto; display:block; }
 @media (min-width:901px) { .hero-scale-deco svg * { stroke-width:1.5; } }
-.hero-photo { display:none; }
-@media (min-width:901px) {
-  .hero.has-photo .hero-scale-deco { display:none; }
-  .hero.has-photo .hero-photo { display:block; position:absolute; top:48%; right:var(--sr); width:var(--sw); transform:translateY(-50%); z-index:1; }
-  .hero-photo::before { content:''; position:absolute; inset:0; transform:translate(16px,16px); border:1px solid var(--gold); opacity:.5; pointer-events:none; }
-  .hp-frame { position:relative; aspect-ratio:4/5; overflow:hidden; background:var(--navy2); box-shadow:0 20px 60px rgba(0,0,0,.35); }
-  .hp-frame img { width:100%; height:100%; object-fit:cover; object-position:50% 18%; display:block; }
-  .hp-frame::after { content:''; position:absolute; inset:0; background:linear-gradient(to top, rgba(var(--navy-rgb),.45), transparent 40%); }
-  .hp-emblem { position:absolute; left:-34px; bottom:-34px; width:78px; height:78px; border-radius:50%; background:var(--navy); border:1px solid var(--gold); color:var(--gold); display:flex; align-items:center; justify-content:center; z-index:2; }
-  .hp-emblem svg { width:40px; height:auto; }
-  .hp-emblem svg * { stroke-width:7; }
-}
-.hero.has-cover .hero-photo { display:none !important; }
+
 
 .hero-content { position:relative; z-index:2; max-width:700px; }
 
@@ -743,6 +731,16 @@ body.is-admin .hero-tagline, body.is-admin .hero-cta { opacity:1; animation:none
 .hero-cover { position:absolute; inset:0; background-size:cover; background-repeat:no-repeat; }
 .hero-dim { position:absolute; inset:0; background:var(--navy); display:none; }
 .hero.has-cover .hero-scale-deco { display:none; }
+/* PC: topo compacto para a foto da seção "Sobre mim" já aparecer na primeira tela */
+@media (min-width:901px) {
+  .hero { min-height:var(--hero-h,auto); padding:7.6rem 4rem 3.6rem; }
+  .hero-lines::after { bottom:1.2rem; }
+  .hero-name { font-size:clamp(3rem, 5vw, 5rem); }
+  .hero-pretitle { margin-bottom:1.3rem; }
+  .hero-tagline { margin-top:1.4rem; }
+  .hero-cta { margin-top:2.2rem; }
+  .hero.has-cover { min-height:var(--hero-h,min(70vh,620px)); }
+}
 .hero-tools { position:absolute; top:6rem; right:2rem; z-index:6; }
 .photo-tools { position:absolute; top:5.5rem; left:1.2rem; z-index:6; }
 .hero-tools button, .photo-tools button {
@@ -1337,13 +1335,12 @@ function render() {
   <button class="nav-toggle" data-action="navToggle" aria-label="Abrir menu" aria-expanded="false"><span></span><span></span><span></span></button>
 </nav>
 
-<div class="hero ${a.photo ? 'has-photo' : ''}">
+<div class="hero">
   <div class="hero-bg"></div>
   <div class="hero-cover" id="heroCover"></div>
   <div class="hero-dim" id="heroDim"></div>
   <div class="hero-lines"></div>
   <div class="hero-scale-deco">${SCALE_SVG}</div>
-  ${a.photo ? `<div class="hero-photo"><div class="hp-frame"><img id="heroPhoto" src="${esc(a.photo)}" alt="${esc(plainText(a.photoName))}"></div><div class="hp-emblem">${SCALE_SVG}</div></div>` : ''}
   <div class="hero-content">
     <p class="hero-pretitle" data-path="hero.pretitle">${rich(c.hero.pretitle)}</p>
     <h1 class="hero-name"><span data-path="hero.name1">${rich(c.hero.name1)}</span><br><em data-path="hero.name2">${rich(c.hero.name2)}</em></h1>
@@ -1682,7 +1679,7 @@ $('#photoInput').addEventListener('change', async e => {
   const f = e.target.files[0]; if (!f) return;
   try {
     const data = await fitImage(f, [[900, 1100, 0.82], [800, 1000, 0.7], [700, 900, 0.6]], 350000);
-    content.about.photo = data; $('#aboutPhoto').src = data; const hp = $('#heroPhoto'); if (hp) hp.src = data; markDirty();
+    content.about.photo = data; $('#aboutPhoto').src = data; markDirty();
     toast('Foto atualizada. Lembre-se de salvar.');
   } catch { toast('Não foi possível ler essa imagem.', true); }
   e.target.value = '';
@@ -2269,7 +2266,7 @@ const getPath = (o, path) => path.split('.').reduce((x, k) => x?.[k], o);
 function applyLayoutLive() {
   const h = content.hero, a = content.about;
   const hero = $('.hero');
-  if (hero) { hero.style.setProperty('--hero-h', h.h == 100 ? 'min(100vh,900px)' : h.h + 'vh'); hero.classList.toggle('has-cover', !!h.cover); }
+  if (hero) { if (h.h == 100) hero.style.removeProperty('--hero-h'); else hero.style.setProperty('--hero-h', h.h + 'vh'); hero.classList.toggle('has-cover', !!h.cover); }
   const cv = $('#heroCover'); if (cv) { cv.style.backgroundImage = h.cover ? 'url("' + h.cover + '")' : 'none'; cv.style.backgroundPosition = 'center ' + h.coverPos + '%'; }
   const dm = $('#heroDim'); if (dm) { dm.style.display = h.cover ? 'block' : 'none'; dm.style.opacity = h.coverDim / 100; }
   const sec = $('#sobre'); if (sec) { sec.style.setProperty('--photo-w', a.photoW + 'px'); sec.style.setProperty('--photo-h', a.photoH + 'vh'); }
