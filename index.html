@@ -12,6 +12,13 @@
 <meta property="og:image" content="https://polianareboucasadv.github.io/webpage/foto-poliana.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0d1821">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Poliana Adv">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <script>try{var __t=JSON.parse(localStorage.getItem('pr_theme')||'null');if(__t){for(var __k in __t.vars)document.documentElement.style.setProperty(__k,__t.vars[__k]);document.documentElement.style.colorScheme=__t.cs;}}catch(e){}</script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -741,6 +748,26 @@ body.is-admin .hero-tagline, body.is-admin .hero-cta { opacity:1; animation:none
 .lp-row input { width:100%; accent-color:var(--gold); }
 .lp-hint { color:var(--muted); font-size:.64rem; line-height:1.5; margin-bottom:.8rem; }
 
+.install-box { text-align:center; }
+.install-ico { border-radius:20px; box-shadow:0 6px 22px rgba(0,0,0,.35); margin-bottom:.8rem; }
+.install-sub { font-size:.78rem; color:var(--muted); line-height:1.6; margin-bottom:1rem; }
+.inst-steps { list-style:none; counter-reset:st; text-align:left; margin:.4rem 0 .2rem; padding:0; }
+.inst-steps li { counter-increment:st; position:relative; padding:.55rem 0 .55rem 2.2rem; font-size:.8rem; line-height:1.55; color:var(--cream); border-top:1px solid var(--border); }
+.inst-steps li:first-child { border-top:none; }
+.inst-steps li::before { content:counter(st); position:absolute; left:0; top:.55rem; width:1.5rem; height:1.5rem; border-radius:50%; background:var(--gold); color:var(--on-gold); font-size:.7rem; font-weight:700; display:flex; align-items:center; justify-content:center; }
+.inst-steps b { color:var(--gold); font-weight:600; }
+.inst-note { font-size:.68rem; color:var(--muted); margin-top:.8rem; line-height:1.5; }
+html.is-app .install-link, html.is-app .install-banner { display:none !important; }
+.install-banner { position:fixed; left:1rem; right:5rem; bottom:1rem; z-index:850; display:none; align-items:center; gap:.7rem; background:#162030; border:1px solid rgba(201,168,76,.4); padding:.6rem .7rem; box-shadow:0 8px 30px rgba(0,0,0,.4); color:#f8f5ef; font-family:'Montserrat',sans-serif; }
+.install-banner.show { display:flex; }
+.install-banner img { border-radius:9px; }
+.install-banner div { flex:1; display:flex; flex-direction:column; min-width:0; }
+.install-banner b { font-size:.75rem; font-weight:600; }
+.install-banner span { font-size:.62rem; color:#8a8070; }
+.install-banner button { background:#c9a84c; color:#0d1821; border:none; padding:.5rem .8rem; font:700 .65rem 'Montserrat',sans-serif; letter-spacing:.08em; text-transform:uppercase; cursor:pointer; }
+.install-banner .ib-x { background:none; color:#8a8070; padding:.3rem; font-size:.9rem; }
+body.is-admin .install-banner { display:none !important; }
+@media (min-width:700px) { .install-banner { right:auto; max-width:380px; left:1.5rem; } }
 .share-fab {
   position:fixed; right:1.4rem; bottom:1.4rem; z-index:9000; width:48px; height:48px; border-radius:50%;
   background:var(--gold); color:var(--on-gold); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;
@@ -1086,6 +1113,22 @@ body.is-admin .intro-photo.shaped { padding-top:9.5rem; }
   </div>
 </div>
 
+<div class="share-overlay" id="installModal">
+  <div class="share-box install-box">
+    <button class="share-close" data-action="installClose" aria-label="Fechar">✕</button>
+    <img class="install-ico" src="icons/icon-192.png" alt="" width="84" height="84">
+    <p class="share-title">Instalar o app</p>
+    <p class="install-sub">Acesse o site da Poliana direto da tela inicial, como um aplicativo.</p>
+    <div id="installBody"></div>
+  </div>
+</div>
+<div class="install-banner" id="installBanner">
+  <img src="icons/icon-192.png" alt="" width="40" height="40">
+  <div><b>Instale o app</b><span>Acesso rápido na tela inicial</span></div>
+  <button data-action="install">Instalar</button>
+  <button class="ib-x" data-action="installBannerClose" aria-label="Dispensar">✕</button>
+</div>
+
 <input type="file" id="photoInput" accept="image/*" hidden>
 <div class="toast" id="toast"></div>
 
@@ -1383,6 +1426,7 @@ function render() {
     <a href="mailto:${esc(ct.email)}">E-mail</a>
     <a href="https://instagram.com/${esc(igHandle)}" target="_blank" rel="noopener">Instagram</a>
     <button data-action="share">Compartilhar</button>
+    <button class="install-link" data-action="install">Instalar app</button>
     <button class="restricted" data-action="login">Área restrita</button>
   </div>
 </footer>`;
@@ -1521,6 +1565,9 @@ document.addEventListener('click', async e => {
       case 'layoutReset':  resetLayout(); return;
       case 'photoShape':   content.about.photoShape = act.dataset.val; applyLayoutLive(); renderLayout(); markDirty(); return;
       case 'share':        openShare(); return;
+      case 'install':      openInstall(); return;
+      case 'installClose': $('#installModal').classList.remove('open'); return;
+      case 'installBannerClose': $('#installBanner').classList.remove('show'); try { localStorage.setItem('pr_inst_x', '1'); } catch { /* ok */ } return;
       case 'shareClose':   closeShare(); return;
       case 'shareCopy':    shareCopy(); return;
       case 'shareWhats':   shareWhats(); return;
@@ -2360,6 +2407,47 @@ document.addEventListener('input', e => {
   const sw = document.querySelector('#palettePanel .pal-card[data-id="custom"] .pal-sw');
   if (sw) { const c = content.theme.custom; sw.style.background = c.bg; const i = sw.querySelectorAll('i'); i[0].style.background = c.bg2; i[1].style.background = c.accent; i[2].style.background = c.text; }
 });
+
+/* ---------- Instalar como app (PWA) ---------- */
+let deferredInstall = null;
+const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+if (isStandalone()) document.documentElement.classList.add('is-app');
+const UA = navigator.userAgent;
+const isIOS = /iPad|iPhone|iPod/.test(UA) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isAndroid = /Android/i.test(UA);
+const isSafari = /^((?!chrome|crios|fxios|edgios|android).)*safari/i.test(UA);
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+function showInstallBanner() {
+  try { if (localStorage.getItem('pr_inst_x') || isStandalone()) return; } catch { /* sem storage */ }
+  setTimeout(() => $('#installBanner')?.classList.add('show'), 6000);
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; showInstallBanner(); });
+window.addEventListener('appinstalled', () => { deferredInstall = null; document.documentElement.classList.add('is-app'); $('#installModal')?.classList.remove('open'); toast('App instalado! Procure o ícone na sua tela inicial.'); });
+if (isIOS && isSafari) showInstallBanner();
+const ICON_SHARE = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><path d="M12 3v12M8 7l4-4 4 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>';
+async function openInstall() {
+  $('#installBanner')?.classList.remove('show');
+  if (deferredInstall) {
+    deferredInstall.prompt();
+    const r = await deferredInstall.userChoice.catch(() => null);
+    deferredInstall = null;
+    if (r && r.outcome === 'accepted') return;
+  }
+  let body;
+  if (isIOS) {
+    body = isSafari
+      ? `<ol class="inst-steps"><li>Toque no botão <b>Compartilhar</b> ${ICON_SHARE} na barra do Safari.</li><li>Role e toque em <b>Adicionar à Tela de Início</b>.</li><li>Toque em <b>Adicionar</b>. O ícone aparece na sua tela.</li></ol>`
+      : `<ol class="inst-steps"><li>Abra este site no <b>Safari</b> (o iPhone só instala apps por ele).</li><li>Toque em <b>Compartilhar</b> ${ICON_SHARE} e depois em <b>Adicionar à Tela de Início</b>.</li></ol>`;
+  } else if (isAndroid) {
+    body = `<ol class="inst-steps"><li>Toque no menu <b>⋮</b> (três pontinhos) do navegador.</li><li>Toque em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.</li><li>Confirme em <b>Instalar</b>.</li></ol>`;
+  } else {
+    body = `<ol class="inst-steps"><li>No <b>Chrome</b> ou <b>Edge</b>, clique no ícone de instalar (⊕) no final da barra de endereço, ou abra o menu <b>⋮</b> e escolha <b>Instalar Poliana Rebouças</b>.</li><li>No <b>Safari (Mac)</b>: menu <b>Arquivo → Adicionar ao Dock</b>.</li></ol><p class="inst-note">O app abre em janela própria, sem barra do navegador.</p>`;
+  }
+  $('#installBody').innerHTML = body;
+  $('#installModal').classList.add('open');
+}
 
 /* ---------- Início ---------- */
 render();
