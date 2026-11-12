@@ -106,11 +106,29 @@ service cloud.firestore {
       match /arquivos/{fid} {
         allow read: if signedIn() && (isAdmin()
                     || get(/databases/$(database)/documents/processos/$(pid)).data.clienteUid == request.auth.uid);
-        allow create: if isAdmin()
+        allow create: if signedIn()
+                      && (isAdmin() || get(/databases/$(database)/documents/processos/$(pid)).data.clienteUid == request.auth.uid)
                       && request.resource.data.keys().hasOnly(['nome','tipo','tamanho','data','autorUid','criadoAt'])
                       && request.resource.data.data is string && request.resource.data.data.size() < 990000
                       && request.resource.data.autorUid == request.auth.uid;
         allow update: if false;
+        allow delete: if isAdmin();
+      }
+      // Documentos: a advogada solicita; o cliente envia os arquivos (ou manda um avulso)
+      match /documentos/{did} {
+        allow read: if signedIn() && (isAdmin()
+                    || get(/databases/$(database)/documents/processos/$(pid)).data.clienteUid == request.auth.uid);
+        allow create: if isAdmin()
+                      || (signedIn()
+                          && get(/databases/$(database)/documents/processos/$(pid)).data.clienteUid == request.auth.uid
+                          && request.resource.data.solicitadoPor == 'cliente'
+                          && request.resource.data.status == 'enviado');
+        allow update: if isAdmin()
+                      || (signedIn()
+                          && get(/databases/$(database)/documents/processos/$(pid)).data.clienteUid == request.auth.uid
+                          && resource.data.status != 'recebido'
+                          && request.resource.data.status == 'enviado'
+                          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['anexos','status','enviadoAt','atualizadoAt']));
         allow delete: if isAdmin();
       }
       // Anotações internas: nunca visíveis ao cliente

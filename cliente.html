@@ -117,6 +117,17 @@ main{max-width:1100px;margin:auto;padding:2rem 1.5rem 5rem}
 .att{background:rgba(var(--gold-rgb),.08);border:1px solid var(--border);color:var(--cream);padding:.35rem .7rem;font-size:.7rem;font-weight:400;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .att:hover{border-color:var(--gold)}
 .att i{font-style:normal;color:var(--muted);margin-left:.3rem}
+.dh{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:flex-start;margin-bottom:1rem}
+.dh .hint{margin-top:.3rem;max-width:520px}
+.dl{display:flex;flex-direction:column;gap:.7rem}
+.dc{border:1px solid var(--border);background:var(--navy2);padding:1rem 1.1rem;border-left:3px solid var(--border)}
+.dc.pend{border-left-color:#e0a63c}.dc.env{border-left-color:#5aa0d8}.dc.rec{border-left-color:#5cb85c}
+.dc h4{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:500;margin:.1rem 0 .2rem}
+.dc p{font-size:.78rem;color:var(--muted);line-height:1.6;white-space:pre-wrap}
+.dc .top2{display:flex;justify-content:space-between;gap:.6rem;align-items:flex-start;flex-wrap:wrap}
+.dc .acts2{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.8rem}
+.dc small{font-size:.62rem;color:var(--muted);letter-spacing:.04em}
+.dpend{color:#e0a63c}.denv{color:#5aa0d8}.drec{color:#5cb85c}
 
 /* conversa */
 .chat{border:1px solid var(--border);background:var(--navy2);display:flex;flex-direction:column;height:min(620px,70vh)}
@@ -250,7 +261,7 @@ const errMsg = e => ({
 }[e?.code] ?? 'Algo deu errado. Tente novamente.');
 
 /* ---------- estado ---------- */
-const S = { user: null, admin: false, profile: null, clientes: [], processos: [], chats: [], workerUrl: '', r2: false, unsubs: [], view: null, seen: null, bellOpen: false, pending: null };
+const S = { user: null, admin: false, profile: null, clientes: [], processos: [], chats: [], workerUrl: '', r2: false, unsubs: [], view: null, seen: null, bellOpen: false, pending: null, docs: {}, docSub: new Set() };
 const clienteById = uid => S.clientes.find(c => c.id === uid);
 const clienteNome = uid => S.admin ? (clienteById(uid)?.nome || 'Cliente') : (S.profile?.nome || 'Você');
 
@@ -572,6 +583,91 @@ function formProcesso(p, clienteUidFixo, done) {
     };
   });
 }
+/* ---------- documentos do processo ---------- */
+const DOC_ST = { pendente: ['⏳ Aguardando envio', 'dpend', 'pend'], enviado: ['📥 Enviado — aguardando conferência', 'denv', 'env'], recebido: ['✔ Recebido', 'drec', 'rec'] };
+const DOC_SUG = ['RG e CPF', 'Comprovante de residência', 'Procuração assinada', 'Contrato de honorários', 'Certidão de casamento/nascimento', 'Comprovante de renda', 'Extrato bancário', 'Documentos do imóvel', 'Fotos / provas'];
+const docsOf = pid => S.docs[pid] || [];
+const docsPend = pid => docsOf(pid).filter(d => S.admin ? d.status === 'enviado' : d.status === 'pendente').length;
+function syncDocs() {
+  if (S.admin) return;
+  S.processos.forEach(p => { if (S.docSub.has(p.id)) return; S.docSub.add(p.id);
+    listen(collection(db, 'processos', p.id, 'documentos'), s => { S.docs[p.id] = docs(s); onData(); }); });
+}
+async function postDocChat(pid, texto, anexos) {
+  const nome = S.profile?.nome || S.user.displayName || S.user.email;
+  await addDoc(collection(db, 'chats', pid, 'msgs'), { autorUid: S.user.uid, autorNome: nome, autorTipo: 'cliente', texto, anexos, criadoAt: serverTimestamp() });
+  await updateDoc(doc(db, 'chats', pid), { ultimaMsgAt: serverTimestamp(), ultimaMsgPor: 'cliente', ultimaMsgTexto: texto.slice(0, 90), lidoCliente: serverTimestamp() });
+  notify('msg', pid);
+}
+function mountDocs(box, p) {
+  const id = p.id, col = collection(db, 'processos', id, 'documentos');
+  box.innerHTML = `<div class="card"><div class="dh"><div><div class="eyebrow">Documentos do processo</div>
+    <p class="hint">${S.admin ? 'Solicite documentos ao cliente. Quando ele enviar, você recebe o aviso e confere aqui.' : 'Aqui aparecem os documentos que a advogada pediu. Envie o arquivo em cada item, ou mande qualquer outro documento do processo.'} (${limitTxt()})</p></div>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap">${S.admin ? '<button class="btn sm" id="dReq">＋ Solicitar documento</button>' : '<button class="btn sm" id="dNew">⬆ Enviar documento</button>'}</div></div>
+    <div class="dl" id="dl"></div></div><input type="file" id="dFile" multiple hidden>`;
+  const fileIn = $('#dFile', box); let target = null, busy = false;
+  let list = [];
+  const draw = () => {
+    const rank = { pendente: 0, enviado: 1, recebido: 2 };
+    const l = [...list].sort((a, b) => rank[a.status] - rank[b.status] || ms(b.criadoAt) - ms(a.criadoAt));
+    $('#dl', box).innerHTML = l.length ? l.map(d => { const st = DOC_ST[d.status] || DOC_ST.pendente;
+      return `<div class="dc ${st[2]}" data-id="${d.id}"><div class="top2"><div><h4>${esc(d.titulo)}</h4>${d.descricao ? `<p>${esc(d.descricao)}</p>` : ''}</div><span class="${st[1]}" style="font-size:.68rem;letter-spacing:.05em">${st[0]}</span></div>
+      ${attHtml(d.anexos)}<small>${d.solicitadoPor === 'cliente' ? 'Enviado pelo cliente' : 'Solicitado pela advogada'} em ${fmtD(d.criadoAt)}${d.enviadoAt ? ' · arquivo enviado em ' + fmtD(d.enviadoAt) : ''}</small>
+      <div class="acts2">${S.admin
+        ? `${d.status === 'enviado' ? '<button class="btn sm" data-a="ok">Marcar como recebido</button>' : ''}${d.status === 'recebido' ? '<button class="btn ghost sm" data-a="reopen">Reabrir</button>' : ''}<button class="btn ghost sm" data-a="del">Excluir</button>`
+        : (d.status !== 'recebido' && d.solicitadoPor === 'adv' ? `<button class="btn sm" data-a="up">${d.status === 'pendente' ? '⬆ Enviar arquivo' : '＋ Enviar outro arquivo'}</button>` : '')}</div></div>`; }).join('')
+      : `<div class="empty"><b>${S.admin ? 'Nenhum documento solicitado' : 'Nenhum documento por aqui ainda'}</b>${S.admin ? 'Clique em “Solicitar documento” para pedir algo ao cliente.' : 'Quando a advogada pedir um documento, ele aparece aqui. Você também pode enviar um por conta própria.'}</div>`;
+  };
+  const unsub = onSnapshot(col, snap => { list = docs(snap); S.docs[id] = list; draw(); S.view?.tabsRefresh?.(); }, () => { $('#dl', box).innerHTML = '<div class="empty">Não foi possível carregar os documentos.</div>'; });
+  const sendFiles = async (files, d, titulo) => {
+    if (busy || !files.length) return; busy = true; toast('Enviando…');
+    try {
+      const anexos = await uploadFiles(files, 'p', id);
+      if (d) await updateDoc(doc(db, 'processos', id, 'documentos', d.id), { anexos: [...(d.anexos || []), ...anexos], status: 'enviado', enviadoAt: serverTimestamp(), atualizadoAt: serverTimestamp() });
+      else await addDoc(col, { titulo: titulo.slice(0, 120), descricao: '', status: 'enviado', solicitadoPor: 'cliente', anexos, criadoAt: serverTimestamp(), enviadoAt: serverTimestamp(), atualizadoAt: serverTimestamp() });
+      await postDocChat(id, '📎 Documento enviado: ' + (d ? d.titulo : titulo), anexos);
+      toast('Documento enviado. A advogada foi avisada.');
+    } catch (x) { toast(x.message?.includes('permission') ? errMsg({ code: 'permission-denied' }) : (x.message || 'Não foi possível enviar.'), true); }
+    busy = false;
+  };
+  fileIn.onchange = () => { const fl = []; acceptFiles(fileIn, fl); if (fl.length && target) sendFiles(fl, target); };
+  box.onclick = async e => {
+    const b = e.target.closest('[data-a]'), card = e.target.closest('.dc'); if (!b || !card) return;
+    const d = list.find(x => x.id === card.dataset.id); if (!d) return;
+    const ref = doc(db, 'processos', id, 'documentos', d.id);
+    try {
+      if (b.dataset.a === 'up') { target = d; fileIn.click(); }
+      else if (b.dataset.a === 'ok') { await updateDoc(ref, { status: 'recebido', atualizadoAt: serverTimestamp() }); await updateDoc(doc(db, 'processos', id), { atualizadoAt: serverTimestamp(), ultimoAviso: 'Documento recebido: ' + d.titulo }); notify('andamento', id); toast('Marcado como recebido.'); }
+      else if (b.dataset.a === 'reopen') { await updateDoc(ref, { status: 'enviado', atualizadoAt: serverTimestamp() }); }
+      else if (b.dataset.a === 'del') { if (await confirmBox('Excluir o documento “' + esc(d.titulo) + '” da lista?', 'Excluir')) { await deleteDoc(ref); toast('Excluído.'); } }
+    } catch (x) { toast(errMsg(x), true); }
+  };
+  const bReq = $('#dReq', box), bNew = $('#dNew', box);
+  if (bReq) bReq.onclick = () => openModal(`<h2>Solicitar documento</h2><form id="rF">
+      <div class="field"><label>Qual documento?</label><input name="t" required maxlength="120" list="dsug" placeholder="Ex.: Comprovante de residência"><datalist id="dsug">${DOC_SUG.map(x => `<option value="${x}">`).join('')}</datalist></div>
+      <div class="field"><label>Instruções (opcional)</label><textarea name="d" maxlength="600" placeholder="Ex.: conta de luz ou água dos últimos 3 meses, foto nítida."></textarea></div>
+      <p class="msg-err" id="rE"></p><div class="acts"><button type="button" class="btn ghost sm" data-c>Cancelar</button><button class="btn sm">Solicitar</button></div></form>`,
+    (m, close) => { $('[data-c]', m).onclick = close; $('#rF', m).onsubmit = async ev => {
+      ev.preventDefault(); const f = ev.target, bt = $('.btn:not(.ghost)', f); bt.disabled = true;
+      try {
+        const t = f.t.value.trim();
+        await addDoc(col, { titulo: t, descricao: f.d.value.trim(), status: 'pendente', solicitadoPor: 'adv', anexos: [], criadoAt: serverTimestamp(), atualizadoAt: serverTimestamp() });
+        await updateDoc(doc(db, 'processos', id), { atualizadoAt: serverTimestamp(), ultimoAviso: 'Documento solicitado: ' + t }); notify('andamento', id);
+        close(); toast('Solicitação enviada ao cliente.');
+      } catch (x) { $('#rE', m).textContent = errMsg(x); bt.disabled = false; } }; });
+  if (bNew) bNew.onclick = () => { let fl = []; openModal(`<h2>Enviar documento</h2><form id="nF">
+      <div class="field"><label>Nome do documento</label><input name="t" required maxlength="120" list="dsug2" placeholder="Ex.: Contrato assinado"><datalist id="dsug2">${DOC_SUG.map(x => `<option value="${x}">`).join('')}</datalist></div>
+      <div class="field"><label>Arquivos (até 5)</label><button type="button" class="btn ghost sm" data-pick>📎 Escolher arquivos</button><div class="chips" id="nC" style="margin-top:.5rem"></div></div>
+      <input type="file" multiple hidden id="nI"><p class="msg-err" id="nE"></p><div class="acts"><button type="button" class="btn ghost sm" data-c>Cancelar</button><button class="btn sm">Enviar</button></div></form>`,
+    (m, close) => { const ni = $('#nI', m), chips = $('#nC', m);
+      const dc = () => { chips.innerHTML = fl.map((f, i) => `<span>📎 ${esc(f.name)} (${fsize(f.size)})<button type="button" data-rm="${i}">✕</button></span>`).join(''); };
+      $('[data-pick]', m).onclick = () => ni.click(); ni.onchange = () => { acceptFiles(ni, fl); dc(); };
+      chips.onclick = ev => { const r = ev.target.closest('[data-rm]'); if (r) { fl.splice(+r.dataset.rm, 1); dc(); } };
+      $('[data-c]', m).onclick = close;
+      $('#nF', m).onsubmit = async ev => { ev.preventDefault(); if (!fl.length) { $('#nE', m).textContent = 'Escolha ao menos um arquivo.'; return; }
+        $('.btn:not(.ghost)', ev.target).disabled = true; close(); await sendFiles(fl, null, ev.target.t.value.trim()); }; }); };
+  return () => unsub();
+}
 function viewProcess(id, aba) {
   const box = $('#main');
   const first = S.processos.find(p => p.id === id);
@@ -595,24 +691,26 @@ function viewProcess(id, aba) {
   };
   const tabs = () => {
     const c = S.chats.find(x => x.id === id), un = c && chatUnread(c);
-    const defs = [['and', 'Andamentos'], ['chat', 'Conversa'], ...(S.admin ? [['notas', 'Notas internas']] : [])];
-    $('#pTabs', box).innerHTML = defs.map(d => `<button data-t="${d[0]}" class="${d[0] === aba ? 'on' : ''}">${d[1]}${d[0] === 'chat' && un ? '<span class="dot"></span>' : ''}</button>`).join('');
+    const defs = [['and', 'Andamentos'], ['docs', 'Documentos'], ['chat', 'Conversa'], ...(S.admin ? [['notas', 'Notas internas']] : [])];
+    const dn = docsPend(id);
+    $('#pTabs', box).innerHTML = defs.map(d => `<button data-t="${d[0]}" class="${d[0] === aba ? 'on' : ''}">${d[1]}${d[0] === 'chat' && un ? '<span class="dot"></span>' : ''}${d[0] === 'docs' && dn ? `<span class="dot" title="${dn} pendente(s)"></span>` : ''}</button>`).join('');
   };
   $('#pTabs', box).onclick = e => { const b = e.target.closest('[data-t]'); if (b) location.hash = `#/p/${id}/${b.dataset.t}`; };
   head();
   const body = $('#pBody', box); const p0 = first;
   if (aba === 'and') cleanBody = mountTimeline(body, p0);
+  else if (aba === 'docs') cleanBody = mountDocs(body, p0);
   else if (aba === 'chat') cleanBody = mountChat(body, id, p0.numero);
   else if (aba === 'notas' && S.admin) {
     body.innerHTML = `<div class="card"><div class="eyebrow">Notas internas · só a advogada vê</div><div class="field"><textarea id="nt" style="min-height:200px" placeholder="Estratégia, prazos, observações…"></textarea></div>
       <button class="btn sm" id="ntSave">Salvar notas</button></div>
-      <div class="danger-zone"><button class="btn danger sm" id="delP">Excluir processo</button><p class="hint" style="margin-top:.5rem">Apaga o processo, os andamentos, a conversa e os arquivos. Não pode ser desfeito.</p></div>`;
+      <div class="danger-zone"><button class="btn danger sm" id="delP">Excluir processo</button><p class="hint" style="margin-top:.5rem">Apaga o processo, os andamentos, os documentos, a conversa e os arquivos. Não pode ser desfeito.</p></div>`;
     getDoc(doc(db, 'processos', id, 'privado', 'notas')).then(d => { if (d.exists()) $('#nt', body).value = d.data().texto || ''; }).catch(() => {});
     $('#ntSave', body).onclick = async () => { try { await setDoc(doc(db, 'processos', id, 'privado', 'notas'), { texto: $('#nt', body).value, atualizadoAt: serverTimestamp() }); toast('Notas salvas.'); } catch (x) { toast(errMsg(x), true); } };
     $('#delP', body).onclick = async () => {
       if (!await confirmBox('Excluir <b>definitivamente</b> este processo, com andamentos, conversa e arquivos?', 'Excluir tudo')) return;
       try {
-        for (const sub of ['andamentos']) for (const d of (await getDocs(collection(db, 'processos', id, sub))).docs) await deleteDoc(d.ref);
+        for (const sub of ['andamentos', 'documentos']) for (const d of (await getDocs(collection(db, 'processos', id, sub))).docs) await deleteDoc(d.ref);
         for (const d of (await getDocs(collection(db, 'chats', id, 'msgs'))).docs) await deleteDoc(d.ref);
         for (const d of (await getDocs(collection(db, 'chats', id, 'arquivos'))).docs) await deleteDoc(d.ref);
         for (const d of (await getDocs(collection(db, 'processos', id, 'arquivos'))).docs) await deleteDoc(d.ref);
@@ -623,7 +721,7 @@ function viewProcess(id, aba) {
       } catch (x) { toast(errMsg(x), true); }
     };
   }
-  return { refresh() { head(); }, destroy() { cleanBody && cleanBody(); } };
+  return { refresh() { head(); }, tabsRefresh() { if (S.processos.find(x => x.id === id)) tabs(); }, destroy() { cleanBody && cleanBody(); } };
 }
 
 /* ---------- telas do cliente ---------- */
@@ -633,8 +731,8 @@ function viewClientHome() {
     <a class="btn" href="#/mensagens">💬 Falar com a advogada</a></div><div id="cs"></div><div class="list" id="ls"></div>`;
   const draw = () => {
     const ps = [...S.processos].sort((a, b) => ms(b.atualizadoAt) - ms(a.atualizadoAt));
-    $('#cs', box).innerHTML = ps.length ? `<div class="cards">${stat(ps.filter(p => !['concluido', 'arquivado'].includes(p.status)).length, 'Processos ativos')}${stat(ps.filter(procUnread).length, 'Novidades')}${stat(S.chats.filter(chatUnread).length, 'Mensagens novas')}</div>` : '';
-    $('#ls', box).innerHTML = ps.length ? ps.map(p => `<a class="item" href="#/p/${p.id}"><div class="main"><h3>${esc(p.numero)} ${procUnread(p) ? '<span class="dot"></span>' : ''}</h3><p>${esc(p.tipo || 'Processo')}${p.vara ? ' · ' + esc(p.vara) : ''}</p></div><div class="side">${chip(p.status)}<span>Atualizado em ${fmtD(p.atualizadoAt)}</span></div></a>`).join('')
+    $('#cs', box).innerHTML = ps.length ? `<div class="cards">${stat(ps.filter(p => !['concluido', 'arquivado'].includes(p.status)).length, 'Processos ativos')}${stat(ps.filter(procUnread).length, 'Novidades')}${stat(S.chats.filter(chatUnread).length, 'Mensagens novas')}${stat(ps.reduce((n, p) => n + docsPend(p.id), 0), 'Documentos pedidos')}</div>` : '';
+    $('#ls', box).innerHTML = ps.length ? ps.map(p => `<a class="item" href="#/p/${p.id}"><div class="main"><h3>${esc(p.numero)} ${procUnread(p) ? '<span class="dot"></span>' : ''}</h3><p>${esc(p.tipo || 'Processo')}${p.vara ? ' · ' + esc(p.vara) : ''}${docsPend(p.id) ? ` · <b class="dpend">📄 ${docsPend(p.id)} documento(s) pedido(s)</b>` : ''}</p></div><div class="side">${chip(p.status)}<span>Atualizado em ${fmtD(p.atualizadoAt)}</span></div></a>`).join('')
       : `<div class="empty"><b>Nenhum processo vinculado ainda</b>Assim que a advogada cadastrar seu processo, ele aparece aqui.<br>Enquanto isso, você pode enviar mensagens e documentos em “Mensagens”.</div>`;
   };
   draw(); return { refresh: draw };
@@ -777,7 +875,15 @@ async function ensureProfile(user) {
   // conversa geral (mesmos valores a cada acesso: não altera nada se já existir)
   await setDoc(doc(db, 'chats', user.uid), { clienteUid: user.uid, processoId: null, titulo: 'Conversa geral' }, { merge: true });
 }
-function stopAll() { S.unsubs.forEach(u => u()); S.unsubs = []; S.view?.destroy?.(); S.view = null; S.profile = null; S.clientes = []; S.processos = []; S.chats = []; S.seen = null; }
+function stopAll() { S.unsubs.forEach(u => u()); S.unsubs = []; S.view?.destroy?.(); S.view = null; S.profile = null; S.clientes = []; S.processos = []; S.chats = []; S.seen = null; S.docs = {}; S.docSub = new Set(); }
+/* logotipo definido pela advogada no site (aparece no lugar do “PR”) */
+function applyLogo() {
+  if (!S.logo) return;
+  $$('.brand').forEach(b => { if (b.dataset.logo) return; b.dataset.logo = '1';
+    const small = b.querySelector('small'); b.innerHTML = `<img src="${S.logo}" alt="Logotipo" style="height:${b.closest('.auth') ? 56 : 34}px;width:auto;max-width:220px;object-fit:contain">` + (small && !b.closest('.auth') ? `<small>${small.textContent}</small>` : ''); });
+}
+new MutationObserver(applyLogo).observe(document.getElementById('root'), { childList: true, subtree: true });
+getDoc(doc(db, 'site', 'content')).then(d => { S.logo = d.exists() && d.data().brand?.logo || ''; applyLogo(); }).catch(() => {});
 onAuthStateChanged(auth, async user => {
   stopAll(); S.user = user;
   if (!user) { viewAuth(); document.title = 'Área do Cliente | Poliana Rebouças Advocacia'; return; }
@@ -796,7 +902,7 @@ onAuthStateChanged(auth, async user => {
       await ensureProfile(user);
       renderShell();
       listen(doc(db, 'clientes', user.uid), s => { S.profile = s.exists() ? { id: s.id, ...s.data() } : null; const w = $('.who'); if (w && S.profile) w.textContent = S.profile.nome; });
-      listen(query(collection(db, 'processos'), where('clienteUid', '==', user.uid)), s => { S.processos = docs(s); onData(); });
+      listen(query(collection(db, 'processos'), where('clienteUid', '==', user.uid)), s => { S.processos = docs(s); syncDocs(); onData(); });
       listen(query(collection(db, 'chats'), where('clienteUid', '==', user.uid)), s => { S.chats = docs(s); onData(); });
     }
     renderBell(); route();

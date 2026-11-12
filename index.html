@@ -79,6 +79,15 @@ nav.scrolled { border-bottom-color: var(--border); }
   font-size:1.6rem; font-weight:600;
   color: var(--gold); letter-spacing:0.06em;
 }
+.nav-logo-img { display:block; height:var(--logo-h,44px); width:auto; max-width:min(60vw,320px); object-fit:contain; }
+.nav-logo.has-img { flex-direction:row; align-items:center; position:relative; }
+.logo-tools { position:absolute; top:calc(100% + .5rem); left:0; z-index:120; display:flex; flex-wrap:wrap; gap:.4rem; align-items:center;
+  background:rgba(13,24,33,.96); border:1px solid rgba(201,168,76,.5); padding:.5rem .6rem; width:max-content; max-width:92vw; }
+.logo-tools button { background:#c9a84c; color:#0d1821; border:none; padding:.45rem .8rem; font-size:.62rem; letter-spacing:.1em; text-transform:uppercase; font-weight:600; cursor:pointer; font-family:'Montserrat',sans-serif; }
+.logo-tools button.ghost { background:transparent; color:#f2ead3; border:1px solid rgba(242,234,211,.4); }
+.logo-tools label { color:#f2ead3; font-size:.6rem; letter-spacing:.1em; text-transform:uppercase; display:flex; align-items:center; gap:.4rem; }
+.logo-tools input[type=range] { width:110px; accent-color:#c9a84c; }
+@media (max-width:900px){ .nav-logo-img { height:min(var(--logo-h,44px),40px); } }
 .nav-logo-sub {
   font-size:0.52rem; letter-spacing:0.22em;
   text-transform:uppercase; color: var(--muted); margin-top:2px;
@@ -1170,6 +1179,7 @@ body.is-admin .intro-photo.shaped { padding-top:9.5rem; }
 </div>
 
 <input type="file" id="photoInput" accept="image/*" hidden>
+<input type="file" id="logoInput" accept="image/png,image/svg+xml,image/webp,image/jpeg" hidden>
 <div class="toast" id="toast"></div>
 
 <script type="module">
@@ -1200,7 +1210,7 @@ const ADMIN_EMAILS = ['polireboucas@gmail.com'];
 
 /* ---------- Conteúdo padrão (usado até o primeiro "Salvar") ---------- */
 const DEFAULTS = {
-  brand:  { initials: 'PR', sub: 'Advocacia' },
+  brand:  { initials: 'PR', sub: 'Advocacia', logo: '', logoH: 44 },
   hero:   { pretitle: 'Advocacia e Consultoria Jurídica', name1: 'Poliana', name2: 'Rebouças',
             tagline: 'OAB · Brasília, DF · Defesa dos seus direitos', btn1: 'Áreas de Atuação', btn2: 'Fale Comigo',
             cover: '', coverDim: 55, coverPos: 50, h: 100 },
@@ -1327,9 +1337,16 @@ function render() {
 
   $('#app').innerHTML = `
 <nav id="nav">
-  <div class="nav-logo">
-    <span class="nav-logo-pr" data-path="brand.initials">${esc(c.brand.initials)}</span>
-    <span class="nav-logo-sub" data-path="brand.sub">${esc(c.brand.sub)}</span>
+  <div class="nav-logo${c.brand.logo ? ' has-img' : ''}" style="--logo-h:${+c.brand.logoH || 44}px">
+    ${c.brand.logo
+      ? `<img class="nav-logo-img" id="navLogoImg" src="${c.brand.logo}" alt="${esc(c.hero?.name || 'Logotipo')}">`
+      : `<span class="nav-logo-pr" data-path="brand.initials">${esc(c.brand.initials)}</span>
+    <span class="nav-logo-sub" data-path="brand.sub">${esc(c.brand.sub)}</span>`}
+    <div class="logo-tools admin-only">
+      <button data-action="logoPick">🖼 ${c.brand.logo ? 'Trocar logotipo' : 'Usar logotipo'}</button>
+      ${c.brand.logo ? `<label>Tamanho <input type="range" id="logoSize" min="24" max="90" value="${+c.brand.logoH || 44}"></label>
+      <button class="ghost" data-action="logoRemove">Voltar ao “PR”</button>` : ''}
+    </div>
   </div>
   <ul>
     <li><a href="#sobre">Sobre</a></li>
@@ -1598,6 +1615,8 @@ document.addEventListener('click', async e => {
         return;
       }
       case 'photo': $('#photoInput').click(); e.preventDefault(); return;
+      case 'logoPick': $('#logoInput').click(); e.preventDefault(); return;
+      case 'logoRemove': content.brand.logo = ''; markDirty(); render(); toast('Logotipo removido. Clique em Salvar alterações.'); return;
       case 'layout':       openLayout(act.dataset.target); return;
       case 'palette':      openPalette(); return;
       case 'paletteClose': $('#palettePanel').classList.remove('open'); return;
@@ -1699,6 +1718,37 @@ document.addEventListener('click', e => {
   if (e.target.closest('nav ul a') || !e.target.closest('nav')) { n.classList.remove('open'); n.querySelector('.nav-toggle')?.setAttribute('aria-expanded', 'false'); }
 });
 window.addEventListener('resize', () => { if (innerWidth > 900) $('#nav')?.classList.remove('open'); });
+
+/* ---------- Logotipo ---------- */
+function logoToPng(file, maxW = 640, maxH = 240) {
+  return new Promise((res, rej) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      const r = Math.min(1, maxW / (img.naturalWidth || img.width), maxH / (img.naturalHeight || img.height));
+      const w = Math.max(1, Math.round((img.naturalWidth || img.width || maxW) * r)), h = Math.max(1, Math.round((img.naturalHeight || img.height || maxH) * r));
+      const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url); res(cv.toDataURL('image/png'));
+    };
+    img.onerror = () => rej(new Error('imagem inválida'));
+    img.src = url;
+  });
+}
+$('#logoInput').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    let data = await logoToPng(f);
+    if (data.length > 260000) data = await logoToPng(f, 420, 160);
+    if (data.length > 260000) { toast('Logotipo muito pesado. Use uma imagem mais simples ou menor.', true); return; }
+    content.brand.logo = data; if (!content.brand.logoH) content.brand.logoH = 44;
+    markDirty(); render(); toast('Logotipo aplicado. Ajuste o tamanho e clique em Salvar alterações.');
+  } catch { toast('Não foi possível ler essa imagem.', true); }
+});
+document.addEventListener('input', e => {
+  if (e.target.id !== 'logoSize') return;
+  content.brand.logoH = +e.target.value;
+  document.querySelector('.nav-logo')?.style.setProperty('--logo-h', e.target.value + 'px'); markDirty();
+});
 
 /* ---------- Salvar ---------- */
 async function save() {
