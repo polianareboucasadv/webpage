@@ -87,6 +87,7 @@ nav.scrolled { border-bottom-color: var(--border); }
 .logo-tools button.ghost { background:transparent; color:#f2ead3; border:1px solid rgba(242,234,211,.4); }
 .logo-tools label { color:#f2ead3; font-size:.6rem; letter-spacing:.1em; text-transform:uppercase; display:flex; align-items:center; gap:.4rem; }
 .logo-tools input[type=range] { width:110px; accent-color:#c9a84c; }
+@media (min-width:901px){ .nav-logo { position:relative; } .logo-tools { top:50%; left:calc(100% + 1.2rem); transform:translateY(-50%); flex-wrap:nowrap; } .logo-tools label { white-space:nowrap; } }
 @media (max-width:900px){ .nav-logo-img { height:min(var(--logo-h,44px),40px); } }
 .nav-logo-sub {
   font-size:0.52rem; letter-spacing:0.22em;
@@ -753,6 +754,22 @@ body.is-admin .hero-tagline, body.is-admin .hero-cta { opacity:1; animation:none
   .hero-cta { margin-top:2.2rem; }
   .hero.has-cover { min-height:var(--hero-h,min(70vh,620px)); }
 }
+/* campos vazios: somem no site público e ficam mínimos na edição (a caixa encolhe) */
+body:not(.is-admin) #app [data-empty] { display:none !important; }
+body:not(.is-admin) .btn-gold:has(> [data-empty]), body:not(.is-admin) .btn-ghost:has(> [data-empty]),
+body:not(.is-admin) .para:has(> [data-empty]), body:not(.is-admin) .oab-badge:has([data-empty]):not(:has(strong:not([data-empty]))) { display:none !important; }
+body:not(.is-admin) .hero-cta:not(:has(.btn-gold:not(:has(> [data-empty])), .btn-ghost:not(:has(> [data-empty])))) { display:none; }
+#app [data-empty] + br { display:none; }
+body.is-admin #app [data-empty] { font-size:.62rem !important; line-height:1.6 !important; letter-spacing:.08em !important; margin-top:.15rem !important; margin-bottom:.15rem !important; min-height:0 !important; text-transform:none !important; }
+body.is-admin #app [data-empty]::before { content:'＋ clique para escrever'; display:inline; width:auto; height:auto; background:none; margin:0; color:var(--muted); font-style:normal; font-weight:400; opacity:.7; }
+body.is-admin #app [data-empty]::after { display:none; }
+body.is-admin .hero-name:has(> [data-empty]) { line-height:1.2; }
+/* alça para arrastar a altura da seção */
+.rz { position:absolute; left:0; right:0; bottom:-1px; height:22px; z-index:8; cursor:ns-resize; touch-action:none; text-align:center; }
+.rz span { display:inline-block; margin-top:2px; background:var(--navy2); border:1px solid var(--gold); color:var(--gold); font-size:.55rem; letter-spacing:.14em; text-transform:uppercase; padding:.2rem .8rem; font-family:'Montserrat',sans-serif; opacity:.85; }
+.rz:hover span, .rz.on span { background:var(--gold); color:var(--on-gold); opacity:1; }
+.rz::before { content:''; position:absolute; left:0; right:0; bottom:0; border-bottom:1px dashed var(--gold); opacity:.6; }
+#sobre { position:relative; }
 .hero-tools { position:absolute; top:6rem; right:2rem; z-index:6; }
 .photo-tools { position:absolute; top:5.5rem; left:1.2rem; z-index:6; }
 .hero-tools button, .photo-tools button {
@@ -776,9 +793,15 @@ body.is-admin .hero-tagline, body.is-admin .hero-cta { opacity:1; animation:none
 .sf-in .sw { width:22px; min-width:22px; height:22px; padding:0; border-radius:50%; }
 .sf-in .sep { width:1px; height:22px; background:var(--border); margin:0 .25rem; }
 
-.layout-panel { display:none; position:fixed; right:1rem; bottom:calc(var(--ab,64px) + 10px); width:320px; max-height:64vh; overflow:auto; z-index:10003;
+.layout-panel { display:none; position:fixed; right:1rem; bottom:calc(var(--ab,64px) + 10px); width:320px; max-height:calc(100vh - var(--ab,64px) - 40px); overflow:auto; z-index:10003;
   background:var(--navy2); border:1px solid var(--gold); padding:1rem 1.1rem; box-shadow:0 10px 40px rgba(0,0,0,.55); }
 .layout-panel.open { display:block; }
+.layout-panel.dim { opacity:.1; transition:opacity .12s; }
+.layout-panel.min { width:auto; max-height:none; overflow:hidden; padding:.55rem .8rem; }
+.layout-panel.min > :not(.lp-head) { display:none; }
+.layout-panel.min .lp-head { margin:0; gap:1.2rem; }
+.lp-head { cursor:move; user-select:none; touch-action:none; }
+.lp-head > div { display:flex; gap:.3rem; }
 .lp-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:.9rem; color:var(--gold); font-size:.74rem; letter-spacing:.12em; text-transform:uppercase; }
 .lp-head button { background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer; line-height:1; }
 .lp-btns { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1rem; }
@@ -1213,7 +1236,7 @@ const DEFAULTS = {
   brand:  { initials: 'PR', sub: 'Advocacia', logo: '', logoH: 44 },
   hero:   { pretitle: 'Advocacia e Consultoria Jurídica', name1: 'Poliana', name2: 'Rebouças',
             tagline: 'OAB · Brasília, DF · Defesa dos seus direitos', btn1: 'Áreas de Atuação', btn2: 'Fale Comigo',
-            cover: '', coverDim: 55, coverPos: 50, h: 100 },
+            cover: '', coverDim: 55, coverPos: 50, h: 100, padB: 56 },
   about:  { eyebrow: 'Sobre Mim', heading1: 'Comprometida com a', heading2: 'justiça que vale',
             paragraphs: [
               'Sou **Poliana Rebouças**, advogada com atuação em Brasília/DF, comprometida com a defesa dos direitos dos meus clientes com rigor técnico, ética e dedicação.',
@@ -1223,7 +1246,7 @@ const DEFAULTS = {
             photo: 'foto-poliana.jpg', photoName: 'Poliana Rebouças', photoRole: 'Advogada · OAB/DF',
             oabLabel: 'Registro Profissional', oabValue: 'OAB · Seccional DF',
             photoW: 420, photoH: 80, photoZoom: 100, photoX: 50, photoY: 0,
-            photoShape: 'full', photoSize: 80, photoRing: true },
+            photoShape: 'full', photoSize: 80, photoRing: true, padT: 96, padB: 64 },
   quote:  { text: '"É justo que muito custe o que muito vale."', author: '— Poliana Rebouças' },
   areas:  { eyebrow: 'Atuação Profissional', heading1: 'Áreas de', heading2: 'Atuação',
     tabs: [
@@ -1374,6 +1397,7 @@ function render() {
     </div>
   </div>
   <div class="hero-tools admin-only"><button data-action="layout" data-target="cover">🖼 Foto de capa e layout</button></div>
+  <div class="rz admin-only" data-rz="hero" title="Arraste para cima ou para baixo"><span>↕ Arraste para ajustar a altura</span></div>
 </div>
 
 <div class="intro-section" id="sobre">
@@ -1398,6 +1422,7 @@ function render() {
       </div>
     </div>
   </div>
+  <div class="rz admin-only" data-rz="about" title="Arraste para cima ou para baixo"><span>↕ Arraste para ajustar a altura</span></div>
 </div>
 
 <div class="quote-section">
@@ -1503,7 +1528,10 @@ function applyEdit() {
     if (admin) { el.contentEditable = 'true'; el.spellcheck = true; }
     else el.removeAttribute('contenteditable');
   });
+  markEmpties();
 }
+const isEmptyEl = el => !el.textContent.trim() && !el.querySelector('img');
+function markEmpties(root = document) { root.querySelectorAll('#app [data-path]').forEach(el => el.toggleAttribute('data-empty', isEmptyEl(el))); }
 
 /* ---------- Carregar conteúdo do Firestore ---------- */
 async function loadContent() {
@@ -1570,6 +1598,7 @@ document.addEventListener('input', e => {
   const el = e.target.closest?.('[data-path]');
   if (!admin || !el || !el.isContentEditable) return;
   setPath(content, el.dataset.path, isPlain(el.dataset.path) ? el.textContent : sanitize(el.innerHTML));
+  el.toggleAttribute('data-empty', isEmptyEl(el));
   markDirty();
 });
 document.addEventListener('keydown', e => {
@@ -1623,6 +1652,7 @@ document.addEventListener('click', async e => {
       case 'palettePick':  pickPalette(act.dataset.id); return;
       case 'paletteReset': content.theme.custom = { ...DEFAULTS.theme.custom }; pickPalette('advocaticia'); toast('Paleta padrão restaurada. Clique em Salvar alterações para confirmar.'); return;
       case 'layoutClose':  $('#layoutPanel').classList.remove('open'); return;
+      case 'layoutMin':    $('#layoutPanel').classList.toggle('min'); renderLayout(); return;
       case 'layoutUpload': $(LAYOUT[layoutTarget].upload).click(); return;
       case 'layoutRemove': content.hero.cover = ''; applyLayoutLive(); markDirty(); toast('Foto de capa removida.'); return;
       case 'layoutReset':  resetLayout(); return;
@@ -2314,10 +2344,10 @@ if (window.ResizeObserver) new ResizeObserver(() => document.documentElement.sty
 const LAYOUT = {
   cover: { title: 'Foto de capa e layout', upload: '#coverInput', canRemove: true,
     hint: 'A foto de capa aparece atrás do título da página inicial. Escureça para o texto continuar legível.',
-    sliders: [['hero.coverDim', 'Escurecimento da foto', 0, 90, 5, '%'], ['hero.coverPos', 'Posição vertical da foto', 0, 100, 5, '%'], ['hero.h', 'Altura da seção', 50, 120, 5, 'vh']] },
+    sliders: [['hero.coverDim', 'Escurecimento da foto', 0, 90, 5, '%'], ['hero.coverPos', 'Posição vertical da foto', 0, 100, 5, '%'], ['hero.h', 'Altura mínima da seção', 10, 120, 5, 'vh'], ['hero.padB', 'Espaço abaixo do conteúdo', 0, 160, 4, 'px']] },
   photo: { title: 'Foto “Sobre” e layout', upload: '#photoInput', canRemove: false,
     hint: 'Escolha o formato, diminua a foto dentro da coluna e ajuste zoom e enquadramento. Em celulares a foto se adapta à largura da tela.',
-    sliders: [['about.photoW', 'Largura da coluna da foto', 280, 720, 10, 'px'], ['about.photoSize', 'Tamanho da foto na coluna', 20, 100, 5, '%'], ['about.photoH', 'Altura da seção', 50, 120, 5, 'vh'],
+    sliders: [['about.photoW', 'Largura da coluna da foto', 280, 720, 10, 'px'], ['about.photoSize', 'Tamanho da foto na coluna', 20, 100, 5, '%'], ['about.photoH', 'Altura mínima da seção', 10, 120, 5, 'vh'], ['about.padT', 'Espaço acima do texto', 0, 160, 4, 'px'], ['about.padB', 'Espaço abaixo do texto', 0, 160, 4, 'px'],
       ['about.photoZoom', 'Zoom', 100, 220, 5, '%'], ['about.photoX', 'Posição horizontal', 0, 100, 5, '%'], ['about.photoY', 'Posição vertical', 0, 100, 5, '%']] }
 };
 let layoutTarget = 'cover';
@@ -2325,10 +2355,11 @@ const getPath = (o, path) => path.split('.').reduce((x, k) => x?.[k], o);
 function applyLayoutLive() {
   const h = content.hero, a = content.about;
   const hero = $('.hero');
-  if (hero) { if (h.h == 100) hero.style.removeProperty('--hero-h'); else hero.style.setProperty('--hero-h', h.h + 'vh'); hero.classList.toggle('has-cover', !!h.cover); }
+  if (hero) { if (h.h == 100) hero.style.removeProperty('--hero-h'); else hero.style.setProperty('--hero-h', h.h + 'vh'); hero.classList.toggle('has-cover', !!h.cover); hero.style.paddingBottom = (+h.padB === 56 ? '' : h.padB + 'px'); }
   const cv = $('#heroCover'); if (cv) { cv.style.backgroundImage = h.cover ? 'url("' + h.cover + '")' : 'none'; cv.style.backgroundPosition = 'center ' + h.coverPos + '%'; }
   const dm = $('#heroDim'); if (dm) { dm.style.display = h.cover ? 'block' : 'none'; dm.style.opacity = h.coverDim / 100; }
   const sec = $('#sobre'); if (sec) { sec.style.setProperty('--photo-w', a.photoW + 'px'); sec.style.setProperty('--photo-h', a.photoH + 'vh'); }
+  const it = $('.intro-text'); if (it) { it.style.paddingTop = (+a.padT === 96 ? '' : a.padT + 'px'); it.style.paddingBottom = (+a.padB === 64 ? '' : a.padB + 'px'); }
   const ip = $('.intro-photo');
   if (ip) {
     ip.classList.remove('shaped', 'rect', 'square', 'circle', 'ring');
@@ -2341,7 +2372,8 @@ function applyLayoutLive() {
 function renderLayout() {
   const L = LAYOUT[layoutTarget];
   $('#layoutPanel').innerHTML = `
-    <div class="lp-head"><b>${esc(L.title)}</b><button data-action="layoutClose" aria-label="Fechar">×</button></div>
+    <div class="lp-head"><b>${esc(L.title)}</b><div><button data-action="layoutMin" aria-label="Minimizar" title="Minimizar / expandir">${$('#layoutPanel').classList.contains('min') ? '▢' : '–'}</button><button data-action="layoutClose" aria-label="Fechar">×</button></div></div>
+    <p class="lp-hint" style="margin-bottom:.6rem">✥ Arraste esta barra para mover o painel. Ao mexer numa barrinha, o painel fica transparente para você ver a imagem.</p>
     <div class="lp-btns">
       <button class="lp-btn primary" data-action="layoutUpload">📷 Trocar foto</button>
       ${L.canRemove ? '<button class="lp-btn" data-action="layoutRemove">Remover capa</button>' : ''}
@@ -2361,7 +2393,46 @@ function renderLayout() {
     }).join('')}
     <button class="lp-btn" data-action="layoutReset">Restaurar padrão</button>`;
 }
-function openLayout(t) { layoutTarget = t; renderLayout(); $('#palettePanel').classList.remove('open'); $('#layoutPanel').classList.add('open'); }
+function openLayout(t) {
+  layoutTarget = t; $('#layoutPanel').classList.remove('min'); renderLayout(); $('#palettePanel').classList.remove('open'); $('#layoutPanel').classList.add('open');
+  (t === 'cover' ? $('.hero') : $('#sobre'))?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+}
+/* painel móvel: arrastar pela barra, minimizar e ficar transparente ao ajustar */
+let lpPos = null;
+function lpApply() { const pn = $('#layoutPanel'); if (lpPos && innerWidth > 700) { pn.style.left = lpPos.x + 'px'; pn.style.top = lpPos.y + 'px'; pn.style.right = 'auto'; pn.style.bottom = 'auto'; } }
+document.addEventListener('pointerdown', e => {
+  const pn = $('#layoutPanel');
+  if (e.target.matches?.('[data-lp]')) { pn.classList.add('dim'); return; }
+  const hd = e.target.closest?.('.lp-head'); if (!hd || e.target.closest('button') || innerWidth <= 700) return;
+  const r = pn.getBoundingClientRect(), dx = e.clientX - r.left, dy = e.clientY - r.top;
+  hd.setPointerCapture?.(e.pointerId);
+  const mv = ev => { lpPos = { x: Math.max(0, Math.min(innerWidth - 120, ev.clientX - dx)), y: Math.max(0, Math.min(innerHeight - 48, ev.clientY - dy)) }; lpApply(); };
+  const up = () => { hd.removeEventListener('pointermove', mv); hd.removeEventListener('pointerup', up); hd.removeEventListener('pointercancel', up); };
+  hd.addEventListener('pointermove', mv); hd.addEventListener('pointerup', up); hd.addEventListener('pointercancel', up);
+  e.preventDefault();
+});
+['pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, () => $('#layoutPanel')?.classList.remove('dim')));
+/* alça de altura das seções */
+document.addEventListener('pointerdown', e => {
+  const rz = e.target.closest?.('.rz'); if (!rz || !admin) return;
+  const isHero = rz.dataset.rz === 'hero', sec = rz.parentElement;
+  const startH = sec.getBoundingClientRect().height, y0 = e.clientY;
+  const prev = sec.style.minHeight; sec.style.minHeight = '0px';
+  const pbKey = isHero ? 'padB' : 'padB', def = isHero ? 56 : 64, obj = isHero ? content.hero : content.about;
+  const startPad = +obj[pbKey]; const natural = sec.getBoundingClientRect().height; sec.style.minHeight = prev;
+  rz.classList.add('on'); rz.setPointerCapture?.(e.pointerId);
+  const mv = ev => {
+    const target = startH + (ev.clientY - y0);
+    if (target >= natural) { obj[pbKey] = startPad; var vh = Math.round(target / innerHeight * 100); }
+    else { obj[pbKey] = Math.max(0, Math.min(160, Math.round(startPad - (natural - target)))); vh = 10; }
+    vh = Math.max(10, Math.min(120, vh)); if (isHero && vh === 100) vh = 101;
+    if (isHero) content.hero.h = vh; else content.about.photoH = vh;
+    applyLayoutLive(); markDirty();
+  };
+  const up = () => { rz.classList.remove('on'); rz.removeEventListener('pointermove', mv); rz.removeEventListener('pointerup', up); rz.removeEventListener('pointercancel', up); if ($('#layoutPanel').classList.contains('open')) renderLayout(); };
+  rz.addEventListener('pointermove', mv); rz.addEventListener('pointerup', up); rz.addEventListener('pointercancel', up);
+  e.preventDefault();
+});
 function resetLayout() {
   LAYOUT[layoutTarget].sliders.forEach(([k]) => setPath(content, k, getPath(DEFAULTS, k)));
   if (layoutTarget === 'photo') { content.about.photoShape = DEFAULTS.about.photoShape; content.about.photoRing = DEFAULTS.about.photoRing; }
