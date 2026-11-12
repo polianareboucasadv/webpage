@@ -91,6 +91,8 @@ nav a {
   text-transform:uppercase; transition:color 0.3s, opacity 0.3s;
 }
 nav a:hover { color: var(--gold); opacity:1; }
+nav a.nav-cta { border:1px solid var(--gold); color:var(--gold); opacity:1; padding:.55rem 1rem; }
+nav a.nav-cta:hover { background:var(--gold); color:var(--on-gold); }
 
 /* menu mobile */
 .nav-toggle { display:none; background:none; border:1px solid var(--border); width:42px; height:42px; cursor:pointer; padding:0; flex-direction:column; align-items:center; justify-content:center; gap:5px; }
@@ -898,6 +900,7 @@ body.is-admin .intro-photo.shaped { padding-top:9.5rem; }
   <div class="btns">
     <button data-action="messages">Mensagens<span class="badge" id="msgCount"></span></button>
     <button data-action="subs">Assinantes<span class="badge" id="subCount"></span></button>
+    <button data-action="portal">📂 Clientes e processos</button>
     <button data-action="palette">🎨 Paleta</button>
     <button data-action="settings">Configurações</button>
     <button data-action="discard">Descartar</button>
@@ -1333,6 +1336,7 @@ function render() {
     <li><a href="#areas">Áreas</a></li>
     <li id="navArtigos" style="${admin || articles.length ? '' : 'display:none'}"><a href="#artigos">Artigos</a></li>
     <li><a href="#contato">Contato</a></li>
+    <li><a href="cliente.html" class="nav-cta">Área do cliente</a></li>
   </ul>
   <button class="nav-toggle" data-action="navToggle" aria-label="Abrir menu" aria-expanded="false"><span></span><span></span><span></span></button>
 </nav>
@@ -1463,6 +1467,7 @@ function render() {
   <div class="footer-links">
     <a href="mailto:${esc(ct.email)}">E-mail</a>
     <a href="https://instagram.com/${esc(igHandle)}" target="_blank" rel="noopener">Instagram</a>
+    <a href="cliente.html">Área do cliente</a>
     <button data-action="share">Compartilhar</button>
     <button class="install-link" data-action="install">Instalar app</button>
     <button class="restricted" data-action="login">Área restrita</button>
@@ -1604,6 +1609,7 @@ document.addEventListener('click', async e => {
       case 'layoutReset':  resetLayout(); return;
       case 'photoShape':   content.about.photoShape = act.dataset.val; applyLayoutLive(); renderLayout(); markDirty(); return;
       case 'share':        openShare(); return;
+      case 'portal':       window.open('cliente.html', '_blank', 'noopener'); return;
       case 'install':      closeShare(); openInstall(); return;
       case 'navToggle':    { const n = $('#nav'); const o = n.classList.toggle('open'); act.setAttribute('aria-expanded', o); act.setAttribute('aria-label', o ? 'Fechar menu' : 'Abrir menu'); return; }
       case 'installClose': $('#installModal').classList.remove('open'); return;

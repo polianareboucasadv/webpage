@@ -57,5 +57,102 @@ service cloud.firestore {
                     && request.resource.data.lida == false;
       allow read, update, delete: if isAdmin();
     }
+
+    // ============ ÁREA DO CLIENTE ============
+    function signedIn() { return request.auth != null; }
+    function chatOwner(chatId) {
+      return signedIn()
+          && get(/databases/$(database)/documents/chats/$(chatId)).data.clienteUid == request.auth.uid;
+    }
+
+    // Perfil do cliente: o próprio cliente cria/edita; o admin lê e edita
+    match /clientes/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow create: if signedIn() && request.auth.uid == uid
+                    && request.resource.data.keys().hasOnly(['uid','nome','email','telefone','documento','notifEmail','criadoEm','atualizadoEm'])
+                    && request.resource.data.uid == uid
+                    && request.resource.data.email == request.auth.token.email.lower()
+                    && request.resource.data.nome is string && request.resource.data.nome.size() <= 150
+                    && request.resource.data.telefone is string && request.resource.data.telefone.size() <= 40
+                    && request.resource.data.documento is string && request.resource.data.documento.size() <= 30
+                    && request.resource.data.notifEmail is bool;
+      allow update: if signedIn() && ((request.auth.uid == uid
+                    && request.resource.data.keys().hasOnly(['uid','nome','email','telefone','documento','notifEmail','criadoEm','atualizadoEm'])
+                    && request.resource.data.uid == resource.data.uid
+                    && request.resource.data.email == resource.data.email
+                    && request.resource.data.criadoEm == resource.data.criadoEm
+                    && request.resource.data.nome is string && request.resource.data.nome.size() <= 150
+                    && request.resource.data.telefone is string && request.resource.data.telefone.size() <= 40
+                    && request.resource.data.documento is string && request.resource.data.documento.size() <= 30
+                    && request.resource.data.notifEmail is bool) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // Processos: criados e editados só pela advogada; o cliente vê os seus e só marca "lido"
+    match /processos/{pid} {
+      allow read: if signedIn() && (isAdmin() || resource.data.clienteUid == request.auth.uid);
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+                    || (signedIn() && resource.data.clienteUid == request.auth.uid
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lidoCliente']));
+
+      // Linha do tempo de andamentos (só a advogada publica)
+      match /andamentos/{aid} {
+        allow read: if signedIn() && (isAdmin()
+                    || get(/databases/$(database)/documents/processos/$(pid)).data.clienteUid == request.auth.uid);
+        allow write: if isAdmin();
+      }
+      // Arquivos anexados aos andamentos (guardados aqui, até ~700 KB; só a advogada envia)
+      match /arquivos/{fid} {
+        allow read: if signedIn() && (isAdmin()
+                    || get(/databases/$(database)/documents/processos/$(pid)).data.clienteUid == request.auth.uid);
+        allow create: if isAdmin()
+                      && request.resource.data.keys().hasOnly(['nome','tipo','tamanho','data','autorUid','criadoAt'])
+                      && request.resource.data.data is string && request.resource.data.data.size() < 990000
+                      && request.resource.data.autorUid == request.auth.uid;
+        allow update: if false;
+        allow delete: if isAdmin();
+      }
+      // Anotações internas: nunca visíveis ao cliente
+      match /privado/{docId} {
+        allow read, write: if isAdmin();
+      }
+    }
+
+    // Conversas: uma geral por cliente (id = uid do cliente) e uma por processo (id = id do processo)
+    match /chats/{cid} {
+      allow read: if signedIn() && (isAdmin() || resource.data.clienteUid == request.auth.uid);
+      allow create: if signedIn() && (isAdmin()
+                    || (cid == request.auth.uid && request.resource.data.clienteUid == request.auth.uid));
+      allow update: if isAdmin()
+                    || (signedIn() && resource.data.clienteUid == request.auth.uid
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                             .hasOnly(['lidoCliente','ultimaMsgAt','ultimaMsgPor','ultimaMsgTexto']));
+      allow delete: if isAdmin();
+
+      // Arquivos enviados na conversa (cliente ou advogada; até ~700 KB cada)
+      match /arquivos/{fid} {
+        allow read: if isAdmin() || chatOwner(cid);
+        allow create: if signedIn() && (isAdmin() || chatOwner(cid))
+                      && request.resource.data.keys().hasOnly(['nome','tipo','tamanho','data','autorUid','criadoAt'])
+                      && request.resource.data.data is string && request.resource.data.data.size() < 990000
+                      && request.resource.data.autorUid == request.auth.uid
+                      && request.resource.data.criadoAt == request.time;
+        allow update: if false;
+        allow delete: if isAdmin();
+      }
+
+      match /msgs/{mid} {
+        allow read: if isAdmin() || chatOwner(cid);
+        allow create: if signedIn() && (isAdmin() || chatOwner(cid))
+                      && request.resource.data.keys().hasOnly(['autorUid','autorNome','autorTipo','texto','anexos','criadoAt'])
+                      && request.resource.data.autorUid == request.auth.uid
+                      && request.resource.data.autorTipo == (isAdmin() ? 'adv' : 'cliente')
+                      && request.resource.data.texto is string && request.resource.data.texto.size() <= 4000
+                      && request.resource.data.anexos is list && request.resource.data.anexos.size() <= 5
+                      && request.resource.data.criadoAt == request.time;
+        allow update, delete: if isAdmin();
+      }
+    }
   }
 }

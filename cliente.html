@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Área do Cliente | Poliana Rebouças Advocacia</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0d1821">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<script>try{var __t=JSON.parse(localStorage.getItem('pr_theme')||'null');if(__t){for(var __k in __t.vars)document.documentElement.style.setProperty(__k,__t.vars[__k]);document.documentElement.style.colorScheme=__t.cs;}}catch(e){}</script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0d1821;--navy2:#162030;--gold:#c9a84c;--gold-light:#e8c97a;--cream:#f8f5ef;--muted:#8a8070;--on-gold:#0d1821;--gold-rgb:201,168,76;--navy-rgb:13,24,33;--border:rgba(var(--gold-rgb),.2);--ok:#3aa57d;--warn:#d99a2b;--info:#3a8dde;--bad:#d1495b;}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none !important}
+html{scroll-behavior:smooth}
+body{font-family:'Montserrat',sans-serif;background:var(--navy);color:var(--cream);min-height:100vh;-webkit-font-smoothing:antialiased;font-weight:300}
+button{font-family:inherit;cursor:pointer}
+a{color:var(--gold)}
+h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:400}
+
+/* topo */
+.top{position:sticky;top:0;z-index:50;background:rgba(var(--navy-rgb),.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+.top-in{max-width:1100px;margin:auto;padding:.8rem 1.5rem;display:flex;align-items:center;gap:1rem}
+.brand{display:flex;flex-direction:column;line-height:1;text-decoration:none}
+.brand b{font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--gold);letter-spacing:.06em;font-weight:600}
+.brand small{font-size:.5rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.top-sp{flex:1}
+.who{font-size:.72rem;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.icon-btn{position:relative;background:none;border:1px solid var(--border);color:var(--cream);width:40px;height:40px;font-size:1rem;display:flex;align-items:center;justify-content:center}
+.icon-btn:hover{border-color:var(--gold);color:var(--gold)}
+.badge{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--bad);color:#fff;font-size:.62rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+.link-btn{background:none;border:none;color:var(--muted);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;padding:.4rem}
+.link-btn:hover{color:var(--gold)}
+.nav{max-width:1100px;margin:auto;padding:0 1.5rem;display:flex;gap:.2rem;overflow-x:auto}
+.nav a{padding:.8rem 1rem;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap;display:flex;gap:.4rem;align-items:center}
+.nav a:hover{color:var(--cream)}
+.nav a.on{color:var(--gold);border-bottom-color:var(--gold)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--bad);display:inline-block}
+
+main{max-width:1100px;margin:auto;padding:2rem 1.5rem 5rem}
+.page-h{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.6rem}
+.page-h h1{font-size:2.1rem;line-height:1.1}
+.page-h h1 em{color:var(--gold)}
+.page-h p{font-size:.78rem;color:var(--muted);margin-top:.35rem}
+.eyebrow{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem}
+
+/* botões e campos */
+.btn{background:var(--gold);color:var(--on-gold);border:1px solid var(--gold);padding:.75rem 1.4rem;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
+.btn:hover{background:var(--gold-light)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--cream);border-color:var(--border)}
+.btn.ghost:hover{border-color:var(--gold);color:var(--gold)}
+.btn.danger{background:transparent;color:var(--bad);border-color:var(--bad)}
+.btn.sm{padding:.5rem .9rem;font-size:.62rem}
+.field{display:flex;flex-direction:column;gap:.35rem;margin-bottom:1rem}
+.field label{font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.field input,.field select,.field textarea,.composer textarea{background:transparent;border:1px solid var(--border);color:var(--cream);padding:.7rem .8rem;font:inherit;font-size:.85rem;font-weight:400;outline:none;width:100%}
+.field input:focus,.field select:focus,.field textarea:focus,.composer textarea:focus{border-color:var(--gold)}
+.field input[readonly]{opacity:.6}
+.field select option{background:var(--navy2);color:var(--cream)}
+.field textarea{min-height:110px;resize:vertical;line-height:1.6}
+.field small{font-size:.65rem;color:var(--muted);line-height:1.5}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:0 1rem}
+.check{display:flex;gap:.6rem;align-items:flex-start;font-size:.74rem;line-height:1.5;color:var(--muted);margin-bottom:1rem}
+.check input{margin-top:.2rem;accent-color:var(--gold)}
+.msg-err{color:var(--bad);font-size:.75rem;min-height:1.1rem;margin-bottom:.6rem}
+.msg-ok{color:var(--ok);font-size:.75rem;margin-bottom:.6rem}
+
+/* cartões */
+.card{border:1px solid var(--border);background:var(--navy2);padding:1.4rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.8rem;margin-bottom:1.6rem}
+.stat{border:1px solid var(--border);background:var(--navy2);padding:1rem 1.2rem}
+.stat b{display:block;font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:400;color:var(--gold);line-height:1}
+.stat span{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.list{display:flex;flex-direction:column;gap:.6rem}
+.item{display:flex;gap:1rem;align-items:center;border:1px solid var(--border);background:var(--navy2);padding:1rem 1.2rem;text-decoration:none;color:var(--cream);transition:border-color .2s}
+.item:hover{border-color:var(--gold)}
+.item .main{flex:1;min-width:0}
+.item h3{font-size:1.2rem;line-height:1.2;margin-bottom:.2rem;display:flex;gap:.5rem;align-items:center}
+.item p{font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .side{text-align:right;font-size:.65rem;color:var(--muted);display:flex;flex-direction:column;gap:.35rem;align-items:flex-end}
+.chip{display:inline-block;padding:.18rem .6rem;border-radius:20px;font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;font-weight:500;border:1px solid currentColor}
+.chip.s-info{color:var(--info)}.chip.s-warn{color:var(--warn)}.chip.s-ok{color:var(--ok)}.chip.s-mute{color:var(--muted)}.chip.s-purple{color:#9b6bd1}
+.empty{text-align:center;padding:3rem 1rem;color:var(--muted);font-size:.82rem;line-height:1.7;border:1px dashed var(--border)}
+.empty b{display:block;font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:400;color:var(--cream);margin-bottom:.4rem}
+.toolbar{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem}
+.toolbar input,.toolbar select{background:transparent;border:1px solid var(--border);color:var(--cream);padding:.6rem .8rem;font:inherit;font-size:.8rem;outline:none}
+.toolbar input{flex:1;min-width:180px}
+.toolbar select option{background:var(--navy2)}
+
+/* processo */
+.p-head{border:1px solid var(--border);background:var(--navy2);padding:1.5rem;margin-bottom:1.2rem}
+.p-head h1{font-size:1.9rem;margin:.2rem 0 .6rem}
+.meta{display:flex;flex-wrap:wrap;gap:.4rem 1.6rem;font-size:.74rem;color:var(--muted);margin-bottom:.8rem}
+.meta b{color:var(--cream);font-weight:400}
+.p-desc{font-size:.85rem;line-height:1.7;color:var(--cream);white-space:pre-wrap}
+.tabs{display:flex;gap:.2rem;border-bottom:1px solid var(--border);margin-bottom:1.2rem;overflow-x:auto}
+.tabs button{background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);padding:.8rem 1.1rem;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;display:flex;gap:.4rem;align-items:center}
+.tabs button.on{color:var(--gold);border-bottom-color:var(--gold)}
+.back{display:inline-block;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-decoration:none;margin-bottom:1rem}
+.back:hover{color:var(--gold)}
+
+/* linha do tempo */
+.tl{position:relative;padding-left:1.6rem}
+.tl::before{content:'';position:absolute;left:5px;top:.5rem;bottom:.5rem;width:1px;background:var(--border)}
+.tl-i{position:relative;margin-bottom:1.1rem;border:1px solid var(--border);background:var(--navy2);padding:1rem 1.2rem}
+.tl-i::before{content:'';position:absolute;left:-1.6rem;top:1.15rem;width:11px;height:11px;border-radius:50%;background:var(--gold);border:2px solid var(--navy)}
+.tl-i .d{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.tl-i h4{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:400;margin:.2rem 0 .4rem}
+.tl-i p{font-size:.82rem;line-height:1.7;white-space:pre-wrap}
+.tl-i .x{float:right;background:none;border:none;color:var(--muted);font-size:1rem}
+.tl-i .x:hover{color:var(--bad)}
+.atts{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.6rem}
+.att{background:rgba(var(--gold-rgb),.08);border:1px solid var(--border);color:var(--cream);padding:.35rem .7rem;font-size:.7rem;font-weight:400;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.att:hover{border-color:var(--gold)}
+.att i{font-style:normal;color:var(--muted);margin-left:.3rem}
+
+/* conversa */
+.chat{border:1px solid var(--border);background:var(--navy2);display:flex;flex-direction:column;height:min(620px,70vh)}
+.chat-list{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.5rem}
+.day{align-self:center;font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:.5rem 0}
+.bub{max-width:78%;padding:.6rem .85rem;font-size:.84rem;line-height:1.55;font-weight:400;border:1px solid var(--border);background:var(--navy);white-space:pre-wrap;word-break:break-word}
+.bub.me{align-self:flex-end;background:rgba(var(--gold-rgb),.16);border-color:rgba(var(--gold-rgb),.5)}
+.bub small{display:block;font-size:.58rem;color:var(--muted);margin-top:.25rem;letter-spacing:.05em}
+.bub .who2{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:.15rem}
+.composer{border-top:1px solid var(--border);padding:.7rem;display:flex;flex-direction:column;gap:.5rem}
+.composer .r{display:flex;gap:.5rem;align-items:flex-end}
+.composer textarea{min-height:44px;max-height:140px;resize:none;border:1px solid var(--border)}
+.composer .chips{display:flex;gap:.4rem;flex-wrap:wrap}
+.composer .chips span{font-size:.68rem;background:rgba(var(--gold-rgb),.1);border:1px solid var(--border);padding:.25rem .5rem}
+.composer .chips button{background:none;border:none;color:var(--bad);margin-left:.3rem}
+.hint{font-size:.66rem;color:var(--muted);line-height:1.5}
+
+/* modal, toast, bell */
+.modal-back{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;display:flex;align-items:flex-start;justify-content:center;padding:4vh 1rem;overflow:auto}
+.modal{background:var(--navy);border:1px solid var(--gold);width:100%;max-width:560px;padding:1.8rem;position:relative;margin:auto}
+.modal h2{font-size:1.7rem;margin-bottom:1.2rem}
+.modal .x{position:absolute;top:.7rem;right:.9rem;background:none;border:none;color:var(--muted);font-size:1.2rem}
+.modal .acts{display:flex;gap:.6rem;justify-content:flex-end;flex-wrap:wrap;margin-top:.5rem}
+.toast{position:fixed;left:50%;bottom:1.5rem;transform:translateX(-50%) translateY(30px);background:var(--gold);color:var(--on-gold);padding:.8rem 1.4rem;font-size:.78rem;font-weight:500;z-index:200;opacity:0;transition:.3s;max-width:90vw;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.toast.err{background:var(--bad);color:#fff}
+.bell-box{position:absolute;right:1.5rem;top:100%;width:min(360px,92vw);background:var(--navy);border:1px solid var(--gold);z-index:60;max-height:60vh;overflow:auto;box-shadow:0 14px 40px rgba(0,0,0,.5)}
+.bell-box a{display:block;padding:.8rem 1rem;border-bottom:1px solid var(--border);text-decoration:none;color:var(--cream);font-size:.78rem}
+.bell-box a:hover{background:rgba(var(--gold-rgb),.08)}
+.bell-box a small{display:block;color:var(--muted);font-size:.66rem;margin-top:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bell-box p{padding:1rem;font-size:.75rem;color:var(--muted)}
+.light{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:150;display:flex;align-items:center;justify-content:center;padding:1rem}
+.light img{max-width:100%;max-height:92vh}
+.light a{position:absolute;top:1rem;right:1rem;color:#fff;font-size:1.6rem;text-decoration:none}
+
+/* entrar */
+.auth{max-width:440px;margin:6vh auto;padding:0 1.2rem}
+.auth .card{padding:2rem}
+.auth h1{font-size:2.2rem;text-align:center;line-height:1.1}
+.auth h1 em{color:var(--gold)}
+.auth .sub{text-align:center;font-size:.78rem;color:var(--muted);line-height:1.6;margin:.6rem 0 1.4rem}
+.auth .tabs{margin-bottom:1.3rem}
+.auth .tabs button{flex:1;justify-content:center}
+.gbtn{width:100%;display:flex;gap:.6rem;align-items:center;justify-content:center;background:#fff;color:#222;border:none;padding:.75rem;font-size:.78rem;font-weight:500;margin-bottom:1rem}
+.or{display:flex;align-items:center;gap:.8rem;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem}
+.or::before,.or::after{content:'';flex:1;height:1px;background:var(--border)}
+.center{text-align:center}
+.loading{text-align:center;padding:5rem 1rem;color:var(--muted);font-size:.8rem;letter-spacing:.14em;text-transform:uppercase}
+.back-site{display:block;text-align:center;margin-top:1.2rem;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-decoration:none}
+.sep{height:1px;background:var(--border);margin:1.4rem 0}
+.danger-zone{margin-top:2rem;padding-top:1.2rem;border-top:1px dashed var(--bad)}
+
+@media (max-width:700px){
+  main{padding:1.4rem 1rem 4rem}.top-in{padding:.7rem 1rem}.nav{padding:0 .5rem}.who{display:none}
+  .page-h h1{font-size:1.7rem}.row2{grid-template-columns:1fr;gap:0}.item{flex-wrap:wrap}.item .side{flex-direction:row;align-items:center;width:100%;justify-content:space-between}
+  .bub{max-width:90%}.chat{height:75vh}.bell-box{right:.5rem}
+}
+</style>
+</head>
+<body>
+<div id="root"><div class="loading">Carregando…</div></div>
+<div id="modalRoot"></div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, updateProfile }
+  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, collection, query, where, orderBy, onSnapshot, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAReoHhPsxpE4nVVrgt13fbDDkeHK6WUEA",
+  authDomain: "webpagepoliana.firebaseapp.com",
+  projectId: "webpagepoliana",
+  storageBucket: "webpagepoliana.firebasestorage.app",
+  messagingSenderId: "985638470397",
+  appId: "1:985638470397:web:e2e9412c5d9bec0c8b3494"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const ADMIN_EMAILS = ['polireboucas@gmail.com'];
+const STATUS = [
+  ['analise', 'Em análise', 's-purple'], ['andamento', 'Em andamento', 's-info'], ['cliente', 'Aguardando cliente', 's-warn'],
+  ['decisao', 'Aguardando decisão', 's-warn'], ['suspenso', 'Suspenso', 's-mute'], ['concluido', 'Concluído', 's-ok'], ['arquivado', 'Arquivado', 's-mute']
+];
+const AREAS = ['Direito Civil', 'Direito do Consumidor', 'Direito de Família', 'Direito Penal', 'Direito do Trabalho', 'Direito Empresarial', 'Direito Tributário', 'Direito Administrativo', 'Direito Previdenciário'];
+
+/* ---------- utilitários ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ms = t => t ? (t.toMillis ? t.toMillis() : (t.seconds ? t.seconds * 1000 : Number(t) || 0)) : 0;
+const fmtD = t => { const m = ms(t); return m ? new Date(m).toLocaleDateString('pt-BR') : ''; };
+const fmtDT = t => { const m = ms(t); return m ? new Date(m).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''; };
+const fmtHM = t => { const m = ms(t); return m ? new Date(m).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''; };
+const fmtISO = s => s ? s.split('-').reverse().join('/') : '';
+const fsize = n => n < 1024 ? n + ' B' : n < 1048576 ? (n / 1024).toFixed(0) + ' KB' : (n / 1048576).toFixed(1) + ' MB';
+const statusOf = id => STATUS.find(s => s[0] === id) || STATUS[1];
+const chip = id => { const s = statusOf(id); return `<span class="chip ${s[2]}">${s[1]}</span>`; };
+const firstName = n => String(n || '').trim().split(/\s+/)[0] || '';
+let toastT;
+function toast(msg, err) {
+  const t = $('#toast'); t.textContent = msg; t.className = 'toast on' + (err ? ' err' : '');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), err ? 5000 : 3200);
+}
+function openModal(html, mount) {
+  const root = $('#modalRoot');
+  root.innerHTML = `<div class="modal-back"><div class="modal"><button class="x" data-close aria-label="Fechar">✕</button>${html}</div></div>`;
+  const close = () => { root.innerHTML = ''; };
+  root.querySelector('.modal-back').addEventListener('mousedown', e => { if (e.target.classList.contains('modal-back')) close(); });
+  root.querySelector('[data-close]').onclick = close;
+  mount && mount(root.querySelector('.modal'), close);
+  return close;
+}
+function confirmBox(texto, rotulo = 'Confirmar') {
+  return new Promise(res => {
+    const close = openModal(`<h2>Confirmar</h2><p style="font-size:.85rem;line-height:1.6;margin-bottom:1.2rem">${texto}</p>
+      <div class="acts"><button class="btn ghost sm" data-no>Cancelar</button><button class="btn danger sm" data-yes>${rotulo}</button></div>`,
+      (m, c) => { m.querySelector('[data-no]').onclick = () => { c(); res(false); }; m.querySelector('[data-yes]').onclick = () => { c(); res(true); }; });
+  });
+}
+const errMsg = e => ({
+  'auth/invalid-credential': 'E-mail ou senha incorretos.', 'auth/wrong-password': 'E-mail ou senha incorretos.', 'auth/user-not-found': 'E-mail ou senha incorretos.',
+  'auth/invalid-email': 'E-mail inválido.', 'auth/email-already-in-use': 'Este e-mail já tem cadastro. Use “Entrar” ou “Esqueci a senha”.',
+  'auth/weak-password': 'A senha precisa ter pelo menos 6 caracteres.', 'auth/too-many-requests': 'Muitas tentativas. Aguarde um pouco e tente de novo.',
+  'auth/popup-closed-by-user': '', 'auth/cancelled-popup-request': '', 'auth/network-request-failed': 'Sem conexão com a internet.',
+  'auth/operation-not-allowed': 'Este tipo de login ainda não foi ativado no Firebase.', 'auth/unauthorized-domain': 'Este site ainda não foi autorizado no Firebase (Authentication → Domínios).',
+  'permission-denied': 'Sem permissão para esta ação. Confira se as regras do Firestore foram publicadas.'
+}[e?.code] ?? 'Algo deu errado. Tente novamente.');
+
+/* ---------- estado ---------- */
+const S = { user: null, admin: false, profile: null, clientes: [], processos: [], chats: [], workerUrl: '', r2: false, unsubs: [], view: null, seen: null, bellOpen: false, pending: null };
+const clienteById = uid => S.clientes.find(c => c.id === uid);
+const clienteNome = uid => S.admin ? (clienteById(uid)?.nome || 'Cliente') : (S.profile?.nome || 'Você');
+
+/* ---------- Cloudflare Worker (arquivos + e-mails) ---------- */
+async function api(path, opts = {}) {
+  if (!S.workerUrl) throw new Error('O envio de arquivos ainda não foi configurado.');
+  const token = await auth.currentUser.getIdToken();
+  const r = await fetch(S.workerUrl.replace(/\/$/, '') + path, { ...opts, headers: { ...(opts.headers || {}), Authorization: 'Bearer ' + token } });
+  if (!r.ok) { let m = 'Falha na comunicação com o servidor de arquivos.'; try { m = (await r.json()).erro || m; } catch { /* ok */ } throw new Error(m); }
+  return r;
+}
+const MAXFS = 700 * 1024;                       // arquivos guardados no Firestore: até 700 KB
+const BLOCKED_EXT = /\.(exe|bat|cmd|com|scr|msi|js|vbs|ps1|jar|apk|dll|sh)$/i;
+const useR2 = () => !!(S.workerUrl && S.r2);   // com o Worker + R2 configurados, aceita até 15 MB
+const maxPick = f => useR2() ? 15 * 1048576 : (/^image\//.test(f.type) ? 25 * 1048576 : MAXFS);
+const limitTxt = () => useR2() ? 'arquivos até 15 MB' : 'fotos e PDFs leves, até 700 KB cada';
+function acceptFiles(input, list) {
+  for (const f of input.files) {
+    if (BLOCKED_EXT.test(f.name)) toast(`“${f.name}”: tipo de arquivo não permitido.`, true);
+    else if (f.size > maxPick(f)) toast(`“${f.name}” é grande demais (${limitTxt()}).`, true);
+    else if (list.length < 5) list.push(f);
+  }
+  input.value = '';
+}
+async function shrinkImage(f) {                 // reduz fotos para caberem no limite
+  if (!/^image\/(jpeg|png|webp)$/.test(f.type)) return f;
+  const bmp = await createImageBitmap(f).catch(() => null); if (!bmp) return f;
+  let max = 1800, q = 0.82, blob = f;
+  for (let i = 0; i < 6; i++) {
+    const sc = Math.min(1, max / Math.max(bmp.width, bmp.height)), c = document.createElement('canvas');
+    c.width = Math.round(bmp.width * sc); c.height = Math.round(bmp.height * sc);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    blob = await new Promise(r => c.toBlob(r, 'image/jpeg', q));
+    if (blob.size <= MAXFS) break; max *= 0.8; q = Math.max(0.5, q - 0.06);
+  }
+  return new File([blob], f.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' });
+}
+const readDataURL = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
+async function uploadFiles(files, scope, id) {
+  const out = [];
+  for (let f of files) {
+    if (useR2()) {
+      const r = await api(`/upload?scope=${scope}&id=${encodeURIComponent(id)}&name=${encodeURIComponent(f.name)}`, { method: 'POST', headers: { 'Content-Type': f.type || 'application/octet-stream' }, body: f });
+      out.push(await r.json()); continue;
+    }
+    f = await shrinkImage(f);
+    if (f.size > MAXFS) throw new Error(`“${f.name}” é grande demais (${limitTxt()}).`);
+    const data = await readDataURL(f);
+    if (data.length > 980000) throw new Error(`“${f.name}” é grande demais (${limitTxt()}).`);
+    const ref = await addDoc(collection(db, scope === 'c' ? 'chats' : 'processos', id, 'arquivos'),
+      { nome: f.name.slice(0, 150), tipo: (f.type || 'application/octet-stream').slice(0, 100), tamanho: f.size, data, autorUid: auth.currentUser.uid, criadoAt: serverTimestamp() });
+    out.push({ key: `fs:${scope}:${id}:${ref.id}`, nome: f.name.slice(0, 150), tamanho: f.size, tipo: f.type || '' });
+  }
+  return out;
+}
+const notify = (kind, id) => { if (S.workerUrl) api('/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kind, id }) }).catch(() => {}); };
+const ATT = new Map();
+const attHtml = list => (list && list.length) ? `<div class="atts">${list.map(a => { ATT.set(a.key, a); return `<button type="button" class="att" data-att="${esc(a.key)}">📎 ${esc(a.nome)}<i>${fsize(a.tamanho || 0)}</i></button>`; }).join('')}</div>` : '';
+async function openAttachment(key) {
+  const a = ATT.get(key); if (!a) return;
+  try {
+    toast('Abrindo arquivo…');
+    let blob;
+    if (key.startsWith('fs:')) {
+      const [, sc, id, fid] = key.split(':');
+      const d = await getDoc(doc(db, sc === 'c' ? 'chats' : 'processos', id, 'arquivos', fid));
+      if (!d.exists()) throw new Error('Arquivo não encontrado.');
+      blob = await (await fetch(d.data().data)).blob();
+    } else blob = await (await api('/file?key=' + encodeURIComponent(key))).blob();
+    const url = URL.createObjectURL(blob);
+    if ((a.tipo || '').startsWith('image/')) {
+      const d = document.createElement('div'); d.className = 'light';
+      d.innerHTML = `<a href="#" aria-label="Fechar">✕</a><img src="${url}" alt="${esc(a.nome)}">`;
+      d.onclick = e => { e.preventDefault(); d.remove(); URL.revokeObjectURL(url); }; document.body.appendChild(d);
+    } else {
+      const l = document.createElement('a'); l.href = url; l.download = a.nome; document.body.appendChild(l); l.click(); l.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+    }
+  } catch (e) { toast(e.message, true); }
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-att]'); if (b) openAttachment(b.dataset.att); });
+
+/* ---------- não lidos / sino ---------- */
+const chatUnread = c => { const last = ms(c.ultimaMsgAt), seen = ms(S.admin ? c.lidoAdv : c.lidoCliente); return !!last && last > seen && c.ultimaMsgPor !== (S.admin ? 'adv' : 'cliente'); };
+const procUnread = p => !S.admin && ms(p.atualizadoAt) > ms(p.lidoCliente);
+const chatTitle = c => c.processoId ? (S.processos.find(p => p.id === c.processoId)?.numero ? 'Processo ' + S.processos.find(p => p.id === c.processoId).numero : (c.titulo || 'Processo')) : 'Conversa geral';
+const chatHref = c => c.processoId ? `#/p/${c.processoId}/chat` : (S.admin ? `#/chat/${c.id}` : '#/mensagens');
+function unreadItems() {
+  const it = [];
+  S.chats.filter(chatUnread).forEach(c => it.push({ key: 'c' + c.id + ms(c.ultimaMsgAt), at: ms(c.ultimaMsgAt), title: (S.admin ? clienteNome(c.clienteUid) + ' · ' : '') + chatTitle(c), sub: c.ultimaMsgTexto || 'Nova mensagem', href: chatHref(c), kind: 'msg' }));
+  S.processos.filter(procUnread).forEach(p => it.push({ key: 'p' + p.id + ms(p.atualizadoAt), at: ms(p.atualizadoAt), title: 'Processo ' + p.numero, sub: p.ultimoAviso || 'Atualização no processo', href: `#/p/${p.id}`, kind: 'proc' }));
+  return it.sort((a, b) => b.at - a.at);
+}
+function renderBell() {
+  const items = unreadItems(), n = items.length;
+  const btn = $('#bell'); if (!btn) return;
+  btn.innerHTML = `🔔${n ? `<span class="badge">${n > 9 ? '9+' : n}</span>` : ''}`;
+  document.title = (n ? `(${n}) ` : '') + 'Área do Cliente | Poliana Rebouças Advocacia';
+  const box = $('#bellBox');
+  if (box) box.innerHTML = n ? items.map(i => `<a href="${i.href}">${i.kind === 'msg' ? '💬' : '📌'} ${esc(i.title)}<small>${esc(i.sub)}</small></a>`).join('') : '<p>Nenhuma novidade por enquanto.</p>';
+  // aviso quando chega algo novo com a página aberta
+  const keys = new Set(items.map(i => i.key));
+  if (S.seen) items.filter(i => !S.seen.has(i.key)).slice(0, 1).forEach(i => toast((i.kind === 'msg' ? '💬 Nova mensagem: ' : '📌 ') + i.title));
+  S.seen = keys;
+}
+const stat = (n, l) => `<div class="stat"><b>${n}</b><span>${l}</span></div>`;
+
+/* ---------- entrada ---------- */
+function viewAuth(mode = 'login') {
+  S.view?.destroy?.(); S.view = null;
+  $('#root').innerHTML = `
+  <div class="auth"><div class="card">
+    <div class="center"><span class="brand" style="align-items:center"><b>PR</b><small>Advocacia</small></span></div>
+    <h1 style="margin-top:1rem">Área do <em>cliente</em></h1>
+    <p class="sub">Acompanhe seus processos, envie documentos e converse diretamente com a advogada, com sigilo e segurança.</p>
+    <div class="tabs"><button class="${mode === 'login' ? 'on' : ''}" data-m="login">Entrar</button><button class="${mode === 'reg' ? 'on' : ''}" data-m="reg">Criar conta</button></div>
+    <button class="gbtn" id="gBtn"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.5-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>Continuar com Google</button>
+    <div class="or">ou com e-mail</div>
+    <form id="authForm" novalidate>
+      ${mode === 'reg' ? `<div class="field"><label>Nome completo</label><input name="nome" autocomplete="name" required maxlength="150"></div>
+      <div class="field"><label>Telefone / WhatsApp</label><input name="tel" type="tel" autocomplete="tel" placeholder="(00) 00000-0000" required maxlength="40"></div>` : ''}
+      <div class="field"><label>E-mail</label><input name="email" type="email" autocomplete="email" required maxlength="150"></div>
+      <div class="field"><label>Senha</label><input name="senha" type="password" autocomplete="${mode === 'reg' ? 'new-password' : 'current-password'}" required minlength="6"></div>
+      ${mode === 'reg' ? `<label class="check"><input type="checkbox" name="lgpd" required> <span>Concordo com o tratamento dos meus dados e documentos para fins de atendimento jurídico, com sigilo profissional (LGPD).</span></label>` : ''}
+      <p class="msg-err" id="authErr"></p>
+      <button class="btn" style="width:100%" id="authBtn">${mode === 'reg' ? 'Criar minha conta' : 'Entrar'}</button>
+      ${mode === 'login' ? '<p class="center" style="margin-top:1rem"><button type="button" class="link-btn" id="forgot">Esqueci minha senha</button></p>' : ''}
+    </form>
+  </div><a class="back-site" href="index.html">← Voltar ao site</a></div>`;
+  $$('.tabs [data-m]').forEach(b => b.onclick = () => viewAuth(b.dataset.m));
+  const err = m => { $('#authErr').textContent = m || ''; };
+  $('#gBtn').onclick = async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (e) { err(errMsg(e)); } };
+  $('#forgot')?.addEventListener('click', async () => {
+    const email = $('#authForm').email.value.trim();
+    if (!email) return err('Digite seu e-mail acima e clique novamente.');
+    try { await sendPasswordResetEmail(auth, email); $('#authErr').className = 'msg-ok'; err('Enviamos um link para redefinir a senha no seu e-mail.'); } catch (e) { err(errMsg(e)); }
+  });
+  $('#authForm').onsubmit = async e => {
+    e.preventDefault(); const f = e.target; err(''); $('#authErr').className = 'msg-err';
+    const email = f.email.value.trim(), senha = f.senha.value;
+    if (!email || !senha) return err('Preencha e-mail e senha.');
+    const btn = $('#authBtn'); btn.disabled = true;
+    try {
+      if (mode === 'reg') {
+        const nome = f.nome.value.trim(), tel = f.tel.value.trim();
+        if (nome.length < 3) throw { code: 'x', msg: 'Informe seu nome completo.' };
+        if (tel.replace(/\D/g, '').length < 10) throw { code: 'x', msg: 'Informe um telefone com DDD.' };
+        if (!f.lgpd.checked) throw { code: 'x', msg: 'É preciso aceitar o tratamento de dados para criar a conta.' };
+        S.pending = { nome, telefone: tel };
+        const cred = await createUserWithEmailAndPassword(auth, email, senha);
+        try { await updateProfile(cred.user, { displayName: nome }); } catch { /* ok */ }
+      } else await signInWithEmailAndPassword(auth, email, senha);
+    } catch (x) { S.pending = null; err(x.msg || errMsg(x)); btn.disabled = false; }
+  };
+}
+
+/* ---------- casca (topo + menu) ---------- */
+function renderShell() {
+  const nav = S.admin
+    ? [['#/', 'Processos'], ['#/clientes', 'Clientes'], ['#/mensagens', 'Conversas'], ['#/config', 'Configurações']]
+    : [['#/', 'Meus processos'], ['#/mensagens', 'Mensagens'], ['#/perfil', 'Meu perfil']];
+  $('#root').innerHTML = `
+  <header class="top" style="position:sticky"><div class="top-in">
+    <a class="brand" href="#/"><b>PR</b><small>Área do cliente</small></a><span class="top-sp"></span>
+    <span class="who">${S.admin ? '⚖ Advogada · ' : ''}${esc(S.profile?.nome || S.user.displayName || S.user.email)}</span>
+    <button class="icon-btn" id="bell" aria-label="Novidades"></button>
+    <a class="link-btn" href="index.html">Site</a>
+    <button class="link-btn" id="logout">Sair</button>
+  </div><div class="nav" id="nav">${nav.map(n => `<a href="${n[0]}" data-nav="${n[0]}">${n[1]}<span class="dot" data-dot="${n[0]}" hidden></span></a>`).join('')}</div>
+  <div class="bell-box" id="bellBox" hidden></div></header>
+  <main id="main"></main>`;
+  $('#logout').onclick = () => signOut(auth);
+  $('#bell').onclick = e => { e.stopPropagation(); $('#bellBox').hidden = !$('#bellBox').hidden; };
+  document.addEventListener('click', e => { const b = $('#bellBox'); if (b && !e.target.closest('#bell')) b.hidden = true; });
+  $('#bellBox').onclick = () => { $('#bellBox').hidden = true; };
+}
+function updateNavDots() {
+  const msgUn = S.chats.some(chatUnread), procUn = S.processos.some(procUnread) || (S.admin && S.chats.some(c => c.processoId && chatUnread(c)));
+  $$('[data-dot]').forEach(d => { const h = d.dataset.dot; d.hidden = !((h === '#/mensagens' && msgUn) || (h === '#/' && procUn && !S.admin)); });
+}
+function onData() { renderBell(); updateNavDots(); S.view?.refresh?.(); }
+
+/* ---------- conversa (reutilizável) ---------- */
+function mountChat(box, chatId, titulo) {
+  box.innerHTML = `<div class="chat"><div class="chat-list"></div>
+    <form class="composer"><div class="chips"></div>
+      <div class="r"><button type="button" class="btn ghost sm" data-attach title="Anexar arquivo">📎</button>
+      <textarea rows="1" placeholder="Escreva sua mensagem…" maxlength="4000"></textarea>
+      <button class="btn sm" data-send>Enviar</button></div>
+      <input type="file" multiple hidden>
+      <p class="hint">Enter envia · Shift+Enter quebra a linha · ${limitTxt()}</p>
+    </form></div>`;
+  const list = $('.chat-list', box), ta = $('textarea', box), chips = $('.chips', box), fileIn = $('input[type=file]', box), sendBtn = $('[data-send]', box);
+  let msgs = [], files = [], sending = false;
+  const myTipo = S.admin ? 'adv' : 'cliente';
+  const draw = () => {
+    const near = list.scrollHeight - list.scrollTop - list.clientHeight < 120;
+    let lastDay = '';
+    list.innerHTML = msgs.length ? msgs.map(m => {
+      const day = fmtD(m.criadoAt), sep = day !== lastDay ? `<div class="day">${day}</div>` : ''; lastDay = day;
+      const mine = m.autorTipo === myTipo;
+      return `${sep}<div class="bub ${mine ? 'me' : ''}">${mine ? '' : `<span class="who2">${m.autorTipo === 'adv' ? 'Advogada' : esc(m.autorNome)}</span>`}${esc(m.texto)}${attHtml(m.anexos)}<small>${fmtHM(m.criadoAt)}</small></div>`;
+    }).join('') : '<div class="empty" style="margin:auto;border:none"><b>Nenhuma mensagem ainda</b>Escreva abaixo para iniciar a conversa.</div>';
+    if (near) list.scrollTop = list.scrollHeight;
+  };
+  const markRead = () => {
+    const c = S.chats.find(x => x.id === chatId);
+    if (c && chatUnread(c) && document.visibilityState === 'visible') updateDoc(doc(db, 'chats', chatId), { [S.admin ? 'lidoAdv' : 'lidoCliente']: serverTimestamp() }).catch(() => {});
+  };
+  const unsub = onSnapshot(query(collection(db, 'chats', chatId, 'msgs'), orderBy('criadoAt', 'asc')), snap => {
+    msgs = snap.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) })); draw(); markRead();
+  }, () => { list.innerHTML = '<div class="empty" style="margin:auto;border:none">Não foi possível carregar a conversa.</div>'; });
+  draw(); list.scrollTop = list.scrollHeight;
+  const drawChips = () => { chips.innerHTML = files.map((f, i) => `<span>📎 ${esc(f.name)} (${fsize(f.size)})<button type="button" data-rm="${i}">✕</button></span>`).join(''); };
+  $('[data-attach]', box).onclick = () => fileIn.click();
+  fileIn.onchange = () => { acceptFiles(fileIn, files); drawChips(); };
+  chips.onclick = e => { const b = e.target.closest('[data-rm]'); if (b) { files.splice(+b.dataset.rm, 1); drawChips(); } };
+  ta.oninput = () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 140) + 'px'; };
+  ta.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey && innerWidth > 700) { e.preventDefault(); $('.composer', box).requestSubmit(); } };
+  $('.composer', box).onsubmit = async e => {
+    e.preventDefault(); if (sending) return;
+    const texto = ta.value.trim(); if (!texto && !files.length) return;
+    sending = true; sendBtn.disabled = true; sendBtn.textContent = files.length ? 'Enviando…' : 'Enviar';
+    try {
+      const anexos = files.length ? await uploadFiles(files, 'c', chatId) : [];
+      const nome = S.admin ? 'Advogada' : (S.profile?.nome || S.user.displayName || S.user.email);
+      await addDoc(collection(db, 'chats', chatId, 'msgs'), { autorUid: S.user.uid, autorNome: nome, autorTipo: myTipo, texto: texto || '(arquivo)', anexos, criadoAt: serverTimestamp() });
+      await updateDoc(doc(db, 'chats', chatId), { ultimaMsgAt: serverTimestamp(), ultimaMsgPor: myTipo, ultimaMsgTexto: (texto || '📎 ' + anexos[0]?.nome).slice(0, 90), [S.admin ? 'lidoAdv' : 'lidoCliente']: serverTimestamp() });
+      notify('msg', chatId);
+      ta.value = ''; ta.style.height = 'auto'; files = []; drawChips();
+    } catch (x) { toast(x.message?.includes('permission') ? errMsg({ code: 'permission-denied' }) : (x.message || 'Não foi possível enviar.'), true); }
+    sending = false; sendBtn.disabled = false; sendBtn.textContent = 'Enviar';
+  };
+  return () => unsub();
+}
+
+/* ---------- linha do tempo ---------- */
+function mountTimeline(box, p) {
+  const canPost = S.admin;
+  box.innerHTML = `${canPost ? `<form class="card" id="andForm" style="margin-bottom:1.4rem"><div class="eyebrow">Novo andamento</div>
+    <div class="row2"><div class="field"><label>Título</label><input name="titulo" required maxlength="120" placeholder="Ex.: Audiência designada"></div>
+    <div class="field"><label>Data</label><input name="data" type="date" required></div></div>
+    <div class="field"><label>Descrição (o cliente vai ler)</label><textarea name="texto" maxlength="4000" placeholder="Explique em linguagem simples o que aconteceu e os próximos passos."></textarea></div>
+    <div class="chips" id="andChips" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.8rem"></div><input type="file" id="andFile" multiple hidden>
+    <label class="check"><input type="checkbox" name="avisar" checked><span>Avisar o cliente por e-mail</span></label>
+    <p class="msg-err" id="andErr"></p>
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap"><button type="button" class="btn ghost sm" id="andAttach" >📎 Anexar</button><button class="btn sm" id="andBtn">Publicar andamento</button></div></form>` : ''}
+    <div class="tl" id="tl"></div>`;
+  const tl = $('#tl', box); let items = [], files = [];
+  const draw = () => {
+    tl.innerHTML = items.length ? items.map(a => `<div class="tl-i">${canPost ? `<button class="x" data-del="${a.id}" title="Excluir">✕</button>` : ''}<div class="d">${fmtISO(a.data) || fmtD(a.criadoAt)}</div><h4>${esc(a.titulo)}</h4>${a.texto ? `<p>${esc(a.texto)}</p>` : ''}${attHtml(a.anexos)}</div>`).join('')
+      : `<div class="empty" style="margin-left:-1.6rem"><b>Sem andamentos ainda</b>${canPost ? 'Publique o primeiro andamento acima.' : 'Quando houver novidades, elas aparecem aqui e você recebe um aviso.'}</div>`;
+  };
+  const unsub = onSnapshot(collection(db, 'processos', p.id, 'andamentos'), snap => {
+    items = snap.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) })).sort((a, b) => (b.data || '').localeCompare(a.data || '') || ms(b.criadoAt) - ms(a.criadoAt)); draw();
+  });
+  if (!S.admin && procUnread(S.processos.find(x => x.id === p.id) || p)) updateDoc(doc(db, 'processos', p.id), { lidoCliente: serverTimestamp() }).catch(() => {});
+  if (canPost) {
+    const f = $('#andForm', box); f.data.value = new Date().toISOString().slice(0, 10);
+    const chips = $('#andChips', box), fi = $('#andFile', box);
+    const dc = () => { chips.innerHTML = files.map((x, i) => `<span class="att">📎 ${esc(x.name)} <button type="button" data-rm="${i}" style="background:none;border:none;color:var(--bad)">✕</button></span>`).join(''); };
+    $('#andAttach', box).onclick = () => fi.click();
+    fi.onchange = () => { acceptFiles(fi, files); dc(); };
+    chips.onclick = e => { const b = e.target.closest('[data-rm]'); if (b) { files.splice(+b.dataset.rm, 1); dc(); } };
+    f.onsubmit = async e => {
+      e.preventDefault(); const btn = $('#andBtn', box); btn.disabled = true; btn.textContent = 'Publicando…'; $('#andErr', box).textContent = '';
+      try {
+        const anexos = files.length ? await uploadFiles(files, 'p', p.id) : [];
+        await addDoc(collection(db, 'processos', p.id, 'andamentos'), { titulo: f.titulo.value.trim(), texto: f.texto.value.trim(), data: f.data.value, anexos, criadoAt: serverTimestamp() });
+        await updateDoc(doc(db, 'processos', p.id), { atualizadoAt: serverTimestamp(), ultimoAviso: 'Novo andamento: ' + f.titulo.value.trim() });
+        if (f.avisar.checked) notify('andamento', p.id);
+        f.titulo.value = ''; f.texto.value = ''; files = []; dc(); toast('Andamento publicado.');
+      } catch (x) { $('#andErr', box).textContent = x.message || errMsg(x); }
+      btn.disabled = false; btn.textContent = 'Publicar andamento';
+    };
+    tl.onclick = async e => {
+      const b = e.target.closest('[data-del]'); if (!b) return;
+      if (await confirmBox('Excluir este andamento? O cliente deixará de vê-lo.', 'Excluir')) deleteDoc(doc(db, 'processos', p.id, 'andamentos', b.dataset.del)).catch(x => toast(errMsg(x), true));
+    };
+  }
+  return () => unsub();
+}
+
+/* ---------- processo ---------- */
+function formProcesso(p, clienteUidFixo, done) {
+  const novo = !p;
+  const clientes = [...S.clientes].sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+  openModal(`<h2>${novo ? 'Novo processo' : 'Editar processo'}</h2>
+    <form id="pForm">
+    ${novo ? `<div class="field"><label>Cliente</label><select name="cliente" required><option value="">Selecione…</option>${clientes.map(c => `<option value="${c.id}" ${c.id === clienteUidFixo ? 'selected' : ''}>${esc(c.nome)} · ${esc(c.email)}</option>`).join('')}</select>
+      ${clientes.length ? '' : '<small>Nenhum cliente cadastrado ainda. Em “Clientes”, use “Convidar cliente” para enviar o link de cadastro.</small>'}</div>` : ''}
+    <div class="row2"><div class="field"><label>Número do processo</label><input name="numero" required maxlength="60" value="${esc(p?.numero)}" placeholder="0000000-00.0000.0.00.0000"></div>
+    <div class="field"><label>Início</label><input name="inicio" type="date" value="${esc(p?.inicio)}"></div></div>
+    <div class="row2"><div class="field"><label>Área / tipo da ação</label><input name="tipo" list="areasL" maxlength="80" value="${esc(p?.tipo)}"><datalist id="areasL">${AREAS.map(a => `<option value="${a}">`).join('')}</datalist></div>
+    <div class="field"><label>Status</label><select name="status">${STATUS.map(s => `<option value="${s[0]}" ${(p?.status || 'andamento') === s[0] ? 'selected' : ''}>${s[1]}</option>`).join('')}</select></div></div>
+    <div class="field"><label>Vara / tribunal</label><input name="vara" maxlength="120" value="${esc(p?.vara)}" placeholder="Ex.: 3ª Vara Cível de Brasília — TJDFT"></div>
+    <div class="field"><label>Resumo (visível ao cliente)</label><textarea name="descricao" maxlength="2000">${esc(p?.descricao)}</textarea></div>
+    <p class="msg-err" id="pErr"></p>
+    <div class="acts"><button type="button" class="btn ghost sm" data-close2>Cancelar</button><button class="btn sm">${novo ? 'Criar processo' : 'Salvar'}</button></div></form>`,
+  (m, close) => {
+    $('[data-close2]', m).onclick = close;
+    $('#pForm', m).onsubmit = async e => {
+      e.preventDefault(); const f = e.target, btn = $('.btn:not(.ghost)', f); btn.disabled = true;
+      try {
+        const base = { numero: f.numero.value.trim(), tipo: f.tipo.value.trim(), status: f.status.value, vara: f.vara.value.trim(), descricao: f.descricao.value.trim(), inicio: f.inicio.value };
+        if (novo) {
+          const uid = f.cliente.value; if (!uid) throw new Error('Escolha o cliente.');
+          const ref = doc(collection(db, 'processos'));
+          await setDoc(ref, { ...base, clienteUid: uid, clienteNome: clienteById(uid)?.nome || '', criadoAt: serverTimestamp(), atualizadoAt: serverTimestamp(), ultimoAviso: 'Processo cadastrado' });
+          await setDoc(doc(db, 'chats', ref.id), { clienteUid: uid, processoId: ref.id, titulo: (base.tipo || 'Processo') + ' · ' + base.numero, criadoAt: serverTimestamp() });
+          notify('andamento', ref.id); close(); toast('Processo criado.'); location.hash = '#/p/' + ref.id;
+        } else {
+          const mudouStatus = base.status !== p.status;
+          await updateDoc(doc(db, 'processos', p.id), { ...base, ...(mudouStatus ? { atualizadoAt: serverTimestamp(), ultimoAviso: 'Status: ' + statusOf(base.status)[1] } : {}) });
+          if (mudouStatus) notify('andamento', p.id);
+          close(); toast('Processo atualizado.'); done && done();
+        }
+      } catch (x) { $('#pErr', m).textContent = x.message || errMsg(x); btn.disabled = false; }
+    };
+  });
+}
+function viewProcess(id, aba) {
+  const box = $('#main');
+  const first = S.processos.find(p => p.id === id);
+  if (!first) { box.innerHTML = `<a class="back" href="#/">← Voltar</a><div class="empty"><b>Processo não encontrado</b>Ele pode ter sido removido ou você não tem acesso.</div>`; return { refresh() { if (S.processos.find(p => p.id === id)) route(); } }; }
+  aba = aba || 'and';
+  box.innerHTML = `<a class="back" href="#/">← ${S.admin ? 'Processos' : 'Meus processos'}</a><div id="pHead"></div>
+    <div class="tabs" id="pTabs"></div><div id="pBody"></div>`;
+  let cleanBody = null;
+  const head = () => {
+    const p = S.processos.find(x => x.id === id); if (!p) return;
+    $('#pHead', box).innerHTML = `<div class="p-head"><div class="eyebrow">${esc(p.tipo || 'Processo')}</div><h1>${esc(p.numero)}</h1>
+      <div class="meta">${S.admin ? `<span>Cliente: <b>${esc(clienteNome(p.clienteUid))}</b></span>` : ''}${p.vara ? `<span>Vara/Tribunal: <b>${esc(p.vara)}</b></span>` : ''}${p.inicio ? `<span>Início: <b>${fmtISO(p.inicio)}</b></span>` : ''}<span>Atualizado: <b>${fmtD(p.atualizadoAt)}</b></span><span>${chip(p.status)}</span></div>
+      ${p.descricao ? `<p class="p-desc">${esc(p.descricao)}</p>` : ''}
+      ${S.admin ? `<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem"><button class="btn ghost sm" id="edP">Editar dados</button>
+        <select id="stSel" class="btn ghost sm" style="text-transform:none;letter-spacing:0">${STATUS.map(s => `<option value="${s[0]}" ${p.status === s[0] ? 'selected' : ''}>${s[1]}</option>`).join('')}</select></div>` : ''}</div>`;
+    if (S.admin) {
+      $('#edP', box).onclick = () => formProcesso(p, null);
+      $('#stSel', box).onchange = async e => { try { await updateDoc(doc(db, 'processos', id), { status: e.target.value, atualizadoAt: serverTimestamp(), ultimoAviso: 'Status: ' + statusOf(e.target.value)[1] }); notify('andamento', id); toast('Status atualizado.'); } catch (x) { toast(errMsg(x), true); } };
+    }
+    tabs();
+  };
+  const tabs = () => {
+    const c = S.chats.find(x => x.id === id), un = c && chatUnread(c);
+    const defs = [['and', 'Andamentos'], ['chat', 'Conversa'], ...(S.admin ? [['notas', 'Notas internas']] : [])];
+    $('#pTabs', box).innerHTML = defs.map(d => `<button data-t="${d[0]}" class="${d[0] === aba ? 'on' : ''}">${d[1]}${d[0] === 'chat' && un ? '<span class="dot"></span>' : ''}</button>`).join('');
+  };
+  $('#pTabs', box).onclick = e => { const b = e.target.closest('[data-t]'); if (b) location.hash = `#/p/${id}/${b.dataset.t}`; };
+  head();
+  const body = $('#pBody', box); const p0 = first;
+  if (aba === 'and') cleanBody = mountTimeline(body, p0);
+  else if (aba === 'chat') cleanBody = mountChat(body, id, p0.numero);
+  else if (aba === 'notas' && S.admin) {
+    body.innerHTML = `<div class="card"><div class="eyebrow">Notas internas · só a advogada vê</div><div class="field"><textarea id="nt" style="min-height:200px" placeholder="Estratégia, prazos, observações…"></textarea></div>
+      <button class="btn sm" id="ntSave">Salvar notas</button></div>
+      <div class="danger-zone"><button class="btn danger sm" id="delP">Excluir processo</button><p class="hint" style="margin-top:.5rem">Apaga o processo, os andamentos, a conversa e os arquivos. Não pode ser desfeito.</p></div>`;
+    getDoc(doc(db, 'processos', id, 'privado', 'notas')).then(d => { if (d.exists()) $('#nt', body).value = d.data().texto || ''; }).catch(() => {});
+    $('#ntSave', body).onclick = async () => { try { await setDoc(doc(db, 'processos', id, 'privado', 'notas'), { texto: $('#nt', body).value, atualizadoAt: serverTimestamp() }); toast('Notas salvas.'); } catch (x) { toast(errMsg(x), true); } };
+    $('#delP', body).onclick = async () => {
+      if (!await confirmBox('Excluir <b>definitivamente</b> este processo, com andamentos, conversa e arquivos?', 'Excluir tudo')) return;
+      try {
+        for (const sub of ['andamentos']) for (const d of (await getDocs(collection(db, 'processos', id, sub))).docs) await deleteDoc(d.ref);
+        for (const d of (await getDocs(collection(db, 'chats', id, 'msgs'))).docs) await deleteDoc(d.ref);
+        for (const d of (await getDocs(collection(db, 'chats', id, 'arquivos'))).docs) await deleteDoc(d.ref);
+        for (const d of (await getDocs(collection(db, 'processos', id, 'arquivos'))).docs) await deleteDoc(d.ref);
+        await deleteDoc(doc(db, 'processos', id, 'privado', 'notas')).catch(() => {});
+        await deleteDoc(doc(db, 'chats', id)); await deleteDoc(doc(db, 'processos', id));
+        if (S.workerUrl) { await api('/purge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scope: 'p', id }) }).catch(() => {}); await api('/purge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scope: 'c', id }) }).catch(() => {}); }
+        toast('Processo excluído.'); location.hash = '#/';
+      } catch (x) { toast(errMsg(x), true); }
+    };
+  }
+  return { refresh() { head(); }, destroy() { cleanBody && cleanBody(); } };
+}
+
+/* ---------- telas do cliente ---------- */
+function viewClientHome() {
+  const box = $('#main');
+  box.innerHTML = `<div class="page-h"><div><div class="eyebrow">Bem-vindo(a)</div><h1>Olá, <em>${esc(firstName(S.profile?.nome || S.user.displayName) || 'cliente')}</em></h1><p>Acompanhe aqui o andamento dos seus processos.</p></div>
+    <a class="btn" href="#/mensagens">💬 Falar com a advogada</a></div><div id="cs"></div><div class="list" id="ls"></div>`;
+  const draw = () => {
+    const ps = [...S.processos].sort((a, b) => ms(b.atualizadoAt) - ms(a.atualizadoAt));
+    $('#cs', box).innerHTML = ps.length ? `<div class="cards">${stat(ps.filter(p => !['concluido', 'arquivado'].includes(p.status)).length, 'Processos ativos')}${stat(ps.filter(procUnread).length, 'Novidades')}${stat(S.chats.filter(chatUnread).length, 'Mensagens novas')}</div>` : '';
+    $('#ls', box).innerHTML = ps.length ? ps.map(p => `<a class="item" href="#/p/${p.id}"><div class="main"><h3>${esc(p.numero)} ${procUnread(p) ? '<span class="dot"></span>' : ''}</h3><p>${esc(p.tipo || 'Processo')}${p.vara ? ' · ' + esc(p.vara) : ''}</p></div><div class="side">${chip(p.status)}<span>Atualizado em ${fmtD(p.atualizadoAt)}</span></div></a>`).join('')
+      : `<div class="empty"><b>Nenhum processo vinculado ainda</b>Assim que a advogada cadastrar seu processo, ele aparece aqui.<br>Enquanto isso, você pode enviar mensagens e documentos em “Mensagens”.</div>`;
+  };
+  draw(); return { refresh: draw };
+}
+function viewClientChat() {
+  const box = $('#main');
+  box.innerHTML = `<div class="page-h"><div><div class="eyebrow">Atendimento</div><h1>Conversa com a <em>advogada</em></h1><p>Envie dúvidas, informações e documentos. Você será avisado quando houver resposta.</p></div></div><div id="cb"></div>`;
+  const un = mountChat($('#cb', box), S.user.uid); return { destroy: un };
+}
+function viewProfile() {
+  const box = $('#main'), pr = S.profile || {};
+  box.innerHTML = `<div class="page-h"><div><div class="eyebrow">Conta</div><h1>Meu <em>perfil</em></h1></div></div>
+    <form class="card" id="prF" style="max-width:600px"><div class="row2"><div class="field"><label>Nome completo</label><input name="nome" required maxlength="150" value="${esc(pr.nome)}"></div>
+    <div class="field"><label>Telefone / WhatsApp</label><input name="tel" type="tel" maxlength="40" value="${esc(pr.telefone)}"></div></div>
+    <div class="row2"><div class="field"><label>E-mail de acesso</label><input value="${esc(S.user.email)}" readonly></div>
+    <div class="field"><label>CPF (opcional)</label><input name="doc" maxlength="30" value="${esc(pr.documento)}" placeholder="000.000.000-00"></div></div>
+    <label class="check"><input type="checkbox" name="notif" ${pr.notifEmail === false ? '' : 'checked'}><span>Receber avisos por e-mail (nova mensagem ou andamento). O conteúdo só aparece aqui no portal.</span></label>
+    <p class="msg-err" id="prE"></p><div style="display:flex;gap:.6rem;flex-wrap:wrap"><button class="btn">Salvar alterações</button><button type="button" class="btn ghost" id="pwd">Alterar senha por e-mail</button></div></form>`;
+  $('#pwd', box).onclick = async () => { try { await sendPasswordResetEmail(auth, S.user.email); toast('Enviamos um link para redefinir a senha no seu e-mail.'); } catch (x) { toast(errMsg(x), true); } };
+  $('#prF', box).onsubmit = async e => {
+    e.preventDefault(); const f = e.target;
+    try {
+      await updateDoc(doc(db, 'clientes', S.user.uid), { nome: f.nome.value.trim(), telefone: f.tel.value.trim(), documento: f.doc.value.trim(), notifEmail: f.notif.checked, atualizadoEm: serverTimestamp() });
+      try { await updateProfile(auth.currentUser, { displayName: f.nome.value.trim() }); } catch { /* ok */ }
+      toast('Perfil atualizado.');
+    } catch (x) { $('#prE', box).textContent = errMsg(x); }
+  };
+  return {};
+}
+
+/* ---------- telas da advogada ---------- */
+function convidar() {
+  const link = new URL('cliente.html', location.href).href;
+  const txt = `Olá! Para acompanhar seu processo e conversar comigo com segurança, crie seu acesso na Área do Cliente: ${link}`;
+  openModal(`<h2>Convidar cliente</h2><p style="font-size:.82rem;line-height:1.7;margin-bottom:1rem">Envie este link. O cliente cria a própria conta (e-mail e senha ou Google) e depois aparece em <b>Clientes</b>, pronto para você cadastrar o processo.</p>
+    <div class="field"><input readonly value="${esc(link)}" id="lk"></div><div class="acts"><button class="btn ghost sm" id="cp">Copiar link</button><a class="btn sm" target="_blank" rel="noopener" href="https://api.whatsapp.com/send?text=${encodeURIComponent(txt)}" style="text-decoration:none">Enviar por WhatsApp</a></div>`,
+  m => { $('#cp', m).onclick = () => { navigator.clipboard?.writeText(link).then(() => toast('Link copiado.')).catch(() => { $('#lk', m).select(); document.execCommand('copy'); toast('Link copiado.'); }); }; });
+}
+function viewAdminHome() {
+  const box = $('#main'); let q = '', st = '';
+  box.innerHTML = `<div class="page-h"><div><div class="eyebrow">Painel</div><h1>Processos em <em>atuação</em></h1></div><div style="display:flex;gap:.5rem;flex-wrap:wrap"><button class="btn ghost" id="inv">Convidar cliente</button><button class="btn" id="np">＋ Novo processo</button></div></div>
+    <div id="cs"></div><div class="toolbar"><input id="q" placeholder="Buscar por número, cliente ou tipo…"><select id="st"><option value="">Todos os status</option>${STATUS.map(s => `<option value="${s[0]}">${s[1]}</option>`).join('')}</select></div><div class="list" id="ls"></div>`;
+  const draw = () => {
+    const ps = S.processos;
+    $('#cs', box).innerHTML = `<div class="cards">${stat(ps.filter(p => !['concluido', 'arquivado'].includes(p.status)).length, 'Processos ativos')}${stat(ps.filter(p => p.status === 'cliente').length, 'Aguardando cliente')}${stat(S.chats.filter(chatUnread).length, 'Mensagens novas')}${stat(S.clientes.length, 'Clientes')}</div>`;
+    const t = q.toLowerCase();
+    const l = ps.filter(p => (!st || p.status === st) && (!t || [p.numero, p.tipo, p.vara, clienteNome(p.clienteUid)].join(' ').toLowerCase().includes(t))).sort((a, b) => ms(b.atualizadoAt) - ms(a.atualizadoAt));
+    $('#ls', box).innerHTML = l.length ? l.map(p => { const c = S.chats.find(x => x.id === p.id); return `<a class="item" href="#/p/${p.id}"><div class="main"><h3>${esc(p.numero)} ${c && chatUnread(c) ? '<span class="dot" title="Mensagem nova"></span>' : ''}</h3><p>${esc(clienteNome(p.clienteUid))} · ${esc(p.tipo || 'Processo')}${p.vara ? ' · ' + esc(p.vara) : ''}</p></div><div class="side">${chip(p.status)}<span>${fmtD(p.atualizadoAt)}</span></div></a>`; }).join('')
+      : `<div class="empty"><b>${ps.length ? 'Nada encontrado' : 'Nenhum processo cadastrado'}</b>${ps.length ? 'Ajuste a busca ou o filtro.' : 'Convide seus clientes e cadastre o primeiro processo.'}</div>`;
+  };
+  $('#q', box).oninput = e => { q = e.target.value; draw(); }; $('#st', box).onchange = e => { st = e.target.value; draw(); };
+  $('#np', box).onclick = () => formProcesso(null, null); $('#inv', box).onclick = convidar;
+  draw(); return { refresh: draw };
+}
+function viewClients() {
+  const box = $('#main'); let q = '';
+  box.innerHTML = `<div class="page-h"><div><div class="eyebrow">Cadastro</div><h1><em>Clientes</em></h1></div><button class="btn" id="inv">Convidar cliente</button></div>
+    <div class="toolbar"><input id="q" placeholder="Buscar por nome, e-mail ou telefone…"></div><div class="list" id="ls"></div>`;
+  const draw = () => {
+    const t = q.toLowerCase();
+    const l = [...S.clientes].filter(c => !t || [c.nome, c.email, c.telefone].join(' ').toLowerCase().includes(t)).sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+    $('#ls', box).innerHTML = l.length ? l.map(c => { const n = S.processos.filter(p => p.clienteUid === c.id).length, ch = S.chats.find(x => x.id === c.id); return `<a class="item" href="#/c/${c.id}"><div class="main"><h3>${esc(c.nome)} ${ch && chatUnread(ch) ? '<span class="dot"></span>' : ''}</h3><p>${esc(c.email)} · ${esc(c.telefone)}</p></div><div class="side"><span>${n} processo${n === 1 ? '' : 's'}</span><span>Desde ${fmtD(c.criadoEm)}</span></div></a>`; }).join('')
+      : `<div class="empty"><b>${S.clientes.length ? 'Nada encontrado' : 'Nenhum cliente cadastrado'}</b>${S.clientes.length ? '' : 'Use “Convidar cliente” para enviar o link de cadastro.'}</div>`;
+  };
+  $('#q', box).oninput = e => { q = e.target.value; draw(); }; $('#inv', box).onclick = convidar;
+  draw(); return { refresh: draw };
+}
+function viewClientDetail(uid) {
+  const box = $('#main'), c = clienteById(uid);
+  if (!c) { box.innerHTML = `<a class="back" href="#/clientes">← Clientes</a><div class="empty"><b>Cliente não encontrado</b></div>`; return { refresh() { if (clienteById(uid)) route(); } }; }
+  box.innerHTML = `<a class="back" href="#/clientes">← Clientes</a><div class="page-h"><div><div class="eyebrow">Cliente</div><h1>${esc(c.nome)}</h1><p>${esc(c.email)}</p></div>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap"><a class="btn ghost" href="#/chat/${uid}">💬 Conversa</a><button class="btn" id="np">＋ Novo processo</button></div></div>
+    <form class="card" id="cf" style="max-width:640px;margin-bottom:1.6rem"><div class="row2"><div class="field"><label>Nome</label><input name="nome" value="${esc(c.nome)}" maxlength="150" required></div><div class="field"><label>Telefone</label><input name="tel" value="${esc(c.telefone)}" maxlength="40"></div></div>
+    <div class="field"><label>CPF</label><input name="doc" value="${esc(c.documento)}" maxlength="30"></div><button class="btn sm">Salvar dados</button></form>
+    <div class="eyebrow">Processos deste cliente</div><div class="list" id="ls"></div>`;
+  $('#np', box).onclick = () => formProcesso(null, uid);
+  $('#cf', box).onsubmit = async e => { e.preventDefault(); const f = e.target; try { await updateDoc(doc(db, 'clientes', uid), { nome: f.nome.value.trim(), telefone: f.tel.value.trim(), documento: f.doc.value.trim(), atualizadoEm: serverTimestamp() }); toast('Dados salvos.'); } catch (x) { toast(errMsg(x), true); } };
+  const draw = () => {
+    const ps = S.processos.filter(p => p.clienteUid === uid).sort((a, b) => ms(b.atualizadoAt) - ms(a.atualizadoAt));
+    $('#ls', box).innerHTML = ps.length ? ps.map(p => `<a class="item" href="#/p/${p.id}"><div class="main"><h3>${esc(p.numero)}</h3><p>${esc(p.tipo || '')}${p.vara ? ' · ' + esc(p.vara) : ''}</p></div><div class="side">${chip(p.status)}<span>${fmtD(p.atualizadoAt)}</span></div></a>`).join('') : '<div class="empty">Nenhum processo para este cliente.</div>';
+  };
+  draw(); return { refresh: draw };
+}
+function viewAdminChats() {
+  const box = $('#main');
+  box.innerHTML = `<div class="page-h"><div><div class="eyebrow">Atendimento</div><h1><em>Conversas</em></h1><p>Mensagens dos clientes, gerais e por processo.</p></div></div><div class="list" id="ls"></div>`;
+  const draw = () => {
+    const l = S.chats.filter(c => c.ultimaMsgAt).sort((a, b) => ms(b.ultimaMsgAt) - ms(a.ultimaMsgAt));
+    $('#ls', box).innerHTML = l.length ? l.map(c => `<a class="item" href="${chatHref(c)}"><div class="main"><h3>${esc(clienteNome(c.clienteUid))} ${chatUnread(c) ? '<span class="dot"></span>' : ''}</h3><p>${esc(chatTitle(c))} · ${c.ultimaMsgPor === 'adv' ? 'Você: ' : ''}${esc(c.ultimaMsgTexto || '')}</p></div><div class="side"><span>${fmtDT(c.ultimaMsgAt)}</span></div></a>`).join('') : '<div class="empty"><b>Nenhuma conversa ainda</b>Quando um cliente escrever, a conversa aparece aqui.</div>';
+  };
+  draw(); return { refresh: draw };
+}
+function viewAdminChat(id) {
+  const box = $('#main'), c = clienteById(id);
+  box.innerHTML = `<a class="back" href="#/mensagens">← Conversas</a><div class="page-h"><div><div class="eyebrow">Conversa geral</div><h1>${esc(c?.nome || 'Cliente')}</h1></div>${c ? `<a class="btn ghost" href="#/c/${id}">Ver cadastro</a>` : ''}</div><div id="cb"></div>`;
+  const un = mountChat($('#cb', box), id); return { destroy: un };
+}
+function viewConfig() {
+  const box = $('#main');
+  box.innerHTML = `<div class="page-h"><div><div class="eyebrow">Sistema</div><h1><em>Configurações</em></h1></div></div>
+    <div class="card" style="max-width:700px"><div class="eyebrow">E-mails de aviso e arquivos grandes (Cloudflare) · opcional</div>
+    <p class="hint" style="margin-bottom:1rem">O portal já funciona sem isto: mensagens, processos, sino de novidades e arquivos leves (até 700 KB, fotos são reduzidas automaticamente). Para receber <b>avisos por e-mail</b> e liberar arquivos de até 15 MB, cole aqui o endereço do seu Cloudflare Worker (termina em <b>workers.dev</b>).</p>
+    <div class="field"><label>Endereço do Worker</label><input id="wk" placeholder="https://portal-poliana.seuusuario.workers.dev" value="${esc(S.workerUrl)}"></div><p class="msg-err" id="wkE"></p>
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap"><button class="btn sm" id="wkS">Salvar</button><button class="btn ghost sm" id="wkT">Testar conexão</button></div></div>`;
+  $('#wkS', box).onclick = async () => {
+    const v = $('#wk', box).value.trim().replace(/\/$/, '');
+    if (v && !/^https:\/\/[\w.-]+/.test(v)) return $('#wkE', box).textContent = 'O endereço deve começar com https://';
+    let r2 = false; if (v) { try { r2 = !!(await (await fetch(v + '/health')).json()).r2; } catch { r2 = false; } }
+    try { await setDoc(doc(db, 'site', 'portal'), { workerUrl: v, r2 }, { merge: true }); S.workerUrl = v; S.r2 = r2; $('#wkE', box).textContent = ''; toast('Configuração salva.'); } catch (x) { $('#wkE', box).textContent = errMsg(x); }
+  };
+  $('#wkT', box).onclick = async () => {
+    const v = $('#wk', box).value.trim().replace(/\/$/, ''); if (!v) return toast('Informe o endereço do Worker.', true);
+    try { const r = await fetch(v + '/health'); const j = await r.json(); toast(j.ok ? `Conexão OK · arquivos: ${j.r2 ? 'sim' : 'NÃO configurado'} · e-mail: ${j.mail ? 'sim' : 'NÃO configurado'}` : 'Respondeu, mas algo está errado.', !j.ok); } catch { toast('Não foi possível conectar. Confira o endereço.', true); }
+  };
+  return {};
+}
+
+/* ---------- rotas ---------- */
+function route() {
+  if (!S.user || !$('#main')) return;
+  S.view?.destroy?.(); S.view = null;
+  const [r, a, b] = location.hash.replace(/^#\/?/, '').split('/');
+  $$('[data-nav]').forEach(n => { const h = n.dataset.nav.replace('#/', ''); n.classList.toggle('on', h === (r === 'p' ? '' : r === 'c' ? 'clientes' : r === 'chat' ? 'mensagens' : r || '')); });
+  window.scrollTo(0, 0);
+  if (r === 'p' && a) S.view = viewProcess(a, b);
+  else if (S.admin) S.view = r === 'clientes' ? viewClients() : r === 'c' && a ? viewClientDetail(a) : r === 'mensagens' ? viewAdminChats() : r === 'chat' && a ? viewAdminChat(a) : r === 'config' ? viewConfig() : viewAdminHome();
+  else S.view = r === 'mensagens' ? viewClientChat() : r === 'perfil' ? viewProfile() : viewClientHome();
+}
+window.addEventListener('hashchange', route);
+
+/* ---------- início de sessão ---------- */
+const listen = (q, fn) => S.unsubs.push(onSnapshot(q, fn, e => console.warn('listen', e.code)));
+const docs = snap => snap.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }));
+async function ensureProfile(user) {
+  const ref = doc(db, 'clientes', user.uid), d = await getDoc(ref);
+  if (!d.exists()) {
+    await setDoc(ref, { uid: user.uid, nome: (S.pending?.nome || user.displayName || (user.email || '').split('@')[0]).slice(0, 150), email: (user.email || '').toLowerCase(), telefone: S.pending?.telefone || '', documento: '', notifEmail: true, criadoEm: serverTimestamp(), atualizadoEm: serverTimestamp() });
+    S.pending = null;
+  }
+  // conversa geral (mesmos valores a cada acesso: não altera nada se já existir)
+  await setDoc(doc(db, 'chats', user.uid), { clienteUid: user.uid, processoId: null, titulo: 'Conversa geral' }, { merge: true });
+}
+function stopAll() { S.unsubs.forEach(u => u()); S.unsubs = []; S.view?.destroy?.(); S.view = null; S.profile = null; S.clientes = []; S.processos = []; S.chats = []; S.seen = null; }
+onAuthStateChanged(auth, async user => {
+  stopAll(); S.user = user;
+  if (!user) { viewAuth(); document.title = 'Área do Cliente | Poliana Rebouças Advocacia'; return; }
+  $('#root').innerHTML = '<div class="loading">Carregando…</div>';
+  try {
+    const email = (user.email || '').toLowerCase();
+    S.admin = ADMIN_EMAILS.includes(email);
+    if (!S.admin) { try { S.admin = (await getDoc(doc(db, 'admins', email))).exists(); } catch { S.admin = false; } }
+    getDoc(doc(db, 'site', 'portal')).then(d => { if (d.exists()) { S.workerUrl = d.data().workerUrl || ''; S.r2 = !!d.data().r2; } }).catch(() => {});
+    if (S.admin) {
+      renderShell();
+      listen(collection(db, 'clientes'), s => { S.clientes = docs(s); onData(); });
+      listen(collection(db, 'processos'), s => { S.processos = docs(s); onData(); });
+      listen(collection(db, 'chats'), s => { S.chats = docs(s); onData(); });
+    } else {
+      await ensureProfile(user);
+      renderShell();
+      listen(doc(db, 'clientes', user.uid), s => { S.profile = s.exists() ? { id: s.id, ...s.data() } : null; const w = $('.who'); if (w && S.profile) w.textContent = S.profile.nome; });
+      listen(query(collection(db, 'processos'), where('clienteUid', '==', user.uid)), s => { S.processos = docs(s); onData(); });
+      listen(query(collection(db, 'chats'), where('clienteUid', '==', user.uid)), s => { S.chats = docs(s); onData(); });
+    }
+    renderBell(); route();
+  } catch (e) {
+    $('#root').innerHTML = `<div class="auth"><div class="card center"><h1>Ops</h1><p class="sub">${esc(errMsg(e))}</p><button class="btn" id="out">Sair</button></div></div>`;
+    $('#out').onclick = () => signOut(auth);
+  }
+});
+</script>
+</body>
+</html>
