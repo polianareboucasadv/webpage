@@ -1,0 +1,192 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Administradores (adicione outros e-mails à lista, se necessário)
+    function isAdmin() {
+      return request.auth != null
+          && (request.auth.token.email.lower() in ['polireboucas@gmail.com']
+              || exists(/databases/$(database)/documents/admins/$(request.auth.token.email.lower())));
+    }
+
+    // Lista de administradores: cada um só consegue ler o próprio documento;
+    // criar/remover administradores é feito apenas pelo console do Firebase
+    match /admins/{adminEmail} {
+      allow get: if request.auth != null && request.auth.token.email.lower() == adminEmail;
+      allow list, write: if false;
+    }
+
+    // Conteúdo do site: qualquer visitante lê, só o admin altera
+    match /site/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Artigos: visitantes leem só os publicados; admin lê rascunhos e gerencia tudo
+    match /artigos/{artigoId} {
+      allow read: if resource.data.publicado == true || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Imagens dos artigos: leitura pública, só o admin envia
+    match /imagens/{imgId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Assinantes dos artigos: o visitante só se cadastra (uma vez, o ID é o próprio e-mail);
+    // apenas o admin lista, edita e exclui
+    match /assinantes/{assinanteId} {
+      allow create: if request.resource.data.keys().hasOnly(['nome','email','origem','criadoEm'])
+                    && request.resource.data.email is string
+                    && request.resource.data.email.size() <= 200
+                    && request.resource.data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
+                    && request.resource.data.email == assinanteId
+                    && request.resource.data.nome is string && request.resource.data.nome.size() <= 150
+                    && request.resource.data.origem == 'site'
+                    && request.resource.data.criadoEm == request.time;
+      allow read, write: if isAdmin();
+    }
+
+    // Mensagens do formulário: visitante só cria; admin lê, marca como lida e exclui
+    match /mensagens/{msgId} {
+      allow create: if request.resource.data.keys().hasOnly(['name','telefone','email','area','mensagem','createdAt','lida'])
+                    && request.resource.data.name is string && request.resource.data.name.size() <= 200
+                    && request.resource.data.email is string && request.resource.data.email.size() <= 200
+                    && request.resource.data.mensagem is string && request.resource.data.mensagem.size() <= 5000
+                    && request.resource.data.lida == false;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ============ ÁREA DO CLIENTE ============
+    function signedIn() { return request.auth != null; }
+    function chatOwner(chatId) {
+      return signedIn()
+          && get(/databases/$(database)/documents/chats/$(chatId)).data.clienteUid == request.auth.uid;
+    }
+
+    // Perfil do cliente: o próprio cliente cria/edita; o admin lê e edita
+    match /clientes/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow create: if signedIn() && request.auth.uid == uid
+                    && request.resource.data.keys().hasOnly(['uid','nome','email','telefone','documento','notifEmail','criadoEm','atualizadoEm'])
+                    && request.resource.data.uid == uid
+                    && request.resource.data.email == request.auth.token.email.lower()
+                    && request.resource.data.nome is string && request.resource.data.nome.size() <= 150
+                    && request.resource.data.telefone is string && request.resource.data.telefone.size() <= 40
+                    && request.resource.data.documento is string && request.resource.data.documento.size() <= 30
+                    && request.resource.data.notifEmail is bool;
+      allow update: if signedIn() && ((request.auth.uid == uid
+                    && request.resource.data.keys().hasOnly(['uid','nome','email','telefone','documento','notifEmail','criadoEm','atualizadoEm'])
+                    && request.resource.data.uid == resource.data.uid
+                    && request.resource.data.email == resource.data.email
+                    && request.resource.data.criadoEm == resource.data.criadoEm
+                    && request.resource.data.nome is string && request.resource.data.nome.size() <= 150
+                    && request.resource.data.telefone is string && request.resource.data.telefone.size() <= 40
+                    && request.resource.data.documento is string && request.resource.data.documento.size() <= 30
+                    && request.resource.data.notifEmail is bool) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // Processos: criados e editados só pela advogada; o cliente vê os seus e só marca "lido"
+    match /processos/{pid} {
+      allow read: if signedIn() && (isAdmin() || resource.data.clienteUid == request.auth.uid);
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+                    || (signedIn() && resource.data.clienteUid == request.auth.uid
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lidoCliente']));
+
+      // Linha do tempo de andamentos (só a advogada publica)
+      match /andamentos/{aid} {
+        allow read: if signedIn() && (isAdmin()
+                    || get(/databases/$(database)/documents/processos/$(pid)).data.clienteUid == request.auth.uid);
+        allow write: if isAdmin();
+      }
+      // Arquivos anexados aos andamentos (guardados aqui, até ~700 KB; só a advogada envia)
+      match /arquivos/{fid} {
+        allow read: if signedIn() && (isAdmin()
+                    || get(/databases/$(database)/documents/processos/$(pid)).data.clienteUid == request.auth.uid);
+        allow create: if signedIn()
+                      && (isAdmin() || get(/databases/$(database)/documents/processos/$(pid)).data.clienteUid == request.auth.uid)
+                      && request.resource.data.keys().hasOnly(['nome','tipo','tamanho','data','autorUid','criadoAt'])
+                      && request.resource.data.data is string && request.resource.data.data.size() < 990000
+                      && request.resource.data.autorUid == request.auth.uid;
+        allow update: if false;
+        allow delete: if isAdmin();
+      }
+      // Documentos: a advogada solicita; o cliente envia os arquivos (ou manda um avulso)
+      match /documentos/{did} {
+        allow read: if signedIn() && (isAdmin()
+                    || get(/databases/$(database)/documents/processos/$(pid)).data.clienteUid == request.auth.uid);
+        allow create: if isAdmin()
+                      || (signedIn()
+                          && get(/databases/$(database)/documents/processos/$(pid)).data.clienteUid == request.auth.uid
+                          && request.resource.data.solicitadoPor == 'cliente'
+                          && request.resource.data.status == 'enviado');
+        allow update: if isAdmin()
+                      || (signedIn()
+                          && get(/databases/$(database)/documents/processos/$(pid)).data.clienteUid == request.auth.uid
+                          && resource.data.status != 'recebido'
+                          && request.resource.data.status == 'enviado'
+                          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['anexos','status','enviadoAt','atualizadoAt']));
+        allow delete: if isAdmin();
+      }
+      // Anotações internas: nunca visíveis ao cliente
+      match /privado/{docId} {
+        allow read, write: if isAdmin();
+      }
+    }
+
+    // Conversas: uma geral por cliente (id = uid do cliente) e uma por processo (id = id do processo)
+    // Agenda: audiências e reuniões (a advogada agenda; o cliente pode solicitar reuniões)
+    match /eventos/{eid} {
+      allow read: if signedIn() && (isAdmin() || resource.data.clienteUid == request.auth.uid);
+      allow create: if signedIn() && (isAdmin()
+                    || (request.resource.data.clienteUid == request.auth.uid
+                        && request.resource.data.status == 'solicitado'
+                        && request.resource.data.criadoPor == 'cliente'
+                        && request.resource.data.tipo == 'reuniao'));
+      allow update: if signedIn() && (isAdmin()
+                    || (resource.data.clienteUid == request.auth.uid
+                        && resource.data.status == 'solicitado'
+                        && request.resource.data.status == 'cancelado'
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','atualizadoAt'])));
+      allow delete: if isAdmin();
+    }
+
+    match /chats/{cid} {
+      allow read: if signedIn() && (isAdmin() || resource.data.clienteUid == request.auth.uid);
+      allow create: if signedIn() && (isAdmin()
+                    || (cid == request.auth.uid && request.resource.data.clienteUid == request.auth.uid));
+      allow update: if isAdmin()
+                    || (signedIn() && resource.data.clienteUid == request.auth.uid
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                             .hasOnly(['lidoCliente','ultimaMsgAt','ultimaMsgPor','ultimaMsgTexto']));
+      allow delete: if isAdmin();
+
+      // Arquivos enviados na conversa (cliente ou advogada; até ~700 KB cada)
+      match /arquivos/{fid} {
+        allow read: if isAdmin() || chatOwner(cid);
+        allow create: if signedIn() && (isAdmin() || chatOwner(cid))
+                      && request.resource.data.keys().hasOnly(['nome','tipo','tamanho','data','autorUid','criadoAt'])
+                      && request.resource.data.data is string && request.resource.data.data.size() < 990000
+                      && request.resource.data.autorUid == request.auth.uid
+                      && request.resource.data.criadoAt == request.time;
+        allow update: if false;
+        allow delete: if isAdmin();
+      }
+
+      match /msgs/{mid} {
+        allow read: if isAdmin() || chatOwner(cid);
+        allow create: if signedIn() && (isAdmin() || chatOwner(cid))
+                      && request.resource.data.keys().hasOnly(['autorUid','autorNome','autorTipo','texto','anexos','criadoAt'])
+                      && request.resource.data.autorUid == request.auth.uid
+                      && request.resource.data.autorTipo == (isAdmin() ? 'adv' : 'cliente')
+                      && request.resource.data.texto is string && request.resource.data.texto.size() <= 4000
+                      && request.resource.data.anexos is list && request.resource.data.anexos.size() <= 5
+                      && request.resource.data.criadoAt == request.time;
+        allow update, delete: if isAdmin();
+      }
+    }
+  }
+}
