@@ -422,7 +422,7 @@ blockquote cite {
 
 /* FOOTER */
 footer {
-  padding:2rem 4rem; border-top:1px solid var(--border);
+  position:relative; padding:2rem 4rem; border-top:1px solid var(--border);
   display:flex; justify-content:space-between; align-items:center;
 }
 footer p { color: var(--muted); font-size:0.7rem; letter-spacing:0.1em; }
@@ -766,8 +766,8 @@ body.is-admin #app [data-empty]::after { display:none; }
 body.is-admin .hero-name:has(> [data-empty]) { line-height:1.2; }
 /* alça para arrastar a altura da seção */
 .areas-section, .articles-section, .contact-section { position:relative; }
-.rz.top { top:-1px; bottom:auto; }
-.rz.top::before { top:0; bottom:auto; border-bottom:none; border-top:1px dashed var(--gold); }
+.rz.top { top:-1px; bottom:auto; left:1rem; right:auto; width:auto; }
+.rz.top::before { display:none; }
 .rz.top span { margin-top:0; margin-bottom:0; }
 .sr-only { position:absolute !important; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 .hero-name, .section-heading { position:relative; }
@@ -1448,7 +1448,9 @@ function render() {
   <div class="rz admin-only" data-rz="about" title="Arraste para cima ou para baixo"><span>↕ Arraste para ajustar a altura</span></div>
 </div>
 
-<div class="quote-section">
+<div class="quote-section" id="citacao">
+  <div class="rz top admin-only" data-rz="citacao" data-side="t" title="Arraste para ajustar o espaço superior"><span>↕ Espaço superior</span></div>
+  <div class="rz admin-only" data-rz="citacao" data-side="b" title="Arraste para cima ou para baixo"><span>↕ Arraste para ajustar a altura</span></div>
   <blockquote>
     <span data-path="quote.text">${rich(c.quote.text)}</span>
     <cite data-path="quote.author">${rich(c.quote.author)}</cite>
@@ -1533,7 +1535,9 @@ function render() {
   </div>
 </div>
 
-<footer>
+<footer id="rodape">
+  <div class="rz top admin-only" data-rz="rodape" data-side="t" title="Arraste para ajustar o espaço superior"><span>↕ Espaço superior</span></div>
+  <div class="rz admin-only" data-rz="rodape" data-side="b" title="Arraste para cima ou para baixo"><span>↕ Arraste para ajustar a altura</span></div>
   <p data-path="footer.text">${rich(c.footer.text)}</p>
   <div class="footer-links">
     <a href="mailto:${esc(ct.email)}">E-mail</a>
@@ -1824,7 +1828,7 @@ document.addEventListener('input', e => {
 });
 
 /* ---------- altura das demais seções (arrastar) ---------- */
-const SEC_SEL = { areas: '#areas', artigos: '#artigos', contato: '#contato' };
+const SEC_SEL = { areas: '#areas', artigos: '#artigos', contato: '#contato', citacao: '#citacao', rodape: '#rodape' };
 document.addEventListener('pointerdown', e => {
   const rz = e.target.closest?.('.rz'); if (!rz || !admin || !SEC_SEL[rz.dataset.rz]) return;
   const key = rz.dataset.rz, side = rz.dataset.side === 't' ? 't' : 'b', sec = rz.parentElement, y0 = e.clientY;
