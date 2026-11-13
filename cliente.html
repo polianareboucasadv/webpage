@@ -128,6 +128,44 @@ main{max-width:1100px;margin:auto;padding:2rem 1.5rem 5rem}
 .dc .acts2{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.8rem}
 .dc small{font-size:.62rem;color:var(--muted);letter-spacing:.04em}
 .dpend{color:#e0a63c}.denv{color:#5aa0d8}.drec{color:#5cb85c}
+.sec-t{font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin:1.6rem 0 .7rem;display:flex;align-items:center;gap:.6rem}
+.sec-t::after{content:'';flex:1;height:1px;background:var(--border)}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:800px){.dgrid{grid-template-columns:1fr}}
+.pnl{border:1px solid var(--border);background:var(--navy2);padding:1rem 1.1rem}
+.pnl h3{font-family:'Montserrat',sans-serif;font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:.8rem}
+.bar{display:grid;grid-template-columns:130px 1fr 28px;gap:.6rem;align-items:center;font-size:.72rem;margin:.4rem 0}
+.bar>span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+.bar i{display:block;height:10px;background:rgba(255,255,255,.06)}
+.bar i b{display:block;height:100%;background:var(--gold)}
+.bar em{font-style:normal;text-align:right;color:var(--cream)}
+.mini{display:flex;flex-direction:column;gap:.1rem}
+.mini a,.mini div{display:flex;justify-content:space-between;gap:.8rem;font-size:.76rem;padding:.5rem 0;border-bottom:1px solid var(--border);color:var(--cream);text-decoration:none}
+.mini a:hover{color:var(--gold)}
+.mini small{color:var(--muted);font-size:.66rem;text-align:right}
+.mini .none{color:var(--muted);border:none;font-size:.74rem}
+.cal{border:1px solid var(--border);background:var(--navy2);padding:.8rem;margin-bottom:1rem}
+.cal-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem}
+.cal-h b{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:500}
+.cal-h button{background:none;border:1px solid var(--border);color:var(--cream);width:34px;height:34px;cursor:pointer;font-size:1rem}
+.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-g .wd{font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:center;padding:.2rem 0}
+.cal-g button{background:transparent;border:1px solid transparent;color:var(--cream);height:44px;font:inherit;font-size:.78rem;cursor:pointer;position:relative}
+.cal-g button:hover{border-color:var(--gold)}
+.cal-g button.out{opacity:.3}.cal-g button.today{border-color:rgba(201,168,76,.6)}.cal-g button.sel{background:var(--gold);color:#0d1821}
+.cal-g button i{position:absolute;bottom:3px;left:50%;transform:translateX(-50%);display:flex;gap:2px}
+.cal-g button i u{width:5px;height:5px;border-radius:50%;background:#5aa0d8;display:block}.cal-g button i u.a{background:#e0a63c}
+.ev{display:flex;gap:1rem;border:1px solid var(--border);background:var(--navy2);padding:.9rem 1rem;border-left:3px solid #5aa0d8;margin-bottom:.7rem}
+.ev.solicitado{border-left-color:#e0a63c}.ev.cancelado{opacity:.55;border-left-color:var(--border)}.ev.realizado{border-left-color:#5cb85c}
+.ev.aud{border-left-color:#c9a84c}
+.ev-date{min-width:54px;text-align:center}.ev-date b{display:block;font-family:'Cormorant Garamond',serif;font-size:1.9rem;line-height:1;color:var(--gold);font-weight:400}.ev-date span{font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.ev-main{flex:1;min-width:0}.ev-top{display:flex;justify-content:space-between;gap:.6rem;align-items:flex-start;flex-wrap:wrap}
+.ev-main h4{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:500}
+.ev-main p{font-size:.74rem;color:var(--muted);line-height:1.6;margin-top:.15rem;word-break:break-word}.ev-main p a{color:var(--gold)}
+.ev-main .acts2{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.7rem}
+.ag-tabs{display:flex;gap:.4rem;margin-bottom:1rem;flex-wrap:wrap}
+.ag-tabs button{background:transparent;border:1px solid var(--border);color:var(--muted);padding:.45rem .9rem;font:inherit;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.ag-tabs button.on{border-color:var(--gold);color:var(--gold)}
 
 /* conversa */
 .chat{border:1px solid var(--border);background:var(--navy2);display:flex;flex-direction:column;height:min(620px,70vh)}
@@ -225,6 +263,7 @@ const ms = t => t ? (t.toMillis ? t.toMillis() : (t.seconds ? t.seconds * 1000 :
 const fmtD = t => { const m = ms(t); return m ? new Date(m).toLocaleDateString('pt-BR') : ''; };
 const fmtDT = t => { const m = ms(t); return m ? new Date(m).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''; };
 const fmtHM = t => { const m = ms(t); return m ? new Date(m).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''; };
+const fmtDia = m => new Date(m).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' }).replace(/\./g, '');
 const fmtISO = s => s ? s.split('-').reverse().join('/') : '';
 const fsize = n => n < 1024 ? n + ' B' : n < 1048576 ? (n / 1024).toFixed(0) + ' KB' : (n / 1048576).toFixed(1) + ' MB';
 const statusOf = id => STATUS.find(s => s[0] === id) || STATUS[1];
@@ -261,7 +300,7 @@ const errMsg = e => ({
 }[e?.code] ?? 'Algo deu errado. Tente novamente.');
 
 /* ---------- estado ---------- */
-const S = { user: null, admin: false, profile: null, clientes: [], processos: [], chats: [], workerUrl: '', r2: false, unsubs: [], view: null, seen: null, bellOpen: false, pending: null, docs: {}, docSub: new Set() };
+const S = { user: null, admin: false, profile: null, clientes: [], processos: [], chats: [], workerUrl: '', r2: false, unsubs: [], view: null, seen: null, bellOpen: false, pending: null, docs: {}, docSub: new Set(), eventos: [], agMes: null, agDia: '' };
 const clienteById = uid => S.clientes.find(c => c.id === uid);
 const clienteNome = uid => S.admin ? (clienteById(uid)?.nome || 'Cliente') : (S.profile?.nome || 'Você');
 
@@ -421,8 +460,8 @@ function viewAuth(mode = 'login') {
 /* ---------- casca (topo + menu) ---------- */
 function renderShell() {
   const nav = S.admin
-    ? [['#/', 'Processos'], ['#/clientes', 'Clientes'], ['#/mensagens', 'Conversas'], ['#/config', 'Configurações']]
-    : [['#/', 'Meus processos'], ['#/mensagens', 'Mensagens'], ['#/perfil', 'Meu perfil']];
+    ? [['#/', 'Dashboard'], ['#/processos', 'Processos'], ['#/agenda', 'Agenda'], ['#/clientes', 'Clientes'], ['#/mensagens', 'Conversas'], ['#/config', 'Configurações']]
+    : [['#/', 'Meus processos'], ['#/agenda', 'Agenda'], ['#/mensagens', 'Mensagens'], ['#/perfil', 'Meu perfil']];
   $('#root').innerHTML = `
   <header class="top" style="position:sticky"><div class="top-in">
     <a class="brand" href="#/"><b>PR</b><small>Área do cliente</small></a><span class="top-sp"></span>
@@ -589,7 +628,6 @@ const DOC_SUG = ['RG e CPF', 'Comprovante de residência', 'Procuração assinad
 const docsOf = pid => S.docs[pid] || [];
 const docsPend = pid => docsOf(pid).filter(d => S.admin ? d.status === 'enviado' : d.status === 'pendente').length;
 function syncDocs() {
-  if (S.admin) return;
   S.processos.forEach(p => { if (S.docSub.has(p.id)) return; S.docSub.add(p.id);
     listen(collection(db, 'processos', p.id, 'documentos'), s => { S.docs[p.id] = docs(s); onData(); }); });
 }
@@ -671,9 +709,9 @@ function mountDocs(box, p) {
 function viewProcess(id, aba) {
   const box = $('#main');
   const first = S.processos.find(p => p.id === id);
-  if (!first) { box.innerHTML = `<a class="back" href="#/">← Voltar</a><div class="empty"><b>Processo não encontrado</b>Ele pode ter sido removido ou você não tem acesso.</div>`; return { refresh() { if (S.processos.find(p => p.id === id)) route(); } }; }
+  if (!first) { box.innerHTML = `<a class="back" href="${S.admin ? '#/processos' : '#/'}">← Voltar</a><div class="empty"><b>Processo não encontrado</b>Ele pode ter sido removido ou você não tem acesso.</div>`; return { refresh() { if (S.processos.find(p => p.id === id)) route(); } }; }
   aba = aba || 'and';
-  box.innerHTML = `<a class="back" href="#/">← ${S.admin ? 'Processos' : 'Meus processos'}</a><div id="pHead"></div>
+  box.innerHTML = `<a class="back" href="${S.admin ? '#/processos' : '#/'}">← ${S.admin ? 'Processos' : 'Meus processos'}</a><div id="pHead"></div>
     <div class="tabs" id="pTabs"></div><div id="pBody"></div>`;
   let cleanBody = null;
   const head = () => {
@@ -717,7 +755,7 @@ function viewProcess(id, aba) {
         await deleteDoc(doc(db, 'processos', id, 'privado', 'notas')).catch(() => {});
         await deleteDoc(doc(db, 'chats', id)); await deleteDoc(doc(db, 'processos', id));
         if (S.workerUrl) { await api('/purge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scope: 'p', id }) }).catch(() => {}); await api('/purge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scope: 'c', id }) }).catch(() => {}); }
-        toast('Processo excluído.'); location.hash = '#/';
+        toast('Processo excluído.'); location.hash = S.admin ? '#/processos' : '#/';
       } catch (x) { toast(errMsg(x), true); }
     };
   }
@@ -731,7 +769,8 @@ function viewClientHome() {
     <a class="btn" href="#/mensagens">💬 Falar com a advogada</a></div><div id="cs"></div><div class="list" id="ls"></div>`;
   const draw = () => {
     const ps = [...S.processos].sort((a, b) => ms(b.atualizadoAt) - ms(a.atualizadoAt));
-    $('#cs', box).innerHTML = ps.length ? `<div class="cards">${stat(ps.filter(p => !['concluido', 'arquivado'].includes(p.status)).length, 'Processos ativos')}${stat(ps.filter(procUnread).length, 'Novidades')}${stat(S.chats.filter(chatUnread).length, 'Mensagens novas')}${stat(ps.reduce((n, p) => n + docsPend(p.id), 0), 'Documentos pedidos')}</div>` : '';
+    const nx = S.eventos.filter(evFuturo).sort((a, b) => evStart(a) - evStart(b));
+    $('#cs', box).innerHTML = (ps.length ? `<div class="cards">${stat(ps.filter(p => !['concluido', 'arquivado'].includes(p.status)).length, 'Processos ativos')}${stat(nx.length, 'Próximos compromissos')}${stat(ps.filter(procUnread).length, 'Novidades')}${stat(S.chats.filter(chatUnread).length, 'Mensagens novas')}${stat(ps.reduce((n, p) => n + docsPend(p.id), 0), 'Documentos pedidos')}</div>` : '') + (nx.length ? `<div class="sec-t">Próximos compromissos</div>${nx.slice(0, 3).map(evCard).join('')}<p style="margin:-.2rem 0 1rem"><a class="back" href="#/agenda" style="margin:0">Ver agenda completa →</a></p><div class="sec-t">Processos</div>` : '');
     $('#ls', box).innerHTML = ps.length ? ps.map(p => `<a class="item" href="#/p/${p.id}"><div class="main"><h3>${esc(p.numero)} ${procUnread(p) ? '<span class="dot"></span>' : ''}</h3><p>${esc(p.tipo || 'Processo')}${p.vara ? ' · ' + esc(p.vara) : ''}${docsPend(p.id) ? ` · <b class="dpend">📄 ${docsPend(p.id)} documento(s) pedido(s)</b>` : ''}</p></div><div class="side">${chip(p.status)}<span>Atualizado em ${fmtD(p.atualizadoAt)}</span></div></a>`).join('')
       : `<div class="empty"><b>Nenhum processo vinculado ainda</b>Assim que a advogada cadastrar seu processo, ele aparece aqui.<br>Enquanto isso, você pode enviar mensagens e documentos em “Mensagens”.</div>`;
   };
@@ -770,6 +809,157 @@ function convidar() {
   openModal(`<h2>Convidar cliente</h2><p style="font-size:.82rem;line-height:1.7;margin-bottom:1rem">Envie este link. O cliente cria a própria conta (e-mail e senha ou Google) e depois aparece em <b>Clientes</b>, pronto para você cadastrar o processo.</p>
     <div class="field"><input readonly value="${esc(link)}" id="lk"></div><div class="acts"><button class="btn ghost sm" id="cp">Copiar link</button><a class="btn sm" target="_blank" rel="noopener" href="https://api.whatsapp.com/send?text=${encodeURIComponent(txt)}" style="text-decoration:none">Enviar por WhatsApp</a></div>`,
   m => { $('#cp', m).onclick = () => { navigator.clipboard?.writeText(link).then(() => toast('Link copiado.')).catch(() => { $('#lk', m).select(); document.execCommand('copy'); toast('Link copiado.'); }); }; });
+}
+/* ---------- agenda ---------- */
+const EV_TIPO = { audiencia: '⚖ Audiência', reuniao: '🤝 Reunião' };
+const EV_ST = { agendado: ['Confirmado', 's-ok'], solicitado: ['Aguardando confirmação', 's-warn'], cancelado: ['Cancelado', 's-mute'], realizado: ['Realizado', 's-info'] };
+const evStart = e => ms(e.inicio), evEnd = e => evStart(e) + (e.duracao || 60) * 60000;
+const evAtivo = e => e.status === 'agendado' || e.status === 'solicitado';
+const evFuturo = e => evAtivo(e) && evEnd(e) >= Date.now();
+const dayKey = m => { const d = new Date(m); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const safeUrl = u => /^https?:\/\//i.test(u || '') ? u : '';
+function evCard(e) {
+  const st = EV_ST[e.status] || EV_ST.agendado, p = S.processos.find(x => x.id === e.processoId), d = new Date(evStart(e));
+  const loc = e.modo === 'virtual' ? (safeUrl(e.link) ? `<a href="${esc(safeUrl(e.link))}" target="_blank" rel="noopener">Entrar na videochamada ↗</a>` : (e.link ? esc(e.link) : 'Link será informado')) : (e.local ? '📍 ' + esc(e.local) : 'Local será informado');
+  const mine = S.admin || (e.criadoPor === 'cliente' && e.status === 'solicitado');
+  return `<div class="ev ${e.status} ${e.tipo === 'audiencia' ? 'aud' : ''}" data-id="${e.id}"><div class="ev-date"><b>${String(d.getDate()).padStart(2, '0')}</b><span>${d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}</span></div>
+    <div class="ev-main"><div class="ev-top"><h4>${esc(e.titulo)}</h4><span class="chip ${st[1]}">${st[0]}</span></div>
+    <p>${EV_TIPO[e.tipo] || 'Compromisso'} · ${e.modo === 'virtual' ? '💻 Virtual' : '🏛 Presencial'} · ${fmtHM(e.inicio)} (${e.duracao || 60} min)${S.admin && e.clienteUid ? ' · ' + esc(clienteNome(e.clienteUid)) : ''}${p ? ' · Proc. ' + esc(p.numero) : ''}</p>
+    <p>${loc}</p>${e.descricao ? `<p>${esc(e.descricao)}</p>` : ''}
+    <div class="acts2"><button class="btn ghost sm" data-a="ics">📅 Adicionar ao meu calendário</button>
+    ${S.admin && e.status === 'solicitado' ? '<button class="btn sm" data-a="ok">Confirmar</button>' : ''}${S.admin && e.status === 'agendado' ? '<button class="btn ghost sm" data-a="done">Marcar como realizado</button>' : ''}${S.admin && evAtivo(e) ? '<button class="btn ghost sm" data-a="edit">Editar</button>' : ''}${mine && evAtivo(e) ? '<button class="btn ghost sm" data-a="cancel">Cancelar</button>' : ''}${S.admin ? '<button class="btn ghost sm" data-a="del">Excluir</button>' : ''}</div></div></div>`;
+}
+function downloadIcs(e) {
+  const f = m => new Date(m).toISOString().replace(/[-:]/g, '').replace(/\.\d+/, ''), t = x => String(x || '').replace(/[\;,]/g, c => '\\' + c).replace(/\n/g, '\\n');
+  const txt = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Poliana Reboucas Advocacia//PT', 'BEGIN:VEVENT', 'UID:' + e.id + '@polianareboucas', 'DTSTAMP:' + f(Date.now()), 'DTSTART:' + f(evStart(e)), 'DTEND:' + f(evEnd(e)),
+    'SUMMARY:' + t((EV_TIPO[e.tipo] || '').replace(/^\S+\s/, '') + ' - ' + e.titulo), 'LOCATION:' + t(e.modo === 'virtual' ? e.link : e.local), 'DESCRIPTION:' + t(e.descricao), 'BEGIN:VALARM', 'TRIGGER:-PT1H', 'ACTION:DISPLAY', 'DESCRIPTION:Lembrete', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'text/calendar' })); a.download = 'compromisso.ics'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+async function postEventChat(uid, texto) {
+  if (!uid) return;
+  const tipo = S.admin ? 'adv' : 'cliente', nome = S.admin ? 'Advogada' : (S.profile?.nome || S.user.displayName || S.user.email);
+  try {
+    await addDoc(collection(db, 'chats', uid, 'msgs'), { autorUid: S.user.uid, autorNome: nome, autorTipo: tipo, texto, anexos: [], criadoAt: serverTimestamp() });
+    await updateDoc(doc(db, 'chats', uid), { ultimaMsgAt: serverTimestamp(), ultimaMsgPor: tipo, ultimaMsgTexto: texto.slice(0, 90), [S.admin ? 'lidoAdv' : 'lidoCliente']: serverTimestamp() });
+    notify('msg', uid);
+  } catch (e) { console.warn('aviso de agenda', e); }
+}
+const evResumo = e => `${e.titulo} — ${new Date(evStart(e)).toLocaleDateString('pt-BR')} às ${fmtHM(e.inicio)} (${e.modo === 'virtual' ? 'virtual' : 'presencial'})`;
+function formEvento(ev, done) {
+  const cli = !S.admin, d0 = ev ? new Date(evStart(ev)) : null;
+  const clientes = [...S.clientes].sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+  const hhmm = d => d ? String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') : '';
+  openModal(`<h2>${ev ? 'Editar compromisso' : cli ? 'Solicitar reunião' : 'Novo compromisso'}</h2><form id="eF">
+    ${cli ? '<p class="hint" style="margin-bottom:1rem;font-size:.78rem;color:var(--muted);line-height:1.6">Sugira um dia e horário. A advogada recebe o pedido e confirma pela agenda.</p>' : `<div class="field"><label>Cliente</label><select name="c" required><option value="">Selecione…</option>${clientes.map(c => `<option value="${c.id}" ${ev?.clienteUid === c.id ? 'selected' : ''}>${esc(c.nome)}</option>`).join('')}</select></div>`}
+    <div class="row2">${cli ? '' : `<div class="field"><label>Tipo</label><select name="tipo"><option value="audiencia" ${ev?.tipo === 'audiencia' ? 'selected' : ''}>⚖ Audiência</option><option value="reuniao" ${ev?.tipo !== 'audiencia' ? 'selected' : ''}>🤝 Reunião</option></select></div>`}
+    <div class="field"><label>Formato</label><select name="modo"><option value="presencial" ${ev?.modo !== 'virtual' ? 'selected' : ''}>🏛 Presencial</option><option value="virtual" ${ev?.modo === 'virtual' ? 'selected' : ''}>💻 Virtual</option></select></div></div>
+    <div class="field"><label>Título</label><input name="t" required maxlength="120" value="${esc(ev?.titulo)}" placeholder="${cli ? 'Ex.: Reunião para tirar dúvidas' : 'Ex.: Audiência de instrução'}"></div>
+    <div class="row2"><div class="field"><label>Data</label><input name="d" type="date" required value="${d0 ? dayKey(d0) : ''}"></div><div class="field"><label>Horário</label><input name="h" type="time" required value="${hhmm(d0)}"></div></div>
+    <div class="row2"><div class="field"><label>Duração</label><select name="dur">${[30, 45, 60, 90, 120, 180, 240].map(m => `<option value="${m}" ${(ev?.duracao || 60) === m ? 'selected' : ''}>${m} min</option>`).join('')}</select></div>
+    <div class="field"><label>Processo (opcional)</label><select name="p"><option value="">—</option>${S.processos.filter(p => cli || !ev || true).map(p => `<option value="${p.id}" data-c="${p.clienteUid}" ${ev?.processoId === p.id ? 'selected' : ''}>${esc(p.numero)}</option>`).join('')}</select></div></div>
+    <div class="field"><label id="lLoc">Local</label><input name="l" maxlength="300" value="${esc(ev ? (ev.modo === 'virtual' ? ev.link : ev.local) : '')}"></div>
+    <div class="field"><label>Observações (opcional)</label><textarea name="o" maxlength="800">${esc(ev?.descricao)}</textarea></div>
+    <p class="msg-err" id="eE"></p><div class="acts"><button type="button" class="btn ghost sm" data-c>Cancelar</button><button class="btn sm">${ev ? 'Salvar' : cli ? 'Enviar pedido' : 'Agendar'}</button></div></form>`,
+  (m, close) => {
+    const f = $('#eF', m), sync = () => { const v = f.modo.value === 'virtual'; $('#lLoc', m).textContent = v ? 'Link da videochamada' : 'Endereço / sala'; f.l.placeholder = v ? 'https://meet.google.com/…' : 'Ex.: Fórum de Brasília, sala 204'; };
+    f.modo.onchange = sync; sync(); $('[data-c]', m).onclick = close;
+    f.onsubmit = async e => {
+      e.preventDefault(); const bt = $('.btn:not(.ghost)', f); bt.disabled = true;
+      try {
+        const ini = new Date(f.d.value + 'T' + f.h.value); if (isNaN(ini)) throw new Error('Data ou horário inválido.');
+        const virtual = f.modo.value === 'virtual', uid = cli ? S.user.uid : f.c.value; if (!uid) throw new Error('Escolha o cliente.');
+        const base = { titulo: f.t.value.trim(), tipo: cli ? 'reuniao' : f.tipo.value, modo: f.modo.value, inicio: ini, duracao: +f.dur.value, local: virtual ? '' : f.l.value.trim(), link: virtual ? f.l.value.trim() : '', descricao: f.o.value.trim(), processoId: f.p.value || '', clienteUid: uid, atualizadoAt: serverTimestamp() };
+        if (ev) { await updateDoc(doc(db, 'eventos', ev.id), base); await postEventChat(uid, '📅 Compromisso alterado: ' + evResumo({ ...base, inicio: ini })); }
+        else {
+          await addDoc(collection(db, 'eventos'), { ...base, status: cli ? 'solicitado' : 'agendado', criadoPor: cli ? 'cliente' : 'adv', criadoAt: serverTimestamp() });
+          await postEventChat(uid, cli ? '📅 Solicitei uma reunião: ' + evResumo({ ...base, inicio: ini }) : `📅 Nova ${base.tipo === 'audiencia' ? 'audiência' : 'reunião'} agendada: ` + evResumo({ ...base, inicio: ini }));
+        }
+        close(); toast(cli ? 'Pedido enviado. A advogada vai confirmar.' : 'Agenda atualizada e cliente avisado.'); done && done();
+      } catch (x) { $('#eE', m).textContent = x.message?.includes('permission') ? errMsg({ code: 'permission-denied' }) : (x.message || 'Não foi possível salvar.'); bt.disabled = false; }
+    };
+  });
+}
+function viewAgenda() {
+  const box = $('#main'); let aba = 'prox';
+  const now = new Date(); if (!S.agMes) S.agMes = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  box.innerHTML = `<div class="page-h"><div><div class="eyebrow">Agenda</div><h1>Audiências e <em>reuniões</em></h1><p>${S.admin ? 'Agende e confirme compromissos. O cliente é avisado pelo sino e por e-mail.' : 'Veja suas audiências e reuniões e peça um novo horário à advogada.'}</p></div>
+    <button class="btn" id="evNew">${S.admin ? '＋ Novo compromisso' : '＋ Solicitar reunião'}</button></div>
+    <div class="cal" id="cal"></div><div class="ag-tabs" id="agT"></div><div id="evL"></div>`;
+  const draw = () => {
+    const evs = S.eventos, mes = new Date(S.agMes), ini = new Date(mes.getFullYear(), mes.getMonth(), 1), pad = ini.getDay();
+    const por = {}; evs.filter(e => e.status !== 'cancelado').forEach(e => (por[dayKey(evStart(e))] ||= []).push(e));
+    const cells = []; for (let i = 0; i < 42; i++) { const d = new Date(ini.getFullYear(), ini.getMonth(), 1 - pad + i), k = dayKey(d.getTime()), l = por[k] || [];
+      cells.push(`<button data-day="${k}" class="${d.getMonth() !== ini.getMonth() ? 'out' : ''} ${k === dayKey(Date.now()) ? 'today' : ''} ${k === S.agDia ? 'sel' : ''}">${d.getDate()}${l.length ? `<i>${l.slice(0, 3).map(e => `<u class="${e.status === 'solicitado' ? 'a' : ''}"></u>`).join('')}</i>` : ''}</button>`); }
+    $('#cal', box).innerHTML = `<div class="cal-h"><button data-m="-1" aria-label="Mês anterior">‹</button><b>${ini.toLocaleDateString('pt-BR', { month: 'long' }).replace(/^./, c => c.toUpperCase())} de ${ini.getFullYear()}</b><button data-m="1" aria-label="Próximo mês">›</button></div>
+      <div class="cal-g">${['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(x => `<span class="wd">${x}</span>`).join('')}${cells.join('')}</div>`;
+    $('#agT', box).innerHTML = [['prox', 'Próximos'], ['pass', 'Anteriores'], ['todos', 'Todos']].map(([k, t]) => `<button data-t="${k}" class="${aba === k && !S.agDia ? 'on' : ''}">${t}</button>`).join('') + (S.agDia ? `<button class="on" data-clr>Dia ${fmtISO(S.agDia)} ✕</button>` : '');
+    let l = [...evs]; const ord = (a, b) => evStart(a) - evStart(b);
+    if (S.agDia) l = l.filter(e => dayKey(evStart(e)) === S.agDia).sort(ord);
+    else if (aba === 'prox') l = l.filter(evFuturo).sort(ord);
+    else if (aba === 'pass') l = l.filter(e => !evFuturo(e)).sort((a, b) => ord(b, a));
+    else l = l.sort((a, b) => ord(b, a));
+    $('#evL', box).innerHTML = l.length ? l.map(evCard).join('') : `<div class="empty"><b>Nenhum compromisso ${S.agDia ? 'neste dia' : aba === 'prox' ? 'marcado' : 'por aqui'}</b>${S.admin ? 'Use “Novo compromisso” para agendar uma audiência ou reunião.' : 'Quando a advogada marcar uma audiência ou reunião, ela aparece aqui. Você também pode pedir um horário.'}</div>`;
+  };
+  box.onclick = async e => {
+    const m = e.target.closest('[data-m]'), dy = e.target.closest('[data-day]'), t = e.target.closest('[data-t]'), a = e.target.closest('[data-a]');
+    if (m) { const d = new Date(S.agMes); S.agMes = new Date(d.getFullYear(), d.getMonth() + +m.dataset.m, 1).getTime(); draw(); }
+    else if (dy) { S.agDia = S.agDia === dy.dataset.day ? '' : dy.dataset.day; draw(); }
+    else if (e.target.closest('[data-clr]')) { S.agDia = ''; draw(); }
+    else if (t) { aba = t.dataset.t; S.agDia = ''; draw(); }
+    else if (a) {
+      const ev = S.eventos.find(x => x.id === a.closest('.ev').dataset.id); if (!ev) return; const ref = doc(db, 'eventos', ev.id);
+      try {
+        if (a.dataset.a === 'ics') downloadIcs(ev);
+        else if (a.dataset.a === 'edit') formEvento(ev);
+        else if (a.dataset.a === 'ok') { await updateDoc(ref, { status: 'agendado', atualizadoAt: serverTimestamp() }); await postEventChat(ev.clienteUid, '✅ Reunião confirmada: ' + evResumo(ev)); toast('Confirmado e cliente avisado.'); }
+        else if (a.dataset.a === 'done') { await updateDoc(ref, { status: 'realizado', atualizadoAt: serverTimestamp() }); toast('Marcado como realizado.'); }
+        else if (a.dataset.a === 'cancel') { if (await confirmBox('Cancelar “' + esc(ev.titulo) + '”?', 'Cancelar compromisso')) { await updateDoc(ref, { status: 'cancelado', atualizadoAt: serverTimestamp() }); await postEventChat(ev.clienteUid, '❌ Compromisso cancelado: ' + evResumo(ev)); toast('Cancelado.'); } }
+        else if (a.dataset.a === 'del') { if (await confirmBox('Excluir “' + esc(ev.titulo) + '” da agenda?', 'Excluir')) { await deleteDoc(ref); toast('Excluído.'); } }
+      } catch (x) { toast(errMsg(x), true); }
+    }
+  };
+  $('#evNew', box).onclick = () => formEvento(null);
+  draw(); return { refresh: draw };
+}
+
+/* ---------- dashboard da advogada ---------- */
+function viewDashboard() {
+  const box = $('#main');
+  box.innerHTML = `<div class="page-h"><div><div class="eyebrow">Dashboard</div><h1>Visão <em>geral</em></h1><p>Resumo do escritório em tempo real.</p></div>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap"><button class="btn ghost" id="dEv">＋ Compromisso</button><button class="btn" id="dNp">＋ Novo processo</button></div></div><div id="dB"></div>`;
+  const bars = (rows, total) => rows.length ? rows.map(([l, n]) => `<div class="bar"><span title="${esc(l)}">${esc(l)}</span><i><b style="width:${Math.max(4, n / (total || 1) * 100)}%"></b></i><em>${n}</em></div>`).join('') : '<p class="none" style="color:var(--muted);font-size:.74rem">Sem dados ainda.</p>';
+  const draw = () => {
+    const ps = S.processos, ativos = ps.filter(p => !['concluido', 'arquivado'].includes(p.status)), agora = Date.now(), DIA = 864e5;
+    const alld = Object.entries(S.docs).flatMap(([pid, l]) => l.map(d => ({ ...d, pid })));
+    const revisar = alld.filter(d => d.status === 'enviado'), pedidos = alld.filter(d => d.status === 'pendente');
+    const prox = S.eventos.filter(evFuturo).sort((a, b) => evStart(a) - evStart(b)), solic = S.eventos.filter(e => e.status === 'solicitado' && evFuturo(e));
+    const semana = prox.filter(e => evStart(e) < agora + 7 * DIA), hoje = prox.filter(e => dayKey(evStart(e)) === dayKey(agora));
+    const parados = ativos.filter(p => agora - ms(p.atualizadoAt) > 30 * DIA);
+    const novos = S.clientes.filter(c => agora - ms(c.criadoEm) < 30 * DIA);
+    const porSt = STATUS.map(s => [s[1], ps.filter(p => p.status === s[0]).length]).filter(x => x[1]);
+    const ar = {}; ps.forEach(p => { const k = p.tipo || 'Sem área'; ar[k] = (ar[k] || 0) + 1; });
+    const porAr = Object.entries(ar).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    const pNome = pid => S.processos.find(x => x.id === pid)?.numero || '';
+    const mini = (arr, fn, vazio) => `<div class="mini">${arr.length ? arr.slice(0, 5).map(fn).join('') : `<div class="none">${vazio}</div>`}</div>`;
+    $('#dB', box).innerHTML = `<div class="cards">${stat(ativos.length, 'Processos ativos')}${stat(S.clientes.length, 'Clientes')}${stat(hoje.length, 'Compromissos hoje')}${stat(semana.length, 'Próximos 7 dias')}${stat(S.chats.filter(chatUnread).length, 'Mensagens novas')}${stat(revisar.length, 'Documentos a conferir')}</div>
+    <div class="dgrid">
+      <div class="pnl"><h3>Próximos compromissos</h3>${mini(prox, e => `<a href="#/agenda"><span>${EV_TIPO[e.tipo] ? EV_TIPO[e.tipo].split(' ')[0] : '📅'} ${esc(e.titulo)}<br><small style="text-align:left">${esc(clienteNome(e.clienteUid))} · ${e.modo === 'virtual' ? 'virtual' : 'presencial'}</small></span><small>${fmtDia(evStart(e))}<br>${fmtHM(e.inicio)}</small></a>`, 'Nenhum compromisso marcado.')}</div>
+      <div class="pnl"><h3>Precisa da sua atenção</h3><div class="mini">
+        <a href="#/agenda"><span>🗓 Reuniões a confirmar</span><b style="color:var(--gold)">${solic.length}</b></a>
+        <a href="#/processos"><span>📥 Documentos enviados a conferir</span><b style="color:var(--gold)">${revisar.length}</b></a>
+        <a href="#/processos"><span>⏳ Documentos pedidos e não enviados</span><b style="color:var(--gold)">${pedidos.length}</b></a>
+        <a href="#/mensagens"><span>💬 Conversas não lidas</span><b style="color:var(--gold)">${S.chats.filter(chatUnread).length}</b></a>
+        <a href="#/processos"><span>🕑 Processos sem andamento há 30+ dias</span><b style="color:var(--gold)">${parados.length}</b></a></div></div>
+      <div class="pnl"><h3>Processos por status</h3>${bars(porSt, Math.max(1, ...porSt.map(x => x[1])))}</div>
+      <div class="pnl"><h3>Processos por área</h3>${bars(porAr, Math.max(1, ...porAr.map(x => x[1])))}</div>
+      <div class="pnl"><h3>Documentos a conferir</h3>${mini(revisar, d => `<a href="#/p/${d.pid}/docs"><span>${esc(d.titulo)}</span><small>${esc(pNome(d.pid))}</small></a>`, 'Nada aguardando conferência.')}</div>
+      <div class="pnl"><h3>Processos parados (30+ dias)</h3>${mini(parados, p => `<a href="#/p/${p.id}"><span>${esc(p.numero)}</span><small>${esc(clienteNome(p.clienteUid))}</small></a>`, 'Nenhum processo parado.')}</div>
+      <div class="pnl"><h3>Clientes novos (30 dias)</h3>${mini(novos, c => `<a href="#/c/${c.id}"><span>${esc(c.nome)}</span><small>${fmtD(c.criadoEm)}</small></a>`, 'Nenhum cliente novo no período.')}</div>
+      <div class="pnl"><h3>Últimas atualizações</h3>${mini([...ps].sort((a, b) => ms(b.atualizadoAt) - ms(a.atualizadoAt)), p => `<a href="#/p/${p.id}"><span>${esc(p.numero)}<br><small style="text-align:left">${esc(p.ultimoAviso || '')}</small></span><small>${fmtD(p.atualizadoAt)}</small></a>`, 'Sem processos.')}</div>
+    </div>`;
+  };
+  $('#dEv', box).onclick = () => formEvento(null); $('#dNp', box).onclick = () => formProcesso(null, null);
+  draw(); return { refresh: draw };
 }
 function viewAdminHome() {
   const box = $('#main'); let q = '', st = '';
@@ -855,11 +1045,11 @@ function route() {
   if (!S.user || !$('#main')) return;
   S.view?.destroy?.(); S.view = null;
   const [r, a, b] = location.hash.replace(/^#\/?/, '').split('/');
-  $$('[data-nav]').forEach(n => { const h = n.dataset.nav.replace('#/', ''); n.classList.toggle('on', h === (r === 'p' ? '' : r === 'c' ? 'clientes' : r === 'chat' ? 'mensagens' : r || '')); });
+  $$('[data-nav]').forEach(n => { const h = n.dataset.nav.replace('#/', ''); n.classList.toggle('on', h === (r === 'p' ? (S.admin ? 'processos' : '') : r === 'c' ? 'clientes' : r === 'chat' ? 'mensagens' : r || '')); });
   window.scrollTo(0, 0);
   if (r === 'p' && a) S.view = viewProcess(a, b);
-  else if (S.admin) S.view = r === 'clientes' ? viewClients() : r === 'c' && a ? viewClientDetail(a) : r === 'mensagens' ? viewAdminChats() : r === 'chat' && a ? viewAdminChat(a) : r === 'config' ? viewConfig() : viewAdminHome();
-  else S.view = r === 'mensagens' ? viewClientChat() : r === 'perfil' ? viewProfile() : viewClientHome();
+  else if (S.admin) S.view = r === 'processos' ? viewAdminHome() : r === 'agenda' ? viewAgenda() : r === 'clientes' ? viewClients() : r === 'c' && a ? viewClientDetail(a) : r === 'mensagens' ? viewAdminChats() : r === 'chat' && a ? viewAdminChat(a) : r === 'config' ? viewConfig() : viewDashboard();
+  else S.view = r === 'agenda' ? viewAgenda() : r === 'mensagens' ? viewClientChat() : r === 'perfil' ? viewProfile() : viewClientHome();
 }
 window.addEventListener('hashchange', route);
 
@@ -875,7 +1065,7 @@ async function ensureProfile(user) {
   // conversa geral (mesmos valores a cada acesso: não altera nada se já existir)
   await setDoc(doc(db, 'chats', user.uid), { clienteUid: user.uid, processoId: null, titulo: 'Conversa geral' }, { merge: true });
 }
-function stopAll() { S.unsubs.forEach(u => u()); S.unsubs = []; S.view?.destroy?.(); S.view = null; S.profile = null; S.clientes = []; S.processos = []; S.chats = []; S.seen = null; S.docs = {}; S.docSub = new Set(); }
+function stopAll() { S.unsubs.forEach(u => u()); S.unsubs = []; S.view?.destroy?.(); S.view = null; S.profile = null; S.clientes = []; S.processos = []; S.chats = []; S.seen = null; S.docs = {}; S.docSub = new Set(); S.eventos = []; }
 /* logotipo definido pela advogada no site (aparece no lugar do “PR”) */
 function applyLogo() {
   if (!S.logo) return;
@@ -896,7 +1086,8 @@ onAuthStateChanged(auth, async user => {
     if (S.admin) {
       renderShell();
       listen(collection(db, 'clientes'), s => { S.clientes = docs(s); onData(); });
-      listen(collection(db, 'processos'), s => { S.processos = docs(s); onData(); });
+      listen(collection(db, 'processos'), s => { S.processos = docs(s); syncDocs(); onData(); });
+      listen(collection(db, 'eventos'), s => { S.eventos = docs(s); onData(); });
       listen(collection(db, 'chats'), s => { S.chats = docs(s); onData(); });
     } else {
       await ensureProfile(user);
@@ -904,6 +1095,7 @@ onAuthStateChanged(auth, async user => {
       listen(doc(db, 'clientes', user.uid), s => { S.profile = s.exists() ? { id: s.id, ...s.data() } : null; const w = $('.who'); if (w && S.profile) w.textContent = S.profile.nome; });
       listen(query(collection(db, 'processos'), where('clienteUid', '==', user.uid)), s => { S.processos = docs(s); syncDocs(); onData(); });
       listen(query(collection(db, 'chats'), where('clienteUid', '==', user.uid)), s => { S.chats = docs(s); onData(); });
+      listen(query(collection(db, 'eventos'), where('clienteUid', '==', user.uid)), s => { S.eventos = docs(s); onData(); });
     }
     renderBell(); route();
   } catch (e) {

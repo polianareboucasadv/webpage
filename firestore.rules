@@ -138,6 +138,22 @@ service cloud.firestore {
     }
 
     // Conversas: uma geral por cliente (id = uid do cliente) e uma por processo (id = id do processo)
+    // Agenda: audiências e reuniões (a advogada agenda; o cliente pode solicitar reuniões)
+    match /eventos/{eid} {
+      allow read: if signedIn() && (isAdmin() || resource.data.clienteUid == request.auth.uid);
+      allow create: if signedIn() && (isAdmin()
+                    || (request.resource.data.clienteUid == request.auth.uid
+                        && request.resource.data.status == 'solicitado'
+                        && request.resource.data.criadoPor == 'cliente'
+                        && request.resource.data.tipo == 'reuniao'));
+      allow update: if signedIn() && (isAdmin()
+                    || (resource.data.clienteUid == request.auth.uid
+                        && resource.data.status == 'solicitado'
+                        && request.resource.data.status == 'cancelado'
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','atualizadoAt'])));
+      allow delete: if isAdmin();
+    }
+
     match /chats/{cid} {
       allow read: if signedIn() && (isAdmin() || resource.data.clienteUid == request.auth.uid);
       allow create: if signedIn() && (isAdmin()

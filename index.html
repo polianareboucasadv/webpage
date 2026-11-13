@@ -1656,6 +1656,9 @@ document.addEventListener('click', async e => {
       case 'layoutUpload': $(LAYOUT[layoutTarget].upload).click(); return;
       case 'layoutRemove': content.hero.cover = ''; applyLayoutLive(); markDirty(); toast('Foto de capa removida.'); return;
       case 'layoutReset':  resetLayout(); return;
+      case 'layoutHist':   openLayoutHist(); return;
+      case 'histBack':     lpHist = null; renderLayout(); return;
+      case 'histRestore':  { const i = +act.dataset.i; putLayout(i < 0 ? pickLayout(DEFAULTS) : histList[i].l); renderLayout(); toast(i < 0 ? 'Layout inicial aplicado. Clique em Salvar alterações.' : 'Versão restaurada. Clique em Salvar alterações.'); return; }
       case 'photoShape':   content.about.photoShape = act.dataset.val; applyLayoutLive(); renderLayout(); markDirty(); return;
       case 'share':        openShare(); return;
       case 'portal':       window.open('cliente.html', '_blank', 'noopener'); return;
@@ -1786,7 +1789,7 @@ async function save() {
     const json = JSON.stringify(content);
     if (new TextEncoder().encode(json).length > 1000000) { toast('O conteúdo ficou grande demais (fotos pesadas). Use fotos menores ou remova a foto de capa.', true); return; }
     await setDoc(doc(db, 'site', 'content'), JSON.parse(json));
-    markDirty(false); render(); applyTheme(true); toast('Alterações salvas! O site já está atualizado.');
+    markDirty(false); recordLayout(); render(); applyTheme(true); toast('Alterações salvas! O site já está atualizado.');
   } catch (err) {
     console.error(err);
     toast(err.code === 'permission-denied'
@@ -2369,7 +2372,36 @@ function applyLayoutLive() {
   const im = $('#aboutPhoto');
   if (im) { im.style.objectPosition = a.photoX + '% ' + a.photoY + '%'; im.style.transformOrigin = a.photoX + '% ' + a.photoY + '%'; im.style.transform = 'scale(' + (a.photoZoom / 100) + ')'; }
 }
+/* ---------- versões do layout ---------- */
+const LAYOUT_KEYS = ['hero.coverDim', 'hero.coverPos', 'hero.h', 'hero.padB', 'about.photoW', 'about.photoSize', 'about.photoH', 'about.padT', 'about.padB', 'about.photoZoom', 'about.photoX', 'about.photoY', 'about.photoShape', 'about.photoRing'];
+const pickLayout = src => Object.fromEntries(LAYOUT_KEYS.map(k => [k, getPath(src, k)]));
+const putLayout = l => { LAYOUT_KEYS.forEach(k => { if (l[k] !== undefined) setPath(content, k, l[k]); }); applyLayoutLive(); markDirty(); };
+let lpHist = null, histList = [];
+async function recordLayout() {
+  try {
+    const ref = doc(db, 'site', 'layout_history'), snap = await getDoc(ref);
+    let list = snap.exists() ? (snap.data().items || []) : [];
+    const cur = pickLayout(content);
+    if (!list.length || JSON.stringify(list[0].l) !== JSON.stringify(cur)) { list.unshift({ at: Date.now(), l: cur }); await setDoc(ref, { items: list.slice(0, 15) }); }
+  } catch (e) { console.warn('histórico de layout', e); }
+}
+async function openLayoutHist() {
+  lpHist = true; histList = []; renderLayout();
+  try { const snap = await getDoc(doc(db, 'site', 'layout_history')); histList = snap.exists() ? (snap.data().items || []) : []; } catch { /* ok */ }
+  renderLayout();
+}
+function renderLayoutHist() {
+  const cur = JSON.stringify(pickLayout(content)), fmt = t => new Date(t).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+  return `<div class="lp-head"><b>↶ Versões do layout</b><div><button data-action="layoutClose" aria-label="Fechar">×</button></div></div>
+    <p class="lp-hint" style="margin-bottom:.7rem">Restaura só o layout (alturas, espaços, zoom e formato da foto). Textos e fotos não mudam. Depois clique em “Salvar alterações”.</p>
+    <div class="lp-btns" style="flex-direction:column;align-items:stretch">
+      <button class="lp-btn primary" data-action="histRestore" data-i="-1">⟲ Layout inicial (padrão)</button>
+      ${histList.length ? histList.map((h, i) => `<button class="lp-btn ${JSON.stringify(h.l) === cur ? 'active' : ''}" data-action="histRestore" data-i="${i}">${i === 0 ? 'Última salva' : 'Versão'} · ${fmt(h.at)}${JSON.stringify(h.l) === cur ? ' (atual)' : ''}</button>`).join('') : '<p class="lp-hint">Nenhuma versão salva ainda. Elas são guardadas automaticamente cada vez que você clica em “Salvar alterações”.</p>'}
+    </div>
+    <button class="lp-btn" data-action="histBack" style="margin-top:.8rem">← Voltar ao painel</button>`;
+}
 function renderLayout() {
+  if (lpHist) { $('#layoutPanel').innerHTML = renderLayoutHist(); return; }
   const L = LAYOUT[layoutTarget];
   $('#layoutPanel').innerHTML = `
     <div class="lp-head"><b>${esc(L.title)}</b><div><button data-action="layoutMin" aria-label="Minimizar" title="Minimizar / expandir">${$('#layoutPanel').classList.contains('min') ? '▢' : '–'}</button><button data-action="layoutClose" aria-label="Fechar">×</button></div></div>
@@ -2391,10 +2423,10 @@ function renderLayout() {
       <label class="lp-row ${off ? 'off' : ''}"><span>${esc(label)} <b>${getPath(content, k)}${u}</b></span>
       <input type="range" data-lp="${k}" data-u="${u}" min="${min}" max="${max}" step="${step}" value="${getPath(content, k)}" ${off ? 'disabled title="Escolha retângulo, quadrado ou círculo para diminuir a foto"' : ''}></label>`;
     }).join('')}
-    <button class="lp-btn" data-action="layoutReset">Restaurar padrão</button>`;
+    <div class="lp-btns" style="margin-top:.6rem"><button class="lp-btn" data-action="layoutReset">Restaurar padrão</button><button class="lp-btn" data-action="layoutHist">↶ Versões do layout</button></div>`;
 }
 function openLayout(t) {
-  layoutTarget = t; $('#layoutPanel').classList.remove('min'); renderLayout(); $('#palettePanel').classList.remove('open'); $('#layoutPanel').classList.add('open');
+  lpHist = null; layoutTarget = t; $('#layoutPanel').classList.remove('min'); renderLayout(); $('#palettePanel').classList.remove('open'); $('#layoutPanel').classList.add('open');
   (t === 'cover' ? $('.hero') : $('#sobre'))?.scrollIntoView({ block: 'start', behavior: 'smooth' });
 }
 /* painel móvel: arrastar pela barra, minimizar e ficar transparente ao ajustar */
