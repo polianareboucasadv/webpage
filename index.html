@@ -765,6 +765,19 @@ body.is-admin #app [data-empty]::before { content:'＋ clique para escrever'; di
 body.is-admin #app [data-empty]::after { display:none; }
 body.is-admin .hero-name:has(> [data-empty]) { line-height:1.2; }
 /* alça para arrastar a altura da seção */
+.areas-section, .articles-section, .contact-section { position:relative; }
+.rz.top { top:-1px; bottom:auto; }
+.rz.top::before { top:0; bottom:auto; border-bottom:none; border-top:1px dashed var(--gold); }
+.rz.top span { margin-top:0; margin-bottom:0; }
+.sr-only { position:absolute !important; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+.hero-name, .section-heading { position:relative; }
+.ti-img { display:block; height:auto; max-width:100%; }
+.section-heading[style*="center"] .ti-img, .areas-section .ti-img, .articles-section .ti-img { margin:0 auto; }
+.ti-tools { position:absolute; top:100%; left:0; z-index:9; display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; background:rgba(13,24,33,.96); border:1px solid rgba(201,168,76,.5); padding:.35rem .5rem; margin-top:.3rem; font-family:'Montserrat',sans-serif; font-style:normal; letter-spacing:.08em; text-transform:uppercase; font-size:.58rem; line-height:1.2; width:max-content; max-width:92vw; }
+.ti-tools button { background:#c9a84c; color:#0d1821; border:none; padding:.4rem .7rem; font-size:.58rem; letter-spacing:.1em; text-transform:uppercase; font-weight:600; cursor:pointer; font-family:'Montserrat',sans-serif; }
+.ti-tools button.ghost { background:transparent; color:#f2ead3; border:1px solid rgba(242,234,211,.4); }
+.ti-tools input[type=range] { width:100px; accent-color:#c9a84c; }
+.hero-tools { display:flex; flex-direction:column; align-items:flex-end; gap:.4rem; }
 .rz { position:absolute; left:0; right:0; bottom:-1px; height:22px; z-index:8; cursor:ns-resize; touch-action:none; text-align:center; }
 .rz span { display:inline-block; margin-top:2px; background:var(--navy2); border:1px solid var(--gold); color:var(--gold); font-size:.55rem; letter-spacing:.14em; text-transform:uppercase; padding:.2rem .8rem; font-family:'Montserrat',sans-serif; opacity:.85; }
 .rz:hover span, .rz.on span { background:var(--gold); color:var(--on-gold); opacity:1; }
@@ -932,11 +945,12 @@ body.is-admin .intro-photo.shaped { padding-top:9.5rem; }
   <div class="btns">
     <button data-action="messages">Mensagens<span class="badge" id="msgCount"></span></button>
     <button data-action="subs">Assinantes<span class="badge" id="subCount"></span></button>
-    <button data-action="portal">📂 Clientes e processos</button>
+    <button data-action="portal">← Voltar à gestão</button>
     <button data-action="palette">🎨 Paleta</button>
     <button data-action="settings">Configurações</button>
     <button data-action="discard">Descartar</button>
     <button data-action="save" class="primary">Salvar alterações</button>
+    <button data-action="exitEdit">👁 Ver o site</button>
     <button data-action="logout">Sair</button>
   </div>
 </div>
@@ -945,7 +959,8 @@ body.is-admin .intro-photo.shaped { padding-top:9.5rem; }
 <div class="modal-back" id="loginModal">
   <form class="modal" id="loginForm" autocomplete="on">
     <button type="button" class="close" data-action="closeModal">×</button>
-    <h3>Área do administrador</h3>
+    <h3>Área restrita</h3>
+    <p style="font-size:.78rem;opacity:.75;margin:-.4rem 0 1rem;line-height:1.5">Acesso para advogados e administradores. Clientes entram pela “Área do cliente”.</p>
     <div class="form-group"><label>E-mail</label><input type="email" id="loginEmail" autocomplete="username" required></div>
     <div class="form-group"><label>Senha</label><input type="password" id="loginPass" autocomplete="current-password" required></div>
     <div class="modal-actions">
@@ -1229,11 +1244,19 @@ const db   = getFirestore(app);
 isSupported().then(ok => { if (ok) getAnalytics(app); }).catch(() => {});
 
 // Administrador principal. Outros administradores ficam na coleção "admins" do Firestore (as regras reforçam isso no servidor)
-const ADMIN_EMAILS = ['polireboucas@gmail.com'];
+const ADMIN_EMAILS = ['poli.reboucas@gmail.com'];   // administrador principal
+const LAWYER_EMAILS = ['poli.reboucas@gmail.com', 'polireboucas@gmail.com'];   // advogadas do portal de gestão
+// O modo de edição do site só liga quando a pessoa vem do botão “Área do administrador” (portal) — não basta estar logada.
+const editFlag = () => { try { return sessionStorage.getItem('pr_edit') === '1'; } catch { return false; } };
+const setEditFlag = on => { try { on ? sessionStorage.setItem('pr_edit', '1') : sessionStorage.removeItem('pr_edit'); } catch { /* ok */ } };
+let userRole = { adm: false, law: false }, justLoggedIn = false;
+try { if (/[?&]editar=1/.test(location.search)) { setEditFlag(true); history.replaceState(null, '', location.pathname + location.hash); } } catch { /* ok */ }
 
 /* ---------- Conteúdo padrão (usado até o primeiro "Salvar") ---------- */
 const DEFAULTS = {
   brand:  { initials: 'PR', sub: 'Advocacia', logo: '', logoH: 44 },
+  titleImgs: {},
+  secPad: {},
   hero:   { pretitle: 'Advocacia e Consultoria Jurídica', name1: 'Poliana', name2: 'Rebouças',
             tagline: 'OAB · Brasília, DF · Defesa dos seus direitos', btn1: 'Áreas de Atuação', btn2: 'Fale Comigo',
             cover: '', coverDim: 55, coverPos: 50, h: 100, padB: 56 },
@@ -1389,7 +1412,7 @@ function render() {
   <div class="hero-scale-deco">${SCALE_SVG}</div>
   <div class="hero-content">
     <p class="hero-pretitle" data-path="hero.pretitle">${rich(c.hero.pretitle)}</p>
-    <h1 class="hero-name"><span data-path="hero.name1">${rich(c.hero.name1)}</span><br><em data-path="hero.name2">${rich(c.hero.name2)}</em></h1>
+    <h1 class="hero-name">${titleBlock('hero', `<span data-path="hero.name1">${rich(c.hero.name1)}</span><br><em data-path="hero.name2">${rich(c.hero.name2)}</em>`, 520)}</h1>
     <p class="hero-tagline" data-path="hero.tagline">${rich(c.hero.tagline)}</p>
     <div class="hero-cta">
       <a href="#areas" class="btn-gold"><span data-path="hero.btn1">${rich(c.hero.btn1)}</span></a>
@@ -1411,7 +1434,7 @@ function render() {
   </div>
   <div class="intro-text">
     <div class="section-eyebrow" data-path="about.eyebrow">${rich(a.eyebrow)}</div>
-    <h2 class="section-heading"><span data-path="about.heading1">${rich(a.heading1)}</span><br><em data-path="about.heading2">${rich(a.heading2)}</em></h2>
+    <h2 class="section-heading">${titleBlock('about', `<span data-path="about.heading1">${rich(a.heading1)}</span><br><em data-path="about.heading2">${rich(a.heading2)}</em>`, 420)}</h2>
     ${paragraphs}
     <div><button class="add-btn admin-only" data-action="addPara">+ Parágrafo</button></div>
     <div class="oab-badge">
@@ -1433,18 +1456,22 @@ function render() {
 </div>
 
 <div class="areas-section" id="areas">
+  <div class="rz top admin-only" data-rz="areas" data-side="t" title="Arraste para ajustar o espaço superior"><span>↕ Espaço superior</span></div>
+  <div class="rz admin-only" data-rz="areas" data-side="b" title="Arraste para cima ou para baixo"><span>↕ Arraste para ajustar a altura</span></div>
   <div class="areas-header">
     <div class="section-eyebrow" style="justify-content:center;" data-path="areas.eyebrow">${rich(ar.eyebrow)}</div>
-    <h2 class="section-heading"><span data-path="areas.heading1">${rich(ar.heading1)}</span> <em data-path="areas.heading2">${rich(ar.heading2)}</em></h2>
+    <h2 class="section-heading">${titleBlock('areas', `<span data-path="areas.heading1">${rich(ar.heading1)}</span> <em data-path="areas.heading2">${rich(ar.heading2)}</em>`, 420)}</h2>
   </div>
   <div class="tab-nav">${tabBtns}<button class="add-btn admin-only" data-action="addTab">+ Aba</button></div>
   ${panes}
 </div>
 
 <div class="articles-section" id="artigos" style="${admin || articles.length ? '' : 'display:none'}">
+  <div class="rz top admin-only" data-rz="artigos" data-side="t" title="Arraste para ajustar o espaço superior"><span>↕ Espaço superior</span></div>
+  <div class="rz admin-only" data-rz="artigos" data-side="b" title="Arraste para cima ou para baixo"><span>↕ Arraste para ajustar a altura</span></div>
   <div class="areas-header">
     <div class="section-eyebrow" style="justify-content:center;" data-path="articles.eyebrow">${rich(c.articles.eyebrow)}</div>
-    <h2 class="section-heading"><span data-path="articles.heading1">${rich(c.articles.heading1)}</span> <em data-path="articles.heading2">${rich(c.articles.heading2)}</em></h2>
+    <h2 class="section-heading">${titleBlock('articles', `<span data-path="articles.heading1">${rich(c.articles.heading1)}</span> <em data-path="articles.heading2">${rich(c.articles.heading2)}</em>`, 420)}</h2>
     <button class="add-btn admin-only" data-action="newArticle">+ Novo artigo</button>
   </div>
   <div class="art-grid" id="articlesGrid">${articleCards()}</div>
@@ -1462,10 +1489,12 @@ function render() {
 </div>
 
 <div class="contact-section" id="contato">
+  <div class="rz top admin-only" data-rz="contato" data-side="t" title="Arraste para ajustar o espaço superior"><span>↕ Espaço superior</span></div>
+  <div class="rz admin-only" data-rz="contato" data-side="b" title="Arraste para cima ou para baixo"><span>↕ Arraste para ajustar a altura</span></div>
   <div class="contact-inner">
     <div>
       <div class="section-eyebrow" data-path="contact.eyebrow">${rich(ct.eyebrow)}</div>
-      <h2 class="section-heading"><span data-path="contact.heading1">${rich(ct.heading1)}</span> <em data-path="contact.heading2">${rich(ct.heading2)}</em></h2>
+      <h2 class="section-heading">${titleBlock('contact', `<span data-path="contact.heading1">${rich(ct.heading1)}</span> <em data-path="contact.heading2">${rich(ct.heading2)}</em>`, 420)}</h2>
       <div class="contact-info-item">
         <div class="c-icon">✉</div>
         <div><h4>E-mail</h4><a href="mailto:${esc(ct.email)}"><span data-path="contact.email">${esc(ct.email)}</span></a></div>
@@ -1521,6 +1550,12 @@ function render() {
   updateInstallUI();
 }
 
+/* ---------- título como imagem (nome/títulos de seção) ---------- */
+function titleBlock(key, textHtml, defW) {
+  const ti = (content.titleImgs || {})[key], w = +(ti?.w) || defW;
+  const tools = `<span class="ti-tools admin-only" contenteditable="false"><button data-action="tiPick" data-k="${key}">🖼 ${ti?.src ? 'Trocar imagem' : 'Usar imagem no lugar do texto'}</button>${ti?.src ? ` <label>Tamanho <input type="range" class="ti-size" data-k="${key}" min="80" max="1000" value="${w}"></label><button class="ghost" data-action="tiRemove" data-k="${key}">Voltar ao texto</button>` : ''}</span>`;
+  return ti?.src ? `<img class="ti-img" data-k="${key}" src="${ti.src}" alt="" style="width:min(100%, ${w}px)"><span class="sr-only">${textHtml}</span>${tools}` : `${textHtml}${tools}`;
+}
 function applyEdit() {
   document.body.classList.toggle('is-admin', admin);
   if (!admin) { $('#layoutPanel')?.classList.remove('open'); $('#palettePanel')?.classList.remove('open'); $('#siteFmt')?.classList.remove('on'); }
@@ -1549,18 +1584,23 @@ async function loadContent() {
 /* ---------- Autenticação ---------- */
 onAuthStateChanged(auth, async user => {
   const email = (user?.email || '').toLowerCase();
-  let ok = !!user && ADMIN_EMAILS.includes(email);
-  // outros administradores: documento admins/<e-mail> no Firestore
-  if (user && !ok) {
-    try { ok = (await getDoc(doc(db, 'admins', email))).exists(); } catch (err) { ok = false; }
+  let adm = !!user && ADMIN_EMAILS.includes(email), law = !!user && LAWYER_EMAILS.includes(email);
+  if (user && !adm) { try { adm = (await getDoc(doc(db, 'admins', email))).exists(); } catch (err) { adm = false; } }
+  if (user && !law) { try { law = (await getDoc(doc(db, 'advogados', email))).exists(); } catch (err) { law = false; } }
+  userRole = { adm, law };
+  if (user && justLoggedIn) {
+    justLoggedIn = false;
+    if (law) { setEditFlag(false); location.href = 'cliente.html'; return; }          // advogada → tela de gestão
+    if (adm) setEditFlag(true);                                                           // administrador sem gestão → edita o site
+    else { signOut(auth); toast('Acesso restrito a advogados e administradores. Clientes entram pela “Área do cliente”.', true); return; }
   }
-  if (user && !ok) { signOut(auth); toast('Este usuário não tem permissão de administrador.', true); return; }
-  admin = ok;
-  $('#adminUser').textContent = ok ? user.email : '';
+  admin = adm && editFlag();
+  if (!admin && editFlag()) setEditFlag(false);
+  $('#adminUser').textContent = admin ? user.email : '';
   render();
-  if (ok) { countUnread(); loadSubs(); }
+  if (admin) { countUnread(); loadSubs(); }
   loadArticles();
-  if (!ok && !hashChecked && location.hash === '#admin') openModal('loginModal');
+  if (!user && !hashChecked && location.hash === '#admin') openModal('loginModal');
   hashChecked = true;
 });
 
@@ -1578,9 +1618,11 @@ $('#loginForm').addEventListener('submit', async e => {
   e.preventDefault();
   const btn = $('#loginBtn'); btn.disabled = true; $('#loginErr').textContent = '';
   try {
+    justLoggedIn = true;
     await signInWithEmailAndPassword(auth, $('#loginEmail').value.trim(), $('#loginPass').value);
-    $('#loginPass').value = ''; closeModals(); toast('Bem-vinda! Clique em qualquer texto para editar. A barra de formatação aparece embaixo.');
+    $('#loginPass').value = ''; closeModals();
   } catch (err) {
+    justLoggedIn = false;
     $('#loginErr').textContent = authErrors[err.code] || ('Erro ao entrar: ' + err.code);
   }
   btn.disabled = false;
@@ -1625,11 +1667,14 @@ document.addEventListener('click', async e => {
     const a = act.dataset.action, i = +act.dataset.i, j = +act.dataset.j, k = +act.dataset.k;
     const tabs = content.areas.tabs;
     switch (a) {
-      case 'login':    openModal('loginModal'); return;
+      case 'login':
+        if (auth.currentUser && userRole.law) { setEditFlag(false); location.href = 'cliente.html'; return; }
+        if (auth.currentUser && userRole.adm) { setEditFlag(true); admin = true; $('#adminUser').textContent = auth.currentUser.email; render(); countUnread(); loadSubs(); toast('Modo edição ativado.'); return; }
+        openModal('loginModal'); return;
       case 'closeModal': closeModals(); return;
       case 'logout':
         if (dirty && !confirm('Há alterações não salvas. Sair mesmo assim?')) return;
-        markDirty(false); await signOut(auth); toast('Sessão encerrada.'); return;
+        markDirty(false); setEditFlag(false); await signOut(auth); toast('Sessão encerrada.'); return;
       case 'save':     await save(); return;
       case 'discard':
         if (!dirty || confirm('Descartar todas as alterações não salvas?')) { markDirty(false); content = structuredClone(DEFAULTS); await loadContent(); render(); }
@@ -1645,6 +1690,8 @@ document.addEventListener('click', async e => {
       }
       case 'photo': $('#photoInput').click(); e.preventDefault(); return;
       case 'logoPick': $('#logoInput').click(); e.preventDefault(); return;
+      case 'tiPick': tiKey = act.dataset.k; $('#tiInput').click(); e.preventDefault(); return;
+      case 'tiRemove': delete (content.titleImgs || {})[act.dataset.k]; markDirty(); render(); toast('Voltou ao texto. Clique em Salvar alterações.'); return;
       case 'logoRemove': content.brand.logo = ''; markDirty(); render(); toast('Logotipo removido. Clique em Salvar alterações.'); return;
       case 'layout':       openLayout(act.dataset.target); return;
       case 'palette':      openPalette(); return;
@@ -1661,7 +1708,12 @@ document.addEventListener('click', async e => {
       case 'histRestore':  { const i = +act.dataset.i; putLayout(i < 0 ? pickLayout(DEFAULTS) : histList[i].l); renderLayout(); toast(i < 0 ? 'Layout inicial aplicado. Clique em Salvar alterações.' : 'Versão restaurada. Clique em Salvar alterações.'); return; }
       case 'photoShape':   content.about.photoShape = act.dataset.val; applyLayoutLive(); renderLayout(); markDirty(); return;
       case 'share':        openShare(); return;
-      case 'portal':       window.open('cliente.html', '_blank', 'noopener'); return;
+      case 'portal': {
+        if (dirty) { if (confirm('Salvar as alterações antes de voltar à gestão?')) await save(); else if (!confirm('Voltar sem salvar? As alterações serão perdidas.')) return; }
+        setEditFlag(false); location.href = 'cliente.html'; return; }
+      case 'exitEdit': {
+        if (dirty) { if (confirm('Salvar as alterações antes de ver o site?')) await save(); else if (!confirm('Sair da edição sem salvar?')) return; markDirty(false); }
+        setEditFlag(false); admin = false; render(); window.scrollTo(0, 0); toast('Você está vendo o site como os visitantes.'); return; }
       case 'install':      closeShare(); openInstall(); return;
       case 'navToggle':    { const n = $('#nav'); const o = n.classList.toggle('open'); act.setAttribute('aria-expanded', o); act.setAttribute('aria-label', o ? 'Fechar menu' : 'Abrir menu'); return; }
       case 'installClose': $('#installModal').classList.remove('open'); return;
@@ -1751,6 +1803,41 @@ document.addEventListener('click', e => {
   if (e.target.closest('nav ul a') || !e.target.closest('nav')) { n.classList.remove('open'); n.querySelector('.nav-toggle')?.setAttribute('aria-expanded', 'false'); }
 });
 window.addEventListener('resize', () => { if (innerWidth > 900) $('#nav')?.classList.remove('open'); });
+
+/* ---------- imagem no lugar de títulos ---------- */
+let tiKey = null;
+{ const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/png,image/webp,image/svg+xml,image/jpeg'; inp.hidden = true; inp.id = 'tiInput'; document.body.appendChild(inp);
+  inp.addEventListener('change', async e => {
+    const f = e.target.files[0]; e.target.value = ''; if (!f || !tiKey) return;
+    try {
+      let data = await logoToPng(f, 1400, 500);
+      if (data.length > 380000) data = await logoToPng(f, 900, 340);
+      if (data.length > 380000) { toast('Imagem muito pesada. Use um PNG mais simples ou menor.', true); return; }
+      (content.titleImgs ||= {})[tiKey] = { src: data, w: content.titleImgs[tiKey]?.w || (tiKey === 'hero' ? 520 : 420) };
+      markDirty(); render(); toast('Imagem aplicada. Ajuste o tamanho e clique em Salvar alterações.');
+    } catch { toast('Não foi possível ler essa imagem.', true); }
+  }); }
+document.addEventListener('input', e => {
+  if (!e.target.classList?.contains('ti-size')) return;
+  const k = e.target.dataset.k; if (!content.titleImgs?.[k]) return;
+  content.titleImgs[k].w = +e.target.value; const im = document.querySelector('.ti-img[data-k="' + k + '"]'); if (im) im.style.width = 'min(100%, ' + e.target.value + 'px)'; markDirty();
+});
+
+/* ---------- altura das demais seções (arrastar) ---------- */
+const SEC_SEL = { areas: '#areas', artigos: '#artigos', contato: '#contato' };
+document.addEventListener('pointerdown', e => {
+  const rz = e.target.closest?.('.rz'); if (!rz || !admin || !SEC_SEL[rz.dataset.rz]) return;
+  const key = rz.dataset.rz, side = rz.dataset.side === 't' ? 't' : 'b', sec = rz.parentElement, y0 = e.clientY;
+  const cs = getComputedStyle(sec), start = parseFloat(side === 't' ? cs.paddingTop : cs.paddingBottom) || 0;
+  rz.classList.add('on'); rz.setPointerCapture?.(e.pointerId);
+  const mv = ev => {
+    const v = Math.max(0, Math.min(400, Math.round(start + (ev.clientY - y0))));
+    ((content.secPad ||= {})[key] ||= {})[side] = v; applyLayoutLive(); markDirty();
+  };
+  const up = () => { rz.classList.remove('on'); rz.removeEventListener('pointermove', mv); rz.removeEventListener('pointerup', up); rz.removeEventListener('pointercancel', up); };
+  rz.addEventListener('pointermove', mv); rz.addEventListener('pointerup', up); rz.addEventListener('pointercancel', up);
+  e.preventDefault();
+});
 
 /* ---------- Logotipo ---------- */
 function logoToPng(file, maxW = 640, maxH = 240) {
@@ -2357,6 +2444,7 @@ let layoutTarget = 'cover';
 const getPath = (o, path) => path.split('.').reduce((x, k) => x?.[k], o);
 function applyLayoutLive() {
   const h = content.hero, a = content.about;
+  Object.entries(SEC_SEL).forEach(([k, sel]) => { const el = $(sel), v = content.secPad?.[k] || {}; if (el) { el.style.paddingTop = v.t != null ? v.t + 'px' : ''; el.style.paddingBottom = v.b != null ? v.b + 'px' : ''; } });
   const hero = $('.hero');
   if (hero) { if (h.h == 100) hero.style.removeProperty('--hero-h'); else hero.style.setProperty('--hero-h', h.h + 'vh'); hero.classList.toggle('has-cover', !!h.cover); hero.style.paddingBottom = (+h.padB === 56 ? '' : h.padB + 'px'); }
   const cv = $('#heroCover'); if (cv) { cv.style.backgroundImage = h.cover ? 'url("' + h.cover + '")' : 'none'; cv.style.backgroundPosition = 'center ' + h.coverPos + '%'; }
@@ -2373,9 +2461,9 @@ function applyLayoutLive() {
   if (im) { im.style.objectPosition = a.photoX + '% ' + a.photoY + '%'; im.style.transformOrigin = a.photoX + '% ' + a.photoY + '%'; im.style.transform = 'scale(' + (a.photoZoom / 100) + ')'; }
 }
 /* ---------- versões do layout ---------- */
-const LAYOUT_KEYS = ['hero.coverDim', 'hero.coverPos', 'hero.h', 'hero.padB', 'about.photoW', 'about.photoSize', 'about.photoH', 'about.padT', 'about.padB', 'about.photoZoom', 'about.photoX', 'about.photoY', 'about.photoShape', 'about.photoRing'];
+const LAYOUT_KEYS = ['hero.coverDim', 'hero.coverPos', 'hero.h', 'hero.padB', 'about.photoW', 'about.photoSize', 'about.photoH', 'about.padT', 'about.padB', 'about.photoZoom', 'about.photoX', 'about.photoY', 'about.photoShape', 'about.photoRing', 'secPad'];
 const pickLayout = src => Object.fromEntries(LAYOUT_KEYS.map(k => [k, getPath(src, k)]));
-const putLayout = l => { LAYOUT_KEYS.forEach(k => { if (l[k] !== undefined) setPath(content, k, l[k]); }); applyLayoutLive(); markDirty(); };
+const putLayout = l => { LAYOUT_KEYS.forEach(k => { if (l[k] !== undefined) setPath(content, k, structuredClone(l[k])); else if (k === 'secPad') content.secPad = {}; }); applyLayoutLive(); markDirty(); };
 let lpHist = null, histList = [];
 async function recordLayout() {
   try {

@@ -28,7 +28,7 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:400}
 .brand b{font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--gold);letter-spacing:.06em;font-weight:600}
 .brand small{font-size:.5rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-top:2px}
 .top-sp{flex:1}
-.who{font-size:.72rem;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who{display:flex;flex-direction:column;align-items:flex-end;line-height:1.25;max-width:240px;min-width:0}.who b{font-size:.78rem;font-weight:600;color:var(--cream);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.who small{font-size:.6rem;letter-spacing:.06em;color:var(--gold);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .icon-btn{position:relative;background:none;border:1px solid var(--border);color:var(--cream);width:40px;height:40px;font-size:1rem;display:flex;align-items:center;justify-content:center}
 .icon-btn:hover{border-color:var(--gold);color:var(--gold)}
 .badge{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--bad);color:#fff;font-size:.62rem;font-weight:600;display:flex;align-items:center;justify-content:center}
@@ -243,7 +243,7 @@ main{max-width:1100px;margin:auto;padding:2rem 1.5rem 5rem}
 .danger-zone{margin-top:2rem;padding-top:1.2rem;border-top:1px dashed var(--bad)}
 
 @media (max-width:700px){
-  main{padding:1.4rem 1rem 4rem}.top-in{padding:.7rem 1rem}.nav{padding:0 .5rem}.who{display:none}
+  main{padding:1.4rem 1rem 4rem}.top-in{padding:.7rem 1rem}.nav{padding:0 .5rem}.who{max-width:130px}.who small .em{display:none}
   .page-h h1{font-size:1.7rem}.row2{grid-template-columns:1fr;gap:0}.item{flex-wrap:wrap}.item .side{flex-direction:row;align-items:center;width:100%;justify-content:space-between}
   .bub{max-width:90%}.chat{height:75vh}.bell-box{right:.5rem}
 }
@@ -272,7 +272,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const ADMIN_EMAILS = ['polireboucas@gmail.com'];
+const MAIN_ADMIN = 'poli.reboucas@gmail.com';                                    // administrador principal (único que cadastra acessos)
+const ADMIN_EMAILS = [MAIN_ADMIN, 'polireboucas@gmail.com'];                    // advogadas (acesso total ao portal)
 const STATUS = [
   ['analise', 'Em análise', 's-purple'], ['andamento', 'Em andamento', 's-info'], ['cliente', 'Aguardando cliente', 's-warn'],
   ['decisao', 'Aguardando decisão', 's-warn'], ['suspenso', 'Suspenso', 's-mute'], ['concluido', 'Concluído', 's-ok'], ['arquivado', 'Arquivado', 's-mute']
@@ -324,7 +325,7 @@ const errMsg = e => ({
 }[e?.code] ?? 'Algo deu errado. Tente novamente.');
 
 /* ---------- estado ---------- */
-const S = { user: null, admin: false, profile: null, clientes: [], processos: [], chats: [], workerUrl: '', r2: false, unsubs: [], view: null, seen: null, bellOpen: false, pending: null, docs: {}, docSub: new Set(), eventos: [], agMes: null, agDia: '', team: false, equipe: [], tarefas: [] };
+const S = { user: null, admin: false, profile: null, clientes: [], processos: [], chats: [], workerUrl: '', r2: false, unsubs: [], view: null, seen: null, bellOpen: false, pending: null, docs: {}, docSub: new Set(), eventos: [], agMes: null, agDia: '', team: false, equipe: [], tarefas: [], siteAdmin: false, main: false };
 const clienteById = uid => S.clientes.find(c => c.id === uid);
 const clienteNome = uid => S.admin ? (clienteById(uid)?.nome || 'Cliente') : (S.profile?.nome || 'Você');
 
@@ -483,6 +484,9 @@ function viewAuth(mode = 'login') {
 }
 
 /* ---------- casca (topo + menu) ---------- */
+const selfName = () => S.profile?.nome || S.equipe.find(x => x.id === me())?.nome || S.user.displayName || (S.admin ? 'Advogada' : (S.user.email || '').split('@')[0]);
+const whoHtml = () => `<b>${esc(selfName())}</b><small>${S.admin ? '⚖ Advogada' : S.team ? '👥 Equipe' : '👤 Cliente'}<span class="em"> · ${esc(S.user.email || '')}</span></small>`;
+function updateWho() { const w = $('#who'); if (w) w.innerHTML = whoHtml(); }
 function renderShell() {
   const nav = S.team ? [['#/tarefas', 'Tarefas']] : S.admin
     ? [['#/', 'Dashboard'], ['#/processos', 'Processos'], ['#/agenda', 'Agenda'], ['#/tarefas', 'Tarefas'], ['#/clientes', 'Clientes'], ['#/mensagens', 'Conversas'], ['#/config', 'Configurações']]
@@ -490,14 +494,15 @@ function renderShell() {
   $('#root').innerHTML = `
   <header class="top" style="position:sticky"><div class="top-in">
     <a class="brand" href="#/"><b>PR</b><small>Área do cliente</small></a><span class="top-sp"></span>
-    <span class="who">${S.admin ? '⚖ Advogada · ' : S.team ? '👥 Equipe · ' : ''}${esc(S.profile?.nome || S.user.displayName || S.user.email)}</span>
+    <span class="who" id="who">${whoHtml()}</span>
     <button class="icon-btn" id="bell" aria-label="Novidades"></button>
-    <a class="link-btn" href="index.html">Site</a>
+    <a class="link-btn" href="index.html" id="siteLink">Site</a>
     <button class="link-btn" id="logout">Sair</button>
   </div><div class="nav" id="nav">${nav.map(n => `<a href="${n[0]}" data-nav="${n[0]}">${n[1]}<span class="dot" data-dot="${n[0]}" hidden></span></a>`).join('')}</div>
   <div class="bell-box" id="bellBox" hidden></div></header>
   <main id="main"></main>`;
-  $('#logout').onclick = () => signOut(auth);
+  $('#logout').onclick = () => { try { sessionStorage.removeItem('pr_edit'); } catch { /* ok */ } signOut(auth); };
+  $('#siteLink').onclick = () => { try { sessionStorage.removeItem('pr_edit'); } catch { /* ok */ } };
   $('#bell').onclick = e => { e.stopPropagation(); $('#bellBox').hidden = !$('#bellBox').hidden; };
   document.addEventListener('click', e => { const b = $('#bellBox'); if (b && !e.target.closest('#bell')) b.hidden = true; });
   $('#bellBox').onclick = () => { $('#bellBox').hidden = true; };
@@ -506,7 +511,7 @@ function updateNavDots() {
   const msgUn = S.chats.some(chatUnread), procUn = S.processos.some(procUnread) || (S.admin && S.chats.some(c => c.processoId && chatUnread(c)));
   $$('[data-dot]').forEach(d => { const h = d.dataset.dot; d.hidden = !((h === '#/mensagens' && msgUn) || (h === '#/' && procUn && !S.admin && !S.team) || (h === '#/tarefas' && tkNovas().length)); });
 }
-function onData() { renderBell(); updateNavDots(); S.view?.refresh?.(); }
+function onData() { updateWho(); renderBell(); updateNavDots(); S.view?.refresh?.(); }
 
 /* ---------- conversa (reutilizável) ---------- */
 function mountChat(box, chatId, titulo) {
@@ -1142,6 +1147,32 @@ function viewConfig() {
     <p class="hint" style="margin-bottom:1rem">O portal já funciona sem isto: mensagens, processos, sino de novidades e arquivos leves (até 700 KB, fotos são reduzidas automaticamente). Para receber <b>avisos por e-mail</b> e liberar arquivos de até 15 MB, cole aqui o endereço do seu Cloudflare Worker (termina em <b>workers.dev</b>).</p>
     <div class="field"><label>Endereço do Worker</label><input id="wk" placeholder="https://portal-poliana.seuusuario.workers.dev" value="${esc(S.workerUrl)}"></div><p class="msg-err" id="wkE"></p>
     <div style="display:flex;gap:.6rem;flex-wrap:wrap"><button class="btn sm" id="wkS">Salvar</button><button class="btn ghost sm" id="wkT">Testar conexão</button></div></div>`;
+  if (S.siteAdmin) {
+    const ad = document.createElement('div'); ad.className = 'card'; ad.style.cssText = 'max-width:700px;margin-bottom:1.2rem';
+    ad.innerHTML = `<div class="eyebrow">Área do administrador</div><p class="hint" style="margin-bottom:1rem">Edite textos, fotos, logotipo, cores e artigos do site. Lá você salva e volta para a gestão ou para o site quando quiser.</p><button class="btn" id="goAdm">🛠 Área do administrador (editar o site)</button>`;
+    box.insertBefore(ad, box.children[1]); $('#goAdm', ad).onclick = () => { try { sessionStorage.setItem('pr_edit', '1'); } catch { /* ok */ } location.href = 'index.html?editar=1'; };
+  }
+  if (S.main) {
+    const ac = document.createElement('div'); ac.className = 'card'; ac.style.cssText = 'max-width:700px;margin-top:1.2rem';
+    ac.innerHTML = `<div class="eyebrow">Acessos de gestão e administração</div>
+      <p class="hint" style="margin-bottom:1rem">Somente você (administrador principal) cadastra acessos. <b>Advogado(a)</b> usa a gestão (clientes, processos, agenda, tarefas). <b>Administrador</b> também edita o site. Cada pessoa entra por “Área restrita” no site, com e-mail e senha cadastrados.</p>
+      <div id="acL" style="margin-bottom:1rem"><p class="hint">Carregando…</p></div>
+      <form id="acF"><div class="row2"><div class="field"><label>E-mail</label><input name="e" type="email" required maxlength="120" placeholder="nome@email.com"></div>
+      <div class="field"><label>Perfil</label><select name="p"><option value="adv">Advogado(a) — gestão</option><option value="adm">Administrador — gestão + editar o site</option></select></div></div><p class="msg-err" id="acE"></p><button class="btn sm">＋ Cadastrar acesso</button></form>`;
+    box.appendChild(ac);
+    const loadAc = async () => {
+      try {
+        const [a, l] = await Promise.all([getDocs(collection(db, 'admins')), getDocs(collection(db, 'advogados'))]);
+        const m = new Map(); l.docs.forEach(d => m.set(d.id, { adv: true })); a.docs.forEach(d => m.set(d.id, { ...(m.get(d.id) || {}), adm: true }));
+        const rows = [...m.entries()].filter(([e]) => e !== MAIN_ADMIN);
+        $('#acL', ac).innerHTML = `<div class="mini"><div><span>👑 ${MAIN_ADMIN}<br><small style="text-align:left">Administrador principal</small></span></div>${rows.map(([e, v]) => `<div><span>${esc(e)}<br><small style="text-align:left">${v.adm ? 'Administrador' + (v.adv ? ' + gestão' : ' (só edita o site)') : 'Advogado(a) — gestão'}</small></span><button class="btn ghost sm" data-rm="${esc(e)}">Remover</button></div>`).join('')}</div>`;
+      } catch (x) { $('#acL', ac).innerHTML = `<p class="msg-err">${esc(errMsg(x))}</p>`; }
+    };
+    loadAc();
+    ac.onclick = async e => { const b = e.target.closest('[data-rm]'); if (!b) return; if (await confirmBox('Remover o acesso de <b>' + esc(b.dataset.rm) + '</b>?', 'Remover')) { try { await Promise.all([deleteDoc(doc(db, 'admins', b.dataset.rm)), deleteDoc(doc(db, 'advogados', b.dataset.rm))]); toast('Acesso removido.'); loadAc(); } catch (x) { toast(errMsg(x), true); } } };
+    $('#acF', ac).onsubmit = async e => { e.preventDefault(); const f = e.target, em = f.e.value.trim().toLowerCase(), perfil = f.p.value;
+      try { await setDoc(doc(db, 'advogados', em), { email: em, perfil, criadoAt: serverTimestamp() }); if (perfil === 'adm') await setDoc(doc(db, 'admins', em), { email: em, criadoAt: serverTimestamp() }); else await deleteDoc(doc(db, 'admins', em)).catch(() => {}); f.reset(); $('#acE', ac).textContent = ''; toast('Acesso cadastrado.'); loadAc(); } catch (x) { $('#acE', ac).textContent = errMsg(x); } };
+  }
   const eq = document.createElement('div'); eq.className = 'card'; eq.style.cssText = 'max-width:700px;margin-top:1.2rem';
   eq.innerHTML = `<div class="eyebrow">Equipe do escritório</div>
     <p class="hint" style="margin-bottom:1rem">Membros da equipe veem <b>apenas o quadro de Tarefas</b> (não acessam clientes, processos nem conversas). Cadastre o e-mail abaixo; a pessoa entra em “Área do cliente” → <b>Criar conta</b> com esse mesmo e-mail (ou Google) e já cai no quadro.</p>
@@ -1209,7 +1240,9 @@ onAuthStateChanged(auth, async user => {
   try {
     const email = (user.email || '').toLowerCase();
     S.admin = ADMIN_EMAILS.includes(email);
-    if (!S.admin) { try { S.admin = (await getDoc(doc(db, 'admins', email))).exists(); } catch { S.admin = false; } }
+    if (!S.admin) { try { S.admin = (await getDoc(doc(db, 'advogados', email))).exists(); } catch { S.admin = false; } }
+    S.main = email === MAIN_ADMIN; S.siteAdmin = S.main;
+    if (!S.siteAdmin) { try { S.siteAdmin = (await getDoc(doc(db, 'admins', email))).exists(); } catch { S.siteAdmin = false; } }
     S.team = false;
     if (!S.admin) { try { S.team = (await getDoc(doc(db, 'equipe', email))).exists(); } catch { S.team = false; } }
     getDoc(doc(db, 'site', 'portal')).then(d => { if (d.exists()) { S.workerUrl = d.data().workerUrl || ''; S.r2 = !!d.data().r2; } }).catch(() => {});
@@ -1228,7 +1261,7 @@ onAuthStateChanged(auth, async user => {
     } else {
       await ensureProfile(user);
       renderShell();
-      listen(doc(db, 'clientes', user.uid), s => { S.profile = s.exists() ? { id: s.id, ...s.data() } : null; const w = $('.who'); if (w && S.profile) w.textContent = S.profile.nome; });
+      listen(doc(db, 'clientes', user.uid), s => { S.profile = s.exists() ? { id: s.id, ...s.data() } : null; updateWho(); });
       listen(query(collection(db, 'processos'), where('clienteUid', '==', user.uid)), s => { S.processos = docs(s); syncDocs(); onData(); });
       listen(query(collection(db, 'chats'), where('clienteUid', '==', user.uid)), s => { S.chats = docs(s); onData(); });
       listen(query(collection(db, 'eventos'), where('clienteUid', '==', user.uid)), s => { S.eventos = docs(s); onData(); });
