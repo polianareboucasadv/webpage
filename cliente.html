@@ -417,6 +417,7 @@ function unreadItems() {
   const it = [];
   S.chats.filter(chatUnread).forEach(c => it.push({ key: 'c' + c.id + ms(c.ultimaMsgAt), at: ms(c.ultimaMsgAt), title: (S.admin ? clienteNome(c.clienteUid) + ' · ' : '') + chatTitle(c), sub: c.ultimaMsgTexto || 'Nova mensagem', href: chatHref(c), kind: 'msg' }));
   S.processos.filter(procUnread).forEach(p => it.push({ key: 'p' + p.id + ms(p.atualizadoAt), at: ms(p.atualizadoAt), title: 'Processo ' + p.numero, sub: p.ultimoAviso || 'Atualização no processo', href: `#/p/${p.id}`, kind: 'proc' }));
+  if (S.admin) Object.entries(S.docs).forEach(([pid, l]) => l.filter(d => d.status === 'enviado').forEach(d => it.push({ key: 'd' + d.id + ms(d.enviadoAt), at: ms(d.enviadoAt) || ms(d.criadoAt), title: 'Documento enviado: ' + d.titulo, sub: (S.processos.find(x => x.id === pid)?.numero || '') + ' · aguardando conferência', href: `#/p/${pid}/docs`, kind: 'doc' })));
   tkNovas().forEach(t => it.push({ key: 't' + t.id + (t.responsaveis || []).join(), at: ms(t.atualizadoAt) || ms(t.criadoAt), title: 'Nova tarefa: ' + t.titulo, sub: t.criadoPorNome ? 'Atribuída por ' + t.criadoPorNome : 'Atribuída a você', href: '#/tarefas', kind: 'task' }));
   return it.sort((a, b) => b.at - a.at);
 }
@@ -426,7 +427,7 @@ function renderBell() {
   btn.innerHTML = `🔔${n ? `<span class="badge">${n > 9 ? '9+' : n}</span>` : ''}`;
   document.title = (n ? `(${n}) ` : '') + 'Área do Cliente | Poliana Rebouças Advocacia';
   const box = $('#bellBox');
-  if (box) box.innerHTML = n ? items.map(i => `<a href="${i.href}">${i.kind === 'msg' ? '💬' : i.kind === 'task' ? '📋' : '📌'} ${esc(i.title)}<small>${esc(i.sub)}</small></a>`).join('') : '<p>Nenhuma novidade por enquanto.</p>';
+  if (box) box.innerHTML = n ? items.map(i => `<a href="${i.href}">${i.kind === 'msg' ? '💬' : i.kind === 'task' ? '📋' : i.kind === 'doc' ? '📄' : '📌'} ${esc(i.title)}<small>${esc(i.sub)}</small></a>`).join('') : '<p>Nenhuma novidade por enquanto.</p>';
   // aviso quando chega algo novo com a página aberta
   const keys = new Set(items.map(i => i.key));
   if (S.seen) items.filter(i => !S.seen.has(i.key)).slice(0, 1).forEach(i => toast((i.kind === 'msg' ? '💬 Nova mensagem: ' : '📌 ') + i.title));
@@ -573,6 +574,7 @@ function mountTimeline(box, p) {
   box.innerHTML = `${canPost ? `<form class="card" id="andForm" style="margin-bottom:1.4rem"><div class="eyebrow">Novo andamento</div>
     <div class="row2"><div class="field"><label>Título</label><input name="titulo" required maxlength="120" placeholder="Ex.: Audiência designada"></div>
     <div class="field"><label>Data</label><input name="data" type="date" required></div></div>
+    <p style="font-size:.7rem;color:var(--muted);margin:-.2rem 0 .8rem;line-height:1.5">Audiência ou reunião? Depois de publicar, o sistema oferece marcar também na <b>Agenda</b> do cliente (o andamento sozinho não vai para a agenda).</p>
     <div class="field"><label>Descrição (o cliente vai ler)</label><textarea name="texto" maxlength="4000" placeholder="Explique em linguagem simples o que aconteceu e os próximos passos."></textarea></div>
     <div class="chips" id="andChips" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.8rem"></div><input type="file" id="andFile" multiple hidden>
     <label class="check"><input type="checkbox" name="avisar" checked><span>Avisar o cliente por e-mail</span></label>
@@ -581,7 +583,7 @@ function mountTimeline(box, p) {
     <div class="tl" id="tl"></div>`;
   const tl = $('#tl', box); let items = [], files = [];
   const draw = () => {
-    tl.innerHTML = items.length ? items.map(a => `<div class="tl-i">${canPost ? `<button class="x" data-del="${a.id}" title="Excluir">✕</button>` : ''}<div class="d">${fmtISO(a.data) || fmtD(a.criadoAt)}</div><h4>${esc(a.titulo)}</h4>${a.texto ? `<p>${esc(a.texto)}</p>` : ''}${attHtml(a.anexos)}</div>`).join('')
+    tl.innerHTML = items.length ? items.map(a => `<div class="tl-i">${canPost ? `<button class="x" data-del="${a.id}" title="Excluir">✕</button>` : ''}${canPost && /audi[eê]ncia|reuni[aã]o|per[ií]cia|atendimento/i.test(a.titulo) ? `<button class="btn ghost sm" data-ag="${a.id}" style="float:right;margin-right:2rem">📅 Marcar na agenda</button>` : ''}<div class="d">${fmtISO(a.data) || fmtD(a.criadoAt)}</div><h4>${esc(a.titulo)}</h4>${a.texto ? `<p>${esc(a.texto)}</p>` : ''}${attHtml(a.anexos)}</div>`).join('')
       : `<div class="empty" style="margin-left:-1.6rem"><b>Sem andamentos ainda</b>${canPost ? 'Publique o primeiro andamento acima.' : 'Quando houver novidades, elas aparecem aqui e você recebe um aviso.'}</div>`;
   };
   const unsub = onSnapshot(collection(db, 'processos', p.id, 'andamentos'), snap => {
@@ -602,11 +604,16 @@ function mountTimeline(box, p) {
         await addDoc(collection(db, 'processos', p.id, 'andamentos'), { titulo: f.titulo.value.trim(), texto: f.texto.value.trim(), data: f.data.value, anexos, criadoAt: serverTimestamp() });
         await updateDoc(doc(db, 'processos', p.id), { atualizadoAt: serverTimestamp(), ultimoAviso: 'Novo andamento: ' + f.titulo.value.trim() });
         if (f.avisar.checked) notify('andamento', p.id);
+        const tit = f.titulo.value.trim(), dta = f.data.value, txt = f.texto.value.trim();
         f.titulo.value = ''; f.texto.value = ''; files = []; dc(); toast('Andamento publicado.');
+        if (/audi[eê]ncia|reuni[aã]o|per[ií]cia/i.test(tit) && await confirmBox('Marcar também na <b>agenda do cliente</b>? Assim ele vê o dia e o horário em “Agenda”.', 'Marcar na agenda'))
+          formEvento(null, null, { clienteUid: p.clienteUid, processoId: p.id, titulo: tit, data: dta, tipo: /reuni/i.test(tit) ? 'reuniao' : 'audiencia', descricao: txt });
       } catch (x) { $('#andErr', box).textContent = x.message || errMsg(x); }
       btn.disabled = false; btn.textContent = 'Publicar andamento';
     };
     tl.onclick = async e => {
+      const ag = e.target.closest('[data-ag]');
+      if (ag) { const a = items.find(x => x.id === ag.dataset.ag); if (a) formEvento(null, null, { clienteUid: p.clienteUid, processoId: p.id, titulo: a.titulo, data: a.data, tipo: /reuni|atendimento/i.test(a.titulo) ? 'reuniao' : 'audiencia', descricao: a.texto || '' }); return; }
       const b = e.target.closest('[data-del]'); if (!b) return;
       if (await confirmBox('Excluir este andamento? O cliente deixará de vê-lo.', 'Excluir')) deleteDoc(doc(db, 'processos', p.id, 'andamentos', b.dataset.del)).catch(x => toast(errMsg(x), true));
     };
@@ -661,12 +668,6 @@ function syncDocs() {
   S.processos.forEach(p => { if (S.docSub.has(p.id)) return; S.docSub.add(p.id);
     listen(collection(db, 'processos', p.id, 'documentos'), s => { S.docs[p.id] = docs(s); onData(); }); });
 }
-async function postDocChat(pid, texto, anexos) {
-  const nome = S.profile?.nome || S.user.displayName || S.user.email;
-  await addDoc(collection(db, 'chats', pid, 'msgs'), { autorUid: S.user.uid, autorNome: nome, autorTipo: 'cliente', texto, anexos, criadoAt: serverTimestamp() });
-  await updateDoc(doc(db, 'chats', pid), { ultimaMsgAt: serverTimestamp(), ultimaMsgPor: 'cliente', ultimaMsgTexto: texto.slice(0, 90), lidoCliente: serverTimestamp() });
-  notify('msg', pid);
-}
 function mountDocs(box, p) {
   const id = p.id, col = collection(db, 'processos', id, 'documentos');
   box.innerHTML = `<div class="card"><div class="dh"><div><div class="eyebrow">Documentos do processo</div>
@@ -693,7 +694,6 @@ function mountDocs(box, p) {
       const anexos = await uploadFiles(files, 'p', id);
       if (d) await updateDoc(doc(db, 'processos', id, 'documentos', d.id), { anexos: [...(d.anexos || []), ...anexos], status: 'enviado', enviadoAt: serverTimestamp(), atualizadoAt: serverTimestamp() });
       else await addDoc(col, { titulo: titulo.slice(0, 120), descricao: '', status: 'enviado', solicitadoPor: 'cliente', anexos, criadoAt: serverTimestamp(), enviadoAt: serverTimestamp(), atualizadoAt: serverTimestamp() });
-      await postDocChat(id, '📎 Documento enviado: ' + (d ? d.titulo : titulo), anexos);
       toast('Documento enviado. A advogada foi avisada.');
     } catch (x) { toast(x.message?.includes('permission') ? errMsg({ code: 'permission-denied' }) : (x.message || 'Não foi possível enviar.'), true); }
     busy = false;
@@ -875,20 +875,20 @@ async function postEventChat(uid, texto) {
   } catch (e) { console.warn('aviso de agenda', e); }
 }
 const evResumo = e => `${e.titulo} — ${new Date(evStart(e)).toLocaleDateString('pt-BR')} às ${fmtHM(e.inicio)} (${e.modo === 'virtual' ? 'virtual' : 'presencial'})`;
-function formEvento(ev, done) {
-  const cli = !S.admin, d0 = ev ? new Date(evStart(ev)) : null;
+function formEvento(ev, done, pre) {
+  const src = ev || pre || null, cli = !S.admin, d0 = ev ? new Date(evStart(ev)) : null;
   const clientes = [...S.clientes].sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
   const hhmm = d => d ? String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') : '';
   openModal(`<h2>${ev ? 'Editar compromisso' : cli ? 'Solicitar reunião' : 'Novo compromisso'}</h2><form id="eF">
-    ${cli ? '<p class="hint" style="margin-bottom:1rem;font-size:.78rem;color:var(--muted);line-height:1.6">Sugira um dia e horário. A advogada recebe o pedido e confirma pela agenda.</p>' : `<div class="field"><label>Cliente</label><select name="c" required><option value="">Selecione…</option>${clientes.map(c => `<option value="${c.id}" ${ev?.clienteUid === c.id ? 'selected' : ''}>${esc(c.nome)}</option>`).join('')}</select></div>`}
-    <div class="row2">${cli ? '' : `<div class="field"><label>Tipo</label><select name="tipo"><option value="audiencia" ${ev?.tipo === 'audiencia' ? 'selected' : ''}>⚖ Audiência</option><option value="reuniao" ${ev?.tipo !== 'audiencia' ? 'selected' : ''}>🤝 Reunião</option></select></div>`}
-    <div class="field"><label>Formato</label><select name="modo"><option value="presencial" ${ev?.modo !== 'virtual' ? 'selected' : ''}>🏛 Presencial</option><option value="virtual" ${ev?.modo === 'virtual' ? 'selected' : ''}>💻 Virtual</option></select></div></div>
-    <div class="field"><label>Título</label><input name="t" required maxlength="120" value="${esc(ev?.titulo)}" placeholder="${cli ? 'Ex.: Reunião para tirar dúvidas' : 'Ex.: Audiência de instrução'}"></div>
-    <div class="row2"><div class="field"><label>Data</label><input name="d" type="date" required value="${d0 ? dayKey(d0) : ''}"></div><div class="field"><label>Horário</label><input name="h" type="time" required value="${hhmm(d0)}"></div></div>
-    <div class="row2"><div class="field"><label>Duração</label><select name="dur">${[30, 45, 60, 90, 120, 180, 240].map(m => `<option value="${m}" ${(ev?.duracao || 60) === m ? 'selected' : ''}>${m} min</option>`).join('')}</select></div>
-    <div class="field"><label>Processo (opcional)</label><select name="p"><option value="">—</option>${S.processos.filter(p => cli || !ev || true).map(p => `<option value="${p.id}" data-c="${p.clienteUid}" ${ev?.processoId === p.id ? 'selected' : ''}>${esc(p.numero)}</option>`).join('')}</select></div></div>
-    <div class="field"><label id="lLoc">Local</label><input name="l" maxlength="300" value="${esc(ev ? (ev.modo === 'virtual' ? ev.link : ev.local) : '')}"></div>
-    <div class="field"><label>Observações (opcional)</label><textarea name="o" maxlength="800">${esc(ev?.descricao)}</textarea></div>
+    ${cli ? '<p class="hint" style="margin-bottom:1rem;font-size:.78rem;color:var(--muted);line-height:1.6">Sugira um dia e horário. A advogada recebe o pedido e confirma pela agenda.</p>' : `<div class="field"><label>Cliente</label><select name="c" required><option value="">Selecione…</option>${clientes.map(c => `<option value="${c.id}" ${src?.clienteUid === c.id ? 'selected' : ''}>${esc(c.nome)}</option>`).join('')}</select></div>`}
+    <div class="row2">${cli ? '' : `<div class="field"><label>Tipo</label><select name="tipo"><option value="audiencia" ${src?.tipo === 'audiencia' ? 'selected' : ''}>⚖ Audiência</option><option value="reuniao" ${src?.tipo !== 'audiencia' ? 'selected' : ''}>🤝 Reunião</option></select></div>`}
+    <div class="field"><label>Formato</label><select name="modo"><option value="presencial" ${src?.modo !== 'virtual' ? 'selected' : ''}>🏛 Presencial</option><option value="virtual" ${src?.modo === 'virtual' ? 'selected' : ''}>💻 Virtual</option></select></div></div>
+    <div class="field"><label>Título</label><input name="t" required maxlength="120" value="${esc(src?.titulo)}" placeholder="${cli ? 'Ex.: Reunião para tirar dúvidas' : 'Ex.: Audiência de instrução'}"></div>
+    <div class="row2"><div class="field"><label>Data</label><input name="d" type="date" required value="${d0 ? dayKey(d0) : (pre?.data || '')}"></div><div class="field"><label>Horário</label><input name="h" type="time" required value="${hhmm(d0)}"></div></div>
+    <div class="row2"><div class="field"><label>Duração</label><select name="dur">${[30, 45, 60, 90, 120, 180, 240].map(m => `<option value="${m}" ${(src?.duracao || 60) === m ? 'selected' : ''}>${m} min</option>`).join('')}</select></div>
+    <div class="field"><label>Processo (opcional)</label><select name="p"><option value="">—</option>${S.processos.filter(p => cli || !ev || true).map(p => `<option value="${p.id}" data-c="${p.clienteUid}" ${src?.processoId === p.id ? 'selected' : ''}>${esc(p.numero)}</option>`).join('')}</select></div></div>
+    <div class="field"><label id="lLoc">Local</label><input name="l" maxlength="300" value="${esc(src ? (src.modo === 'virtual' ? src.link : src.local) : '')}"></div>
+    <div class="field"><label>Observações (opcional)</label><textarea name="o" maxlength="800">${esc(src?.descricao)}</textarea></div>
     <p class="msg-err" id="eE"></p><div class="acts"><button type="button" class="btn ghost sm" data-c>Cancelar</button><button class="btn sm">${ev ? 'Salvar' : cli ? 'Enviar pedido' : 'Agendar'}</button></div></form>`,
   (m, close) => {
     const f = $('#eF', m), sync = () => { const v = f.modo.value === 'virtual'; $('#lLoc', m).textContent = v ? 'Link da videochamada' : 'Endereço / sala'; f.l.placeholder = v ? 'https://meet.google.com/…' : 'Ex.: Fórum de Brasília, sala 204'; };
@@ -1213,7 +1213,7 @@ function route() {
 window.addEventListener('hashchange', route);
 
 /* ---------- início de sessão ---------- */
-const listen = (q, fn) => S.unsubs.push(onSnapshot(q, fn, e => console.warn('listen', e.code)));
+const listen = (q, fn) => S.unsubs.push(onSnapshot(q, fn, e => { console.warn('listen', e.code); if (e.code === 'permission-denied' && !S.permWarned) { S.permWarned = true; toast('Alguns dados não carregaram: as regras do Firestore precisam ser republicadas (permissão negada).', true); } }));
 const docs = snap => snap.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }));
 async function ensureProfile(user) {
   const ref = doc(db, 'clientes', user.uid), d = await getDoc(ref);
