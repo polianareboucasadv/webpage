@@ -24,6 +24,11 @@ service cloud.firestore {
       allow read: if isLawyer() || isTeam() || (request.auth != null && request.auth.token.email.lower() == em);
       allow write: if isLawyer();
     }
+    match /logs/{lid} {
+      allow read: if isLawyer();
+      allow create: if isLawyer() && request.resource.data.usuario == request.auth.token.email.lower();
+      allow update, delete: if false;
+    }
     match /tarefas/{tid} {
       allow read: if isLawyer() || isTeam();
       allow create: if isLawyer() || (isTeam() && request.resource.data.criadoPor == request.auth.token.email.lower());
