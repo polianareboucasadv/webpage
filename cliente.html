@@ -486,7 +486,7 @@ function viewAuth(mode = 'login') {
 
 /* ---------- casca (topo + menu) ---------- */
 const selfName = () => S.profile?.nome || S.equipe.find(x => x.id === me())?.nome || S.user.displayName || (S.admin ? 'Advogada' : (S.user.email || '').split('@')[0]);
-const whoHtml = () => `<b>${esc(selfName())}</b><small>${S.admin ? '⚖ Advogada' : S.team ? '👥 Equipe' : '👤 Cliente'}<span class="em"> · ${esc(S.user.email || '')}</span></small>`;
+const whoHtml = () => `<b>${esc(selfName())}</b><small>${S.admin ? (S.main ? '⚖ Administradora principal' : '⚖ Advogado(a) · gestão') : S.team ? '👥 Equipe' : '👤 Cliente'}<span class="em"> · ${esc(S.user.email || '')}</span></small>`;
 function updateWho() { const w = $('#who'); if (w) w.innerHTML = whoHtml(); }
 function renderShell() {
   const nav = S.team ? [['#/tarefas', 'Tarefas']] : S.admin
@@ -628,6 +628,13 @@ function mountTimeline(box, p) {
 
 /* ---------- contas de acesso com senha provisória ---------- */
 const genSenha = () => { const c = 'abcdefghjkmnpqrstuvwxyz23456789'; let r = ''; const a = new Uint32Array(6); crypto.getRandomValues(a); a.forEach(n => r += c[n % c.length]); return 'Pr' + r + '#'; };
+async function duplicado(em) {
+  if (em === MAIN_ADMIN) return 'Este e-mail é o do administrador principal e já tem acesso total.';
+  if (S.equipe.some(m => m.id === em)) return 'Este e-mail já está cadastrado na Equipe do escritório. Remova-o de lá antes de cadastrá-lo em outro perfil.';
+  const [a, l] = await Promise.all([getDoc(doc(db, 'admins', em)).catch(() => null), getDoc(doc(db, 'advogados', em)).catch(() => null)]);
+  if (a?.exists() || l?.exists()) return 'Este e-mail já está cadastrado em Acessos de gestão e administração. Remova-o de lá antes de cadastrá-lo em outro perfil.';
+  return '';
+}
 async function criarConta(email, senha, nome) {
   const sec = initializeApp(firebaseConfig, 'sec' + Date.now());
   try {
@@ -638,10 +645,12 @@ async function criarConta(email, senha, nome) {
   } catch (x) { if (x.code === 'auth/email-already-in-use') return 'existe'; throw x; }
   finally { deleteApp(sec).catch(() => {}); }
 }
-function mostrarAcesso(nome, email, senha, resultado) {
+async function mostrarAcesso(nome, email, senha, resultado) {
+  let enviado = false;
+  if (resultado === 'existe') { try { await sendPasswordResetEmail(auth, email); enviado = true; } catch { /* ok */ } }
   const url = location.origin + location.pathname.replace(/[^/]*$/, '') + 'index.html';
-  const txt = resultado === 'criada' ? `Acesso ao sistema — Poliana Rebouças Advocacia\nSite: ${url}\nEntre em “Área restrita”\nE-mail: ${email}\nSenha provisória: ${senha}\nTroque a senha no botão “Senha” depois de entrar.` : `Acesso liberado para ${email}. Esta pessoa já tinha conta: deve entrar com a senha que já usa (ou “Esqueci a senha”).\nSite: ${url}`;
-  openModal(`<h2>${resultado === 'criada' ? 'Acesso criado' : 'Acesso liberado'}</h2><p style="font-size:.85rem;line-height:1.6;margin-bottom:.8rem">Envie estes dados para <b>${esc(nome || email)}</b>:</p>
+  const txt = resultado === 'criada' ? `Acesso ao sistema — Poliana Rebouças Advocacia\nSite: ${url}\nEntre em “Área restrita”\nE-mail: ${email}\nSenha provisória: ${senha}\nTroque a senha no botão “Senha” depois de entrar.` : `ATENÇÃO: ${email} JÁ TINHA uma conta de login (criada antes), então a senha provisória NÃO vale para ela.\n${enviado ? 'Enviamos agora um e-mail com o link para criar uma nova senha — peça para a pessoa abrir esse e-mail (verifique o spam).' : 'Peça para usar “Esqueci a senha” na tela de login.'}\nDepois, entre por “Área restrita”: ${url}`;
+  openModal(`<h2>${resultado === 'criada' ? 'Acesso criado' : 'Conta já existia'}</h2><p style="font-size:.85rem;line-height:1.6;margin-bottom:.8rem">Envie estes dados para <b>${esc(nome || email)}</b>:</p>
     <textarea readonly id="acTxt" style="width:100%;min-height:150px;font-size:.8rem">${esc(txt)}</textarea><div class="acts"><button class="btn ghost sm" id="acCp">Copiar</button><button class="btn sm" data-ok>Fechar</button></div>`,
     (m, c) => { m.querySelector('[data-ok]').onclick = c; m.querySelector('#acCp').onclick = async () => { try { await navigator.clipboard.writeText(txt); toast('Copiado.'); } catch { m.querySelector('#acTxt').select(); toast('Selecione e copie.'); } }; });
 }
@@ -1308,13 +1317,13 @@ function viewConfig() {
         const [a, l] = await Promise.all([getDocs(collection(db, 'admins')), getDocs(collection(db, 'advogados'))]);
         const m = new Map(); l.docs.forEach(d => m.set(d.id, { adv: true })); a.docs.forEach(d => m.set(d.id, { ...(m.get(d.id) || {}), adm: true }));
         const rows = [...m.entries()].filter(([e]) => e !== MAIN_ADMIN);
-        $('#acL', ac).innerHTML = `<div class="mini"><div><span>👑 ${MAIN_ADMIN}<br><small style="text-align:left">Administrador principal</small></span></div>${rows.map(([e, v]) => `<div><span>${esc(e)}<br><small style="text-align:left">${v.adm ? 'Administrador' + (v.adv ? ' + gestão' : ' (só edita o site)') : 'Advogado(a) — gestão'}</small></span><button class="btn ghost sm" data-rm="${esc(e)}">Remover</button></div>`).join('')}</div>`;
+        $('#acL', ac).innerHTML = `<div class="mini"><div><span>👑 ${MAIN_ADMIN}<br><small style="text-align:left">Administrador principal</small></span></div>${rows.map(([e, v]) => `<div><span>${esc(e)}<br><small style="text-align:left">${v.adm ? 'Administrador' + (v.adv ? ' + gestão' : ' (só edita o site)') : 'Advogado(a) — gestão'}</small></span><span><button class="btn ghost sm" data-rs="${esc(e)}">Enviar link de senha</button> <button class="btn ghost sm" data-rm="${esc(e)}">Remover</button></span></div>`).join('')}</div>`;
       } catch (x) { $('#acL', ac).innerHTML = `<p class="msg-err">${esc(errMsg(x))}</p>`; }
     };
     loadAc();
-    ac.onclick = async e => { const b = e.target.closest('[data-rm]'); if (!b) return; if (await confirmBox('Remover o acesso de <b>' + esc(b.dataset.rm) + '</b>?', 'Remover')) { try { await Promise.all([deleteDoc(doc(db, 'admins', b.dataset.rm)), deleteDoc(doc(db, 'advogados', b.dataset.rm))]); toast('Acesso removido.'); loadAc(); } catch (x) { toast(errMsg(x), true); } } };
+    ac.onclick = async e => { const r = e.target.closest('[data-rs]'); if (r) { try { await sendPasswordResetEmail(auth, r.dataset.rs); toast('Link para criar nova senha enviado para ' + r.dataset.rs); } catch (x) { toast(errMsg(x), true); } return; } const b = e.target.closest('[data-rm]'); if (!b) return; if (await confirmBox('Remover o acesso de <b>' + esc(b.dataset.rm) + '</b>?', 'Remover')) { try { await Promise.all([deleteDoc(doc(db, 'admins', b.dataset.rm)), deleteDoc(doc(db, 'advogados', b.dataset.rm))]); toast('Acesso removido.'); loadAc(); } catch (x) { toast(errMsg(x), true); } } };
     $('#acF', ac).onsubmit = async e => { e.preventDefault(); const f = e.target, em = f.e.value.trim().toLowerCase(), perfil = f.p.value;
-      try { const senha = f.s.value; const res = await criarConta(em, senha, f.n.value.trim()); await setDoc(doc(db, 'advogados', em), { email: em, perfil, criadoAt: serverTimestamp() }); if (perfil === 'adm') await setDoc(doc(db, 'admins', em), { email: em, criadoAt: serverTimestamp() }); else await deleteDoc(doc(db, 'admins', em)).catch(() => {}); f.reset(); f.s.value = genSenha(); $('#acE', ac).textContent = ''; mostrarAcesso(f.n.value || em, em, senha, res); loadAc(); } catch (x) { $('#acE', ac).textContent = errMsg(x); } };
+      try { const senha = f.s.value; const dup = await duplicado(em); if (dup) throw new Error(dup); const res = await criarConta(em, senha, f.n.value.trim()); await setDoc(doc(db, 'advogados', em), { email: em, perfil, criadoAt: serverTimestamp() }); if (perfil === 'adm') await setDoc(doc(db, 'admins', em), { email: em, criadoAt: serverTimestamp() }); else await deleteDoc(doc(db, 'admins', em)).catch(() => {}); f.reset(); f.s.value = genSenha(); $('#acE', ac).textContent = ''; mostrarAcesso(f.n.value || em, em, senha, res); loadAc(); } catch (x) { $('#acE', ac).textContent = x.message && !x.code ? x.message : errMsg(x); } };
   }
   const eq = document.createElement('div'); eq.className = 'card'; eq.style.cssText = 'max-width:700px;margin-top:1.2rem';
   eq.innerHTML = `<div class="eyebrow">Equipe do escritório</div>
@@ -1324,11 +1333,11 @@ function viewConfig() {
     <div class="row2"><div class="field"><label>Função (opcional)</label><input name="f" maxlength="60" placeholder="Ex.: Estagiária, Assistente"></div><div class="field"><label>Senha provisória</label><input name="s" minlength="6" maxlength="40" value="${genSenha()}" required></div></div>
     <p class="msg-err" id="eqE"></p><button class="btn sm">＋ Adicionar à equipe</button></form>`;
   box.appendChild(eq);
-  const drawEq = () => { $('#eqL', eq).innerHTML = S.equipe.length ? S.equipe.map(m => `<div class="mini"><div><span>👥 ${esc(m.nome)}${m.funcao ? ' · ' + esc(m.funcao) : ''}<br><small style="text-align:left">${esc(m.id)}</small></span><button class="btn ghost sm" data-rm="${esc(m.id)}">Remover</button></div></div>`).join('') : '<p class="hint">Nenhum membro cadastrado ainda.</p>'; };
+  const drawEq = () => { $('#eqL', eq).innerHTML = S.equipe.length ? S.equipe.map(m => `<div class="mini"><div><span>👥 ${esc(m.nome)}${m.funcao ? ' · ' + esc(m.funcao) : ''}<br><small style="text-align:left">${esc(m.id)}</small></span><span><button class="btn ghost sm" data-rs="${esc(m.id)}">Enviar link de senha</button> <button class="btn ghost sm" data-rm="${esc(m.id)}">Remover</button></span></div></div>`).join('') : '<p class="hint">Nenhum membro cadastrado ainda.</p>'; };
   drawEq();
-  eq.onclick = async e => { const b = e.target.closest('[data-rm]'); if (!b) return; if (await confirmBox('Remover <b>' + esc(b.dataset.rm) + '</b> da equipe? A pessoa perde o acesso ao quadro.', 'Remover')) { try { await deleteDoc(doc(db, 'equipe', b.dataset.rm)); toast('Removido.'); } catch (x) { toast(errMsg(x), true); } } };
+  eq.onclick = async e => { const r = e.target.closest('[data-rs]'); if (r) { try { await sendPasswordResetEmail(auth, r.dataset.rs); toast('Link para criar nova senha enviado para ' + r.dataset.rs); } catch (x) { toast(errMsg(x), true); } return; } const b = e.target.closest('[data-rm]'); if (!b) return; if (await confirmBox('Remover <b>' + esc(b.dataset.rm) + '</b> da equipe? A pessoa perde o acesso ao quadro.', 'Remover')) { try { await deleteDoc(doc(db, 'equipe', b.dataset.rm)); toast('Removido.'); } catch (x) { toast(errMsg(x), true); } } };
   $('#eqF', eq).onsubmit = async e => { e.preventDefault(); const f = e.target, em = f.e.value.trim().toLowerCase();
-    try { const senha = f.s.value, nome = f.n.value.trim(); const res = await criarConta(em, senha, nome); await setDoc(doc(db, 'equipe', em), { nome, email: em, funcao: f.f.value.trim(), criadoAt: serverTimestamp() }); f.reset(); f.s.value = genSenha(); $('#eqE', eq).textContent = ''; mostrarAcesso(nome, em, senha, res); } catch (x) { $('#eqE', eq).textContent = errMsg(x); } };
+    try { const senha = f.s.value, nome = f.n.value.trim(); const dup = await duplicado(em); if (dup) throw new Error(dup); const res = await criarConta(em, senha, nome); await setDoc(doc(db, 'equipe', em), { nome, email: em, funcao: f.f.value.trim(), criadoAt: serverTimestamp() }); f.reset(); f.s.value = genSenha(); $('#eqE', eq).textContent = ''; mostrarAcesso(nome, em, senha, res); } catch (x) { $('#eqE', eq).textContent = x.message && !x.code ? x.message : errMsg(x); } };
   $('#wkS', box).onclick = async () => {
     const v = $('#wk', box).value.trim().replace(/\/$/, '');
     if (v && !/^https:\/\/[\w.-]+/.test(v)) return $('#wkE', box).textContent = 'O endereço deve começar com https://';
