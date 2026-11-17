@@ -255,8 +255,8 @@ main{max-width:1100px;margin:auto;padding:2rem 1.5rem 5rem}
 <div class="toast" id="toast"></div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, updateProfile }
+import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, collection, query, where, orderBy, onSnapshot, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -498,11 +498,13 @@ function renderShell() {
     <span class="who" id="who">${whoHtml()}</span>
     <button class="icon-btn" id="bell" aria-label="Novidades"></button>
     <a class="link-btn" href="index.html" id="siteLink">Site</a>
+    <button class="link-btn" id="pwdBtn">Senha</button>
     <button class="link-btn" id="logout">Sair</button>
   </div><div class="nav" id="nav">${nav.map(n => `<a href="${n[0]}" data-nav="${n[0]}">${n[1]}<span class="dot" data-dot="${n[0]}" hidden></span></a>`).join('')}</div>
   <div class="bell-box" id="bellBox" hidden></div></header>
   <main id="main"></main>`;
   $('#logout').onclick = () => { try { sessionStorage.removeItem('pr_edit'); } catch { /* ok */ } signOut(auth); };
+  $('#pwdBtn').onclick = formSenha;
   $('#siteLink').onclick = () => { try { sessionStorage.removeItem('pr_edit'); } catch { /* ok */ } };
   $('#bell').onclick = e => { e.stopPropagation(); $('#bellBox').hidden = !$('#bellBox').hidden; };
   document.addEventListener('click', e => { const b = $('#bellBox'); if (b && !e.target.closest('#bell')) b.hidden = true; });
@@ -623,6 +625,39 @@ function mountTimeline(box, p) {
 
 /* ---------- processo ---------- */
 
+
+/* ---------- contas de acesso com senha provisória ---------- */
+const genSenha = () => { const c = 'abcdefghjkmnpqrstuvwxyz23456789'; let r = ''; const a = new Uint32Array(6); crypto.getRandomValues(a); a.forEach(n => r += c[n % c.length]); return 'Pr' + r + '#'; };
+async function criarConta(email, senha, nome) {
+  const sec = initializeApp(firebaseConfig, 'sec' + Date.now());
+  try {
+    const a = getAuth(sec);
+    const cr = await createUserWithEmailAndPassword(a, email, senha);
+    try { await updateProfile(cr.user, { displayName: nome || email.split('@')[0] }); } catch { /* ok */ }
+    await signOut(a); return 'criada';
+  } catch (x) { if (x.code === 'auth/email-already-in-use') return 'existe'; throw x; }
+  finally { deleteApp(sec).catch(() => {}); }
+}
+function mostrarAcesso(nome, email, senha, resultado) {
+  const url = location.origin + location.pathname.replace(/[^/]*$/, '') + 'index.html';
+  const txt = resultado === 'criada' ? `Acesso ao sistema — Poliana Rebouças Advocacia\nSite: ${url}\nEntre em “Área restrita”\nE-mail: ${email}\nSenha provisória: ${senha}\nTroque a senha no botão “Senha” depois de entrar.` : `Acesso liberado para ${email}. Esta pessoa já tinha conta: deve entrar com a senha que já usa (ou “Esqueci a senha”).\nSite: ${url}`;
+  openModal(`<h2>${resultado === 'criada' ? 'Acesso criado' : 'Acesso liberado'}</h2><p style="font-size:.85rem;line-height:1.6;margin-bottom:.8rem">Envie estes dados para <b>${esc(nome || email)}</b>:</p>
+    <textarea readonly id="acTxt" style="width:100%;min-height:150px;font-size:.8rem">${esc(txt)}</textarea><div class="acts"><button class="btn ghost sm" id="acCp">Copiar</button><button class="btn sm" data-ok>Fechar</button></div>`,
+    (m, c) => { m.querySelector('[data-ok]').onclick = c; m.querySelector('#acCp').onclick = async () => { try { await navigator.clipboard.writeText(txt); toast('Copiado.'); } catch { m.querySelector('#acTxt').select(); toast('Selecione e copie.'); } }; });
+}
+function formSenha() {
+  openModal(`<h2>Alterar minha senha</h2><form id="spF"><div class="field"><label>Senha atual</label><input name="a" type="password" required autocomplete="current-password"></div>
+    <div class="field"><label>Nova senha (mín. 6 caracteres)</label><input name="n" type="password" required minlength="6" autocomplete="new-password"></div>
+    <div class="field"><label>Repita a nova senha</label><input name="r" type="password" required minlength="6" autocomplete="new-password"></div>
+    <p class="msg-err" id="spE"></p><div class="acts"><button type="button" class="btn ghost sm" data-no>Cancelar</button><button class="btn sm">Salvar senha</button></div></form>`,
+    (m, c) => {
+      $('[data-no]', m).onclick = c;
+      $('#spF', m).onsubmit = async e => { e.preventDefault(); const f = e.target;
+        if (f.n.value !== f.r.value) { $('#spE', m).textContent = 'As senhas novas não conferem.'; return; }
+        try { await reauthenticateWithCredential(auth.currentUser, EmailAuthProvider.credential(auth.currentUser.email, f.a.value)); await updatePassword(auth.currentUser, f.n.value); c(); toast('Senha alterada.'); }
+        catch (x) { $('#spE', m).textContent = errMsg(x); } };
+    });
+}
 /* ---------- registro de atividades (log) ---------- */
 const LOG_AC = { criar: ['➕ Cadastro', 'ok'], editar: ['✏️ Edição', ''], arquivar: ['🗄 Arquivamento', ''], desarquivar: ['📂 Desarquivamento', ''], excluir: ['🗑 Exclusão', 'bad'] };
 function justificar(titulo, aviso, rotulo, perigo) {
@@ -1264,7 +1299,9 @@ function viewConfig() {
       <p class="hint" style="margin-bottom:1rem">Somente você (administrador principal) cadastra acessos. <b>Advogado(a)</b> usa a gestão (clientes, processos, agenda, tarefas). <b>Administrador</b> também edita o site. Cada pessoa entra por “Área restrita” no site, com e-mail e senha cadastrados.</p>
       <div id="acL" style="margin-bottom:1rem"><p class="hint">Carregando…</p></div>
       <form id="acF"><div class="row2"><div class="field"><label>E-mail</label><input name="e" type="email" required maxlength="120" placeholder="nome@email.com"></div>
-      <div class="field"><label>Perfil</label><select name="p"><option value="adv">Advogado(a) — gestão</option><option value="adm">Administrador — gestão + editar o site</option></select></div></div><p class="msg-err" id="acE"></p><button class="btn sm">＋ Cadastrar acesso</button></form>`;
+      <div class="field"><label>Perfil</label><select name="p"><option value="adv">Advogado(a) — gestão</option><option value="adm">Administrador — gestão + editar o site</option></select></div></div>
+      <div class="row2"><div class="field"><label>Nome</label><input name="n" maxlength="80" placeholder="Nome da pessoa"></div><div class="field"><label>Senha provisória</label><input name="s" minlength="6" maxlength="40" value="${genSenha()}" required></div></div>
+      <p class="hint" style="margin-bottom:.8rem">A conta de login é criada na hora com essa senha. Se a pessoa já tiver conta, ela continua com a senha atual. Ela pode trocar a senha pelo botão “Senha”.</p><p class="msg-err" id="acE"></p><button class="btn sm">＋ Cadastrar acesso</button></form>`;
     box.appendChild(ac);
     const loadAc = async () => {
       try {
@@ -1277,20 +1314,21 @@ function viewConfig() {
     loadAc();
     ac.onclick = async e => { const b = e.target.closest('[data-rm]'); if (!b) return; if (await confirmBox('Remover o acesso de <b>' + esc(b.dataset.rm) + '</b>?', 'Remover')) { try { await Promise.all([deleteDoc(doc(db, 'admins', b.dataset.rm)), deleteDoc(doc(db, 'advogados', b.dataset.rm))]); toast('Acesso removido.'); loadAc(); } catch (x) { toast(errMsg(x), true); } } };
     $('#acF', ac).onsubmit = async e => { e.preventDefault(); const f = e.target, em = f.e.value.trim().toLowerCase(), perfil = f.p.value;
-      try { await setDoc(doc(db, 'advogados', em), { email: em, perfil, criadoAt: serverTimestamp() }); if (perfil === 'adm') await setDoc(doc(db, 'admins', em), { email: em, criadoAt: serverTimestamp() }); else await deleteDoc(doc(db, 'admins', em)).catch(() => {}); f.reset(); $('#acE', ac).textContent = ''; toast('Acesso cadastrado.'); loadAc(); } catch (x) { $('#acE', ac).textContent = errMsg(x); } };
+      try { const senha = f.s.value; const res = await criarConta(em, senha, f.n.value.trim()); await setDoc(doc(db, 'advogados', em), { email: em, perfil, criadoAt: serverTimestamp() }); if (perfil === 'adm') await setDoc(doc(db, 'admins', em), { email: em, criadoAt: serverTimestamp() }); else await deleteDoc(doc(db, 'admins', em)).catch(() => {}); f.reset(); f.s.value = genSenha(); $('#acE', ac).textContent = ''; mostrarAcesso(f.n.value || em, em, senha, res); loadAc(); } catch (x) { $('#acE', ac).textContent = errMsg(x); } };
   }
   const eq = document.createElement('div'); eq.className = 'card'; eq.style.cssText = 'max-width:700px;margin-top:1.2rem';
   eq.innerHTML = `<div class="eyebrow">Equipe do escritório</div>
-    <p class="hint" style="margin-bottom:1rem">Membros da equipe veem <b>apenas o quadro de Tarefas</b> (não acessam clientes, processos nem conversas). Cadastre o e-mail abaixo; a pessoa entra em “Área do cliente” → <b>Criar conta</b> com esse mesmo e-mail (ou Google) e já cai no quadro.</p>
+    <p class="hint" style="margin-bottom:1rem">Membros da equipe veem <b>apenas o quadro de Tarefas</b> (não acessam clientes, processos nem conversas). Cadastre o e-mail abaixo; a conta é criada na hora com a senha provisória; a pessoa entra por “Área restrita” (ou “Área do cliente”) e já cai no quadro. Depois pode trocar a senha no botão “Senha”.</p>
     <div id="eqL" style="margin-bottom:1rem"></div>
     <form id="eqF"><div class="row2"><div class="field"><label>Nome</label><input name="n" required maxlength="80" placeholder="Nome do membro"></div><div class="field"><label>E-mail</label><input name="e" type="email" required maxlength="120" placeholder="nome@email.com"></div></div>
-    <div class="field"><label>Função (opcional)</label><input name="f" maxlength="60" placeholder="Ex.: Estagiária, Assistente"></div><p class="msg-err" id="eqE"></p><button class="btn sm">＋ Adicionar à equipe</button></form>`;
+    <div class="row2"><div class="field"><label>Função (opcional)</label><input name="f" maxlength="60" placeholder="Ex.: Estagiária, Assistente"></div><div class="field"><label>Senha provisória</label><input name="s" minlength="6" maxlength="40" value="${genSenha()}" required></div></div>
+    <p class="msg-err" id="eqE"></p><button class="btn sm">＋ Adicionar à equipe</button></form>`;
   box.appendChild(eq);
   const drawEq = () => { $('#eqL', eq).innerHTML = S.equipe.length ? S.equipe.map(m => `<div class="mini"><div><span>👥 ${esc(m.nome)}${m.funcao ? ' · ' + esc(m.funcao) : ''}<br><small style="text-align:left">${esc(m.id)}</small></span><button class="btn ghost sm" data-rm="${esc(m.id)}">Remover</button></div></div>`).join('') : '<p class="hint">Nenhum membro cadastrado ainda.</p>'; };
   drawEq();
   eq.onclick = async e => { const b = e.target.closest('[data-rm]'); if (!b) return; if (await confirmBox('Remover <b>' + esc(b.dataset.rm) + '</b> da equipe? A pessoa perde o acesso ao quadro.', 'Remover')) { try { await deleteDoc(doc(db, 'equipe', b.dataset.rm)); toast('Removido.'); } catch (x) { toast(errMsg(x), true); } } };
   $('#eqF', eq).onsubmit = async e => { e.preventDefault(); const f = e.target, em = f.e.value.trim().toLowerCase();
-    try { await setDoc(doc(db, 'equipe', em), { nome: f.n.value.trim(), email: em, funcao: f.f.value.trim(), criadoAt: serverTimestamp() }); f.reset(); $('#eqE', eq).textContent = ''; toast('Membro adicionado.'); } catch (x) { $('#eqE', eq).textContent = errMsg(x); } };
+    try { const senha = f.s.value, nome = f.n.value.trim(); const res = await criarConta(em, senha, nome); await setDoc(doc(db, 'equipe', em), { nome, email: em, funcao: f.f.value.trim(), criadoAt: serverTimestamp() }); f.reset(); f.s.value = genSenha(); $('#eqE', eq).textContent = ''; mostrarAcesso(nome, em, senha, res); } catch (x) { $('#eqE', eq).textContent = errMsg(x); } };
   $('#wkS', box).onclick = async () => {
     const v = $('#wk', box).value.trim().replace(/\/$/, '');
     if (v && !/^https:\/\/[\w.-]+/.test(v)) return $('#wkE', box).textContent = 'O endereço deve começar com https://';

@@ -960,7 +960,7 @@ body.is-admin .intro-photo.shaped { padding-top:9.5rem; }
   <form class="modal" id="loginForm" autocomplete="on">
     <button type="button" class="close" data-action="closeModal">×</button>
     <h3>Área restrita</h3>
-    <p style="font-size:.78rem;opacity:.75;margin:-.4rem 0 1rem;line-height:1.5">Acesso para advogados e administradores. Clientes entram pela “Área do cliente”.</p>
+    <p style="font-size:.78rem;opacity:.75;margin:-.4rem 0 1rem;line-height:1.5">Acesso para advogados, administradores e equipe. Clientes entram pela “Área do cliente”.</p>
     <div class="form-group"><label>E-mail</label><input type="email" id="loginEmail" autocomplete="username" required></div>
     <div class="form-group"><label>Senha</label><input type="password" id="loginPass" autocomplete="current-password" required></div>
     <div class="modal-actions">
@@ -1592,11 +1592,14 @@ onAuthStateChanged(auth, async user => {
   if (user && !adm) { try { adm = (await getDoc(doc(db, 'admins', email))).exists(); } catch (err) { adm = false; } }
   if (user && !law) { try { law = (await getDoc(doc(db, 'advogados', email))).exists(); } catch (err) { law = false; } }
   userRole = { adm, law };
+  let team = false;
+  if (user && justLoggedIn && !adm && !law) { try { team = (await getDoc(doc(db, 'equipe', email))).exists(); } catch (err) { team = false; } }
   if (user && justLoggedIn) {
     justLoggedIn = false;
+    if (team) { setEditFlag(false); location.href = 'cliente.html'; return; }          // equipe → quadro de tarefas
     if (law) { setEditFlag(false); location.href = 'cliente.html'; return; }          // advogada → tela de gestão
     if (adm) setEditFlag(true);                                                           // administrador sem gestão → edita o site
-    else { signOut(auth); toast('Acesso restrito a advogados e administradores. Clientes entram pela “Área do cliente”.', true); return; }
+    else { signOut(auth); toast('Acesso restrito a advogados, administradores e equipe. Clientes entram pela “Área do cliente”.', true); return; }
   }
   admin = adm && editFlag();
   if (!admin && editFlag()) setEditFlag(false);
