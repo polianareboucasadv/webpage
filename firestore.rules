@@ -110,7 +110,8 @@ service cloud.firestore {
                     && request.resource.data.documento is string && request.resource.data.documento.size() <= 30
                     && request.resource.data.notifEmail is bool;
       allow update: if signedIn() && ((request.auth.uid == uid
-                    && request.resource.data.keys().hasOnly(['uid','nome','email','telefone','documento','notifEmail','criadoEm','atualizadoEm'])
+                    && request.resource.data.keys().hasOnly(['uid','nome','email','telefone','documento','notifEmail','criadoEm','atualizadoEm','inativo'])
+                    && request.resource.data.get('inativo', false) == resource.data.get('inativo', false)
                     && request.resource.data.uid == resource.data.uid
                     && request.resource.data.email == resource.data.email
                     && request.resource.data.criadoEm == resource.data.criadoEm
@@ -118,13 +119,14 @@ service cloud.firestore {
                     && request.resource.data.telefone is string && request.resource.data.telefone.size() <= 40
                     && request.resource.data.documento is string && request.resource.data.documento.size() <= 30
                     && request.resource.data.notifEmail is bool) || isLawyer());
-      allow delete: if isLawyer();
+      allow delete: if isLawyer() && resource.data.get('inativo', false) == true;
     }
 
     // Processos: criados e editados só pela advogada; o cliente vê os seus e só marca "lido"
     match /processos/{pid} {
       allow read: if signedIn() && (isLawyer() || resource.data.clienteUid == request.auth.uid);
-      allow create, delete: if isLawyer();
+      allow create: if isLawyer();
+      allow delete: if isLawyer() && resource.data.status == 'inativo';
       allow update: if isLawyer()
                     || (signedIn() && resource.data.clienteUid == request.auth.uid
                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lidoCliente']));
