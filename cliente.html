@@ -1104,7 +1104,7 @@ const TK_COLS = [['afazer', 'A fazer'], ['andamento', 'Em andamento'], ['conclui
 const PRI = { alta: 'Alta', media: 'Média', baixa: 'Baixa' };
 const me = () => (S.user?.email || '').toLowerCase();
 const people = () => {
-  const m = new Map(); ADMIN_EMAILS.forEach(e => m.set(e, { email: e, nome: 'Dra. Poliana', adv: true }));
+  const m = new Map(); m.set(MAIN_ADMIN, { email: MAIN_ADMIN, nome: 'Dra. Poliana', adv: true });
   S.equipe.forEach(x => m.set(x.id, { email: x.id, nome: x.nome || x.id, funcao: x.funcao || '' }));
   if (S.admin && !m.has(me())) m.set(me(), { email: me(), nome: S.profile?.nome || S.user.displayName || me(), adv: true });
   return [...m.values()];
