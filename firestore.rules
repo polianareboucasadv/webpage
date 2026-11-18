@@ -24,6 +24,13 @@ service cloud.firestore {
       allow read: if isLawyer() || isTeam() || (request.auth != null && request.auth.token.email.lower() == em);
       allow write: if isLawyer();
     }
+    match /perfis/{pid} {
+      allow read: if signedIn() && (isLawyer() || isTeam() || request.auth.token.email.lower() == pid);
+      allow create, update: if signedIn() && (isLawyer() || (request.auth.token.email.lower() == pid
+                    && request.resource.data.keys().hasOnly(['email','nome','foto','atualizadoAt'])
+                    && request.resource.data.foto is string && request.resource.data.foto.size() < 60000));
+      allow delete: if isLawyer();
+    }
     match /logs/{lid} {
       allow read: if isLawyer();
       allow create: if isLawyer() && request.resource.data.usuario == request.auth.token.email.lower();

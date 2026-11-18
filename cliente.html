@@ -180,6 +180,11 @@ main{max-width:1100px;margin:auto;padding:2rem 1.5rem 5rem}
 .kb-f small{font-size:.64rem;color:var(--muted)}.kb-f small.late{color:#e0605c;font-weight:600}
 .av{display:inline-flex;width:24px;height:24px;border-radius:50%;background:var(--gold);color:#0d1821;font-size:.6rem;font-weight:700;align-items:center;justify-content:center;margin-left:-6px;border:2px solid var(--navy2)}
 .avs{display:flex;padding-left:6px}
+.av{position:relative;overflow:visible;flex:none}.av img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
+.av.lg{width:40px;height:40px;font-size:.8rem;margin:0}.av.me{width:34px;height:34px;font-size:.7rem;margin:0 .2rem 0 0;border:1px solid var(--border);cursor:pointer}
+.av[data-tip]:hover::after,.av[data-tip]:focus::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);right:0;background:#000d;color:#fff;font-size:.68rem;font-weight:500;padding:.25rem .5rem;border-radius:3px;white-space:nowrap;z-index:30;pointer-events:none}
+.kb-by{position:absolute;top:.55rem;right:.6rem}.kb-by .av{margin:0}.kb-by .av[data-tip]:hover::after{bottom:auto;top:calc(100% + 6px)}
+.kb-c .pri{margin-right:34px}
 .pri{font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600;padding:.12rem .45rem;border:1px solid currentColor;border-radius:20px}
 .pri.alta{color:#e0605c}.pri.media{color:#e0a63c}.pri.baixa{color:#5aa0d8}
 .kb-mv{display:flex;gap:.3rem;margin-top:.5rem}.kb-mv button{flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);padding:.3rem;cursor:pointer;font-size:.7rem}
@@ -325,7 +330,7 @@ const errMsg = e => ({
 }[e?.code] ?? 'Algo deu errado. Tente novamente.');
 
 /* ---------- estado ---------- */
-const S = { user: null, admin: false, profile: null, clientes: [], processos: [], chats: [], workerUrl: '', r2: false, unsubs: [], view: null, seen: null, bellOpen: false, pending: null, docs: {}, docSub: new Set(), eventos: [], logs: [], agMes: null, agDia: '', team: false, equipe: [], tarefas: [], siteAdmin: false, main: false };
+const S = { user: null, admin: false, profile: null, clientes: [], processos: [], chats: [], workerUrl: '', r2: false, unsubs: [], view: null, seen: null, bellOpen: false, pending: null, docs: {}, docSub: new Set(), eventos: [], logs: [], perfis: {}, agMes: null, agDia: '', team: false, equipe: [], tarefas: [], siteAdmin: false, main: false };
 const clienteById = uid => S.clientes.find(c => c.id === uid);
 const clienteNome = uid => S.admin ? (clienteById(uid)?.nome || 'Cliente') : (S.profile?.nome || 'Você');
 
@@ -487,7 +492,7 @@ function viewAuth(mode = 'login') {
 /* ---------- casca (topo + menu) ---------- */
 const selfName = () => S.profile?.nome || S.equipe.find(x => x.id === me())?.nome || S.user.displayName || (S.admin ? 'Advogada' : (S.user.email || '').split('@')[0]);
 const whoHtml = () => `<b>${esc(selfName())}</b><small>${S.admin ? (S.main ? '⚖ Administradora principal' : '⚖ Advogado(a) · gestão') : S.team ? '👥 Equipe' : '👤 Cliente'}<span class="em"> · ${esc(S.user.email || '')}</span></small>`;
-function updateWho() { const w = $('#who'); if (w) w.innerHTML = whoHtml(); }
+function updateWho() { const w = $('#who'); if (w) w.innerHTML = whoHtml(); const a = $('#myAv'); if (a) { a.innerHTML = avatar(me(), selfName(), 'me'); a.firstChild.onclick = formSenha; } }
 function renderShell() {
   const nav = S.team ? [['#/tarefas', 'Tarefas']] : S.admin
     ? [['#/', 'Dashboard'], ['#/processos', 'Processos'], ['#/agenda', 'Agenda'], ['#/tarefas', 'Tarefas'], ['#/clientes', 'Clientes'], ['#/mensagens', 'Conversas'], ['#/logs', 'Registro'], ['#/config', 'Configurações']]
@@ -495,10 +500,10 @@ function renderShell() {
   $('#root').innerHTML = `
   <header class="top" style="position:sticky"><div class="top-in">
     <a class="brand" href="#/"><b>PR</b><small>Área do cliente</small></a><span class="top-sp"></span>
-    <span class="who" id="who">${whoHtml()}</span>
+    <span id="myAv"></span><span class="who" id="who">${whoHtml()}</span>
     <button class="icon-btn" id="bell" aria-label="Novidades"></button>
     <a class="link-btn" href="index.html" id="siteLink">Site</a>
-    <button class="link-btn" id="pwdBtn">Senha</button>
+    <button class="link-btn" id="pwdBtn">Conta</button>
     <button class="link-btn" id="logout">Sair</button>
   </div><div class="nav" id="nav">${nav.map(n => `<a href="${n[0]}" data-nav="${n[0]}">${n[1]}<span class="dot" data-dot="${n[0]}" hidden></span></a>`).join('')}</div>
   <div class="bell-box" id="bellBox" hidden></div></header>
@@ -654,12 +659,29 @@ async function mostrarAcesso(nome, email, senha, resultado) {
     <textarea readonly id="acTxt" style="width:100%;min-height:150px;font-size:.8rem">${esc(txt)}</textarea><div class="acts"><button class="btn ghost sm" id="acCp">Copiar</button><button class="btn sm" data-ok>Fechar</button></div>`,
     (m, c) => { m.querySelector('[data-ok]').onclick = c; m.querySelector('#acCp').onclick = async () => { try { await navigator.clipboard.writeText(txt); toast('Copiado.'); } catch { m.querySelector('#acTxt').select(); toast('Selecione e copie.'); } }; });
 }
+function reduzFoto(file) {
+  return new Promise((res, rej) => {
+    const img = new Image(), u = URL.createObjectURL(file);
+    img.onload = () => { const n = 160, c = document.createElement('canvas'); c.width = c.height = n; const x = c.getContext('2d'); const l = Math.min(img.width, img.height); x.drawImage(img, (img.width - l) / 2, (img.height - l) / 2, l, l, 0, 0, n, n); URL.revokeObjectURL(u); res(c.toDataURL('image/jpeg', .85)); };
+    img.onerror = () => rej(new Error('Não foi possível ler esta imagem.')); img.src = u;
+  });
+}
 function formSenha() {
-  openModal(`<h2>Alterar minha senha</h2><form id="spF"><div class="field"><label>Senha atual</label><input name="a" type="password" required autocomplete="current-password"></div>
+  const foto = () => fotoOf(me());
+  openModal(`<h2>Minha conta</h2>
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.2rem"><span id="fPrev"></span>
+      <div><label class="btn ghost sm" style="cursor:pointer">Escolher foto<input type="file" id="fIn" accept="image/*" hidden></label> <button type="button" class="btn ghost sm" id="fRm">Remover</button><p class="hint" style="margin-top:.4rem">Aparece nas tarefas e no topo. Fica recortada em quadrado.</p></div></div>
+    <p class="msg-err" id="fE"></p>
+    <h3 style="font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin:.4rem 0 .6rem">Alterar senha</h3>
+    <form id="spF"><div class="field"><label>Senha atual</label><input name="a" type="password" required autocomplete="current-password"></div>
     <div class="field"><label>Nova senha (mín. 6 caracteres)</label><input name="n" type="password" required minlength="6" autocomplete="new-password"></div>
     <div class="field"><label>Repita a nova senha</label><input name="r" type="password" required minlength="6" autocomplete="new-password"></div>
-    <p class="msg-err" id="spE"></p><div class="acts"><button type="button" class="btn ghost sm" data-no>Cancelar</button><button class="btn sm">Salvar senha</button></div></form>`,
+    <p class="msg-err" id="spE"></p><div class="acts"><button type="button" class="btn ghost sm" data-no>Fechar</button><button class="btn sm">Salvar senha</button></div></form>`,
     (m, c) => {
+      const prev = () => { $('#fPrev', m).innerHTML = avatar(me(), selfName(), 'lg'); }; prev();
+      const salvar = async f => { try { await setDoc(doc(db, 'perfis', me()), { email: me(), nome: selfName(), foto: f, atualizadoAt: serverTimestamp() }); S.perfis[me()] = { foto: f }; prev(); updateWho(); onData(); $('#fE', m).textContent = ''; } catch (x) { $('#fE', m).textContent = errMsg(x); } };
+      $('#fIn', m).onchange = async e => { const file = e.target.files[0]; if (!file) return; try { await salvar(await reduzFoto(file)); } catch (x) { $('#fE', m).textContent = x.message; } e.target.value = ''; };
+      $('#fRm', m).onclick = () => salvar('');
       $('[data-no]', m).onclick = c;
       $('#spF', m).onsubmit = async e => { e.preventDefault(); const f = e.target;
         if (f.n.value !== f.r.value) { $('#spE', m).textContent = 'As senhas novas não conferem.'; return; }
@@ -1103,6 +1125,8 @@ function viewAgenda() {
 const TK_COLS = [['afazer', 'A fazer'], ['andamento', 'Em andamento'], ['concluido', 'Concluído']];
 const PRI = { alta: 'Alta', media: 'Média', baixa: 'Baixa' };
 const me = () => (S.user?.email || '').toLowerCase();
+const fotoOf = e => S.perfis[(e || '').toLowerCase()]?.foto || '';
+const avatar = (email, nome, cls = '') => { const f = fotoOf(email); return `<span class="av ${cls}" data-tip="${esc(nome || email)}" tabindex="0">${f ? `<img src="${esc(f)}" alt="">` : esc(iniciais(nome || email))}</span>`; };
 const people = () => {
   const m = new Map(); m.set(MAIN_ADMIN, { email: MAIN_ADMIN, nome: 'Dra. Poliana', adv: true });
   S.equipe.forEach(x => m.set(x.id, { email: x.id, nome: x.nome || x.id, funcao: x.funcao || '' }));
@@ -1167,9 +1191,9 @@ function viewTarefas() {
       const l = S.tarefas.filter(t => t.status === k && ok(t)).sort((a, b) => k === 'concluido' ? ms(b.concluidoAt) - ms(a.concluidoAt) : (prio[a.prioridade] ?? 1) - (prio[b.prioridade] ?? 1) || (a.ordem || 0) - (b.ordem || 0));
       const i = TK_COLS.findIndex(c => c[0] === k);
       return `<div class="kb-col" data-col="${k}"><div class="kb-h"><b>${nome}<small>${l.length}</small></b><button data-add="${k}" aria-label="Nova tarefa em ${nome}">+</button></div><div class="kb-l">${l.map(t => `<div class="kb-c ${k === 'concluido' ? 'done' : ''}" draggable="true" data-id="${t.id}">
-        <span class="pri ${t.prioridade || 'media'}">${PRI[t.prioridade] || 'Média'}</span>${(t.responsaveis || []).includes(me()) && !(t.vistoPor || []).includes(me()) ? ' <span class="dot"></span>' : ''}<h4>${esc(t.titulo)}</h4>${t.descricao ? `<p>${esc(t.descricao)}</p>` : ''}
+        ${t.criadoPor ? `<span class="kb-by">${avatar(t.criadoPor, 'Atribuída por ' + (personOf(t.criadoPor).nome !== t.criadoPor ? personOf(t.criadoPor).nome : (t.criadoPorNome || t.criadoPor)))}</span>` : ''}<span class="pri ${t.prioridade || 'media'}">${PRI[t.prioridade] || 'Média'}</span>${(t.responsaveis || []).includes(me()) && !(t.vistoPor || []).includes(me()) ? ' <span class="dot"></span>' : ''}<h4>${esc(t.titulo)}</h4>${t.descricao ? `<p>${esc(t.descricao)}</p>` : ''}
         <div class="kb-f"><span>${t.prazo ? `<small class="${tkLate(t) ? 'late' : ''}">📅 ${fmtISO(t.prazo)}${tkLate(t) ? ' · atrasada' : ''}</small>` : ''}${t.processoNum ? ` <small>⚖ ${esc(t.processoNum)}</small>` : ''}</span>
-        <span class="avs">${(t.responsaveis || []).slice(0, 4).map(e => `<span class="av" title="${esc(personOf(e).nome)}">${esc(iniciais(personOf(e).nome))}</span>`).join('')}</span></div>
+        <span class="avs">${(t.responsaveis || []).slice(0, 4).map(e => avatar(e, personOf(e).nome)).join('')}</span></div>
         <div class="kb-mv">${i > 0 ? `<button data-mv="${TK_COLS[i - 1][0]}" aria-label="Mover para ${TK_COLS[i - 1][1]}">‹ ${TK_COLS[i - 1][1]}</button>` : ''}${i < 2 ? `<button data-mv="${TK_COLS[i + 1][0]}" aria-label="Mover para ${TK_COLS[i + 1][1]}">${TK_COLS[i + 1][1]} ›</button>` : ''}</div></div>`).join('') || '<p style="font-size:.7rem;color:var(--muted);text-align:center;padding:1rem 0">Nenhuma tarefa</p>'}</div></div>`; }).join('');
   };
   $('#tq', box).oninput = e => { q = e.target.value; draw(); };
@@ -1407,14 +1431,17 @@ onAuthStateChanged(auth, async user => {
       listen(collection(db, 'chats'), s => { S.chats = docs(s); onData(); });
       listen(collection(db, 'equipe'), s => { S.equipe = docs(s); onData(); });
       listen(collection(db, 'logs'), s => { S.logs = docs(s); onData(); });
+      listen(collection(db, 'perfis'), s => { S.perfis = Object.fromEntries(docs(s).map(p => [p.id, p])); onData(); updateWho(); });
       listen(collection(db, 'tarefas'), s => { S.tarefas = docs(s); onData(); });
     } else if (S.team) {
       renderShell();
+      listen(collection(db, 'perfis'), s => { S.perfis = Object.fromEntries(docs(s).map(p => [p.id, p])); onData(); updateWho(); });
       listen(collection(db, 'equipe'), s => { S.equipe = docs(s); onData(); });
       listen(collection(db, 'tarefas'), s => { S.tarefas = docs(s); onData(); });
     } else {
       await ensureProfile(user);
       renderShell();
+      listen(doc(db, 'perfis', me()), s => { S.perfis = s.exists() ? { [s.id]: s.data() } : {}; updateWho(); });
       listen(doc(db, 'clientes', user.uid), s => { S.profile = s.exists() ? { id: s.id, ...s.data() } : null; updateWho(); });
       listen(query(collection(db, 'processos'), where('clienteUid', '==', user.uid)), s => { S.processos = docs(s); syncDocs(); onData(); });
       listen(query(collection(db, 'chats'), where('clienteUid', '==', user.uid)), s => { S.chats = docs(s); onData(); });
