@@ -37,6 +37,9 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:400}
 .nav{max-width:1100px;margin:auto;padding:0 1.5rem;display:flex;gap:.2rem;overflow-x:auto}
 .nav a{padding:.8rem 1rem;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap;display:flex;gap:.4rem;align-items:center}
 .nav a:hover{color:var(--cream)}
+.nav a{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:pan-x}
+.nav a.drag{background:#ffffff14;color:var(--gold);box-shadow:0 4px 14px #0008;transform:translateY(-2px);cursor:grabbing;z-index:2}
+.nav[data-drag] a{cursor:grabbing}
 .nav a.on{color:var(--gold);border-bottom-color:var(--gold)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--bad);display:inline-block}
 
@@ -492,7 +495,7 @@ function viewAuth(mode = 'login') {
 /* ---------- casca (topo + menu) ---------- */
 const selfName = () => S.profile?.nome || S.equipe.find(x => x.id === me())?.nome || S.user.displayName || (S.admin ? 'Advogada' : (S.user.email || '').split('@')[0]);
 const whoHtml = () => `<b>${esc(selfName())}</b><small>${S.admin ? (S.main ? '⚖ Administradora principal' : '⚖ Advogado(a) · gestão') : S.team ? '👥 Equipe' : '👤 Cliente'}<span class="em"> · ${esc(S.user.email || '')}</span></small>`;
-function updateWho() { const w = $('#who'); if (w) w.innerHTML = whoHtml(); const a = $('#myAv'); if (a) { a.innerHTML = avatar(me(), selfName(), 'me'); a.firstChild.onclick = formSenha; } }
+function updateWho() { applyNavOrder(); const w = $('#who'); if (w) w.innerHTML = whoHtml(); const a = $('#myAv'); if (a) { a.innerHTML = avatar(me(), selfName(), 'me'); a.firstChild.onclick = formSenha; } }
 function renderShell() {
   const nav = S.team ? [['#/tarefas', 'Tarefas']] : S.admin
     ? [['#/', 'Dashboard'], ['#/processos', 'Processos'], ['#/agenda', 'Agenda'], ['#/tarefas', 'Tarefas'], ['#/clientes', 'Clientes'], ['#/mensagens', 'Conversas'], ['#/logs', 'Registro'], ['#/config', 'Configurações']]
@@ -505,11 +508,12 @@ function renderShell() {
     <a class="link-btn" href="index.html" id="siteLink">Site</a>
     <button class="link-btn" id="pwdBtn">Conta</button>
     <button class="link-btn" id="logout">Sair</button>
-  </div><div class="nav" id="nav">${nav.map(n => `<a href="${n[0]}" data-nav="${n[0]}">${n[1]}<span class="dot" data-dot="${n[0]}" hidden></span></a>`).join('')}</div>
+  </div><div class="nav" id="nav">${nav.map((n, i) => `<a href="${n[0]}" data-nav="${n[0]}" data-i="${i}" title="Segure e arraste para mudar a ordem das abas">${n[1]}<span class="dot" data-dot="${n[0]}" hidden></span></a>`).join('')}</div>
   <div class="bell-box" id="bellBox" hidden></div></header>
   <main id="main"></main>`;
   $('#logout').onclick = () => { try { sessionStorage.removeItem('pr_edit'); } catch { /* ok */ } signOut(auth); };
   $('#pwdBtn').onclick = formSenha;
+  applyNavOrder(); setupNavDrag();
   $('#siteLink').onclick = () => { try { sessionStorage.removeItem('pr_edit'); } catch { /* ok */ } };
   $('#bell').onclick = e => { e.stopPropagation(); $('#bellBox').hidden = !$('#bellBox').hidden; };
   document.addEventListener('click', e => { const b = $('#bellBox'); if (b && !e.target.closest('#bell')) b.hidden = true; });
@@ -659,6 +663,56 @@ async function mostrarAcesso(nome, email, senha, resultado) {
     <textarea readonly id="acTxt" style="width:100%;min-height:150px;font-size:.8rem">${esc(txt)}</textarea><div class="acts"><button class="btn ghost sm" id="acCp">Copiar</button><button class="btn sm" data-ok>Fechar</button></div>`,
     (m, c) => { m.querySelector('[data-ok]').onclick = c; m.querySelector('#acCp').onclick = async () => { try { await navigator.clipboard.writeText(txt); toast('Copiado.'); } catch { m.querySelector('#acTxt').select(); toast('Selecione e copie.'); } }; });
 }
+
+/* ---------- ordem das abas (arrastar) ---------- */
+const abasKey = () => 'pr_abas_' + me();
+function abasSalvas() {
+  const r = S.perfis[me()]?.abas; if (Array.isArray(r)) return r;
+  try { const l = JSON.parse(localStorage.getItem(abasKey())); if (Array.isArray(l)) return l; } catch { /* ok */ }
+  return [];
+}
+async function salvarAbas(l) {
+  try { localStorage.setItem(abasKey(), JSON.stringify(l)); } catch { /* ok */ }
+  S.perfis[me()] = { ...(S.perfis[me()] || {}), abas: l };
+  try { await setDoc(doc(db, 'perfis', me()), { email: me(), abas: l, atualizadoAt: serverTimestamp() }, { merge: true }); } catch { /* ok */ }
+}
+function applyNavOrder() {
+  const nav = $('#nav'); if (!nav || nav.dataset.drag) return;
+  const ord = abasSalvas(), as = [...nav.children];
+  const pos = a => { const i = ord.indexOf(a.dataset.nav); return i < 0 ? 1000 + +a.dataset.i : i; };
+  as.sort((x, y) => pos(x) - pos(y)).forEach(a => nav.appendChild(a));
+}
+function setupNavDrag() {
+  const nav = $('#nav'); if (!nav) return;
+  nav.querySelectorAll('a').forEach(a => { a.draggable = false; });
+  let cur = null, pend = null, timer = 0, sx = 0, sy = 0, suppress = false;
+  const start = (a, e) => { pend = null; cur = a; nav.dataset.drag = '1'; a.classList.add('drag'); try { a.setPointerCapture(e.pointerId); } catch { /* ok */ } if (navigator.vibrate) navigator.vibrate(15); };
+  const end = () => {
+    clearTimeout(timer); pend = null; if (!cur) return;
+    cur.classList.remove('drag'); cur = null; delete nav.dataset.drag; suppress = true; setTimeout(() => { suppress = false; }, 80);
+    salvarAbas([...nav.children].map(a => a.dataset.nav));
+  };
+  nav.addEventListener('pointerdown', e => {
+    const a = e.target.closest('a'); if (!a || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    sx = e.clientX; sy = e.clientY; clearTimeout(timer);
+    if (e.pointerType === 'mouse') pend = a; else timer = setTimeout(() => start(a, e), 350);
+  });
+  nav.addEventListener('pointermove', e => {
+    if (!cur) {
+      const d = Math.hypot(e.clientX - sx, e.clientY - sy);
+      if (pend && d > 8) start(pend, e); else if (d > 10) clearTimeout(timer);
+      return;
+    }
+    e.preventDefault();
+    const next = [...nav.children].filter(x => x !== cur).find(x => { const r = x.getBoundingClientRect(); return e.clientX < r.left + r.width / 2; });
+    if (next !== cur.nextElementSibling) nav.insertBefore(cur, next || null);
+    const nr = nav.getBoundingClientRect(); if (e.clientX > nr.right - 30) nav.scrollLeft += 12; else if (e.clientX < nr.left + 30) nav.scrollLeft -= 12;
+  });
+  nav.addEventListener('touchmove', e => { if (cur) e.preventDefault(); }, { passive: false });
+  nav.addEventListener('pointerup', end); nav.addEventListener('pointercancel', end);
+  nav.addEventListener('contextmenu', e => { if (cur || timer) e.preventDefault(); });
+  nav.addEventListener('click', e => { if (suppress) { e.preventDefault(); e.stopPropagation(); } }, true);
+}
 function reduzFoto(file) {
   return new Promise((res, rej) => {
     const img = new Image(), u = URL.createObjectURL(file);
@@ -672,6 +726,7 @@ function formSenha() {
     <h3 style="font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin:0 0 .7rem">Foto de perfil</h3>
     <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.2rem"><span id="fPrev"></span>
       <div><label class="btn ghost sm" style="cursor:pointer">Escolher foto<input type="file" id="fIn" accept="image/*" hidden></label> <button type="button" class="btn ghost sm" id="fRm">Remover</button><p class="hint" style="margin-top:.4rem">Aparece nas tarefas e no topo. <b>A foto é salva na hora</b>, sem precisar de senha.</p></div></div>
+    <p style="margin:0 0 .8rem"><button type="button" class="btn ghost sm" id="abRs">↺ Restaurar ordem padrão das abas</button><span class="hint" style="display:block;margin-top:.3rem">Dica: segure e arraste qualquer aba do menu para mudar a ordem.</span></p>
     <p id="fE" style="font-size:.78rem;min-height:1.1em;margin:0 0 .6rem"></p>
     <hr style="border:0;border-top:1px solid var(--border);margin:1rem 0">
     <h3 style="font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin:0 0 .3rem">Alterar senha</h3><p class="hint" style="margin-bottom:.7rem">Opcional — só preencha se quiser trocar a senha.</p>
@@ -682,9 +737,10 @@ function formSenha() {
     (m, c) => {
       const fm = (t, ok) => { const e = $('#fE', m); e.textContent = t; e.style.color = ok ? '#7fc98f' : '#e06c6c'; };
       const prev = () => { $('#fPrev', m).innerHTML = avatar(me(), selfName(), 'lg'); }; prev();
-      const salvar = async f => { try { await setDoc(doc(db, 'perfis', me()), { email: me(), nome: selfName(), foto: f, atualizadoAt: serverTimestamp() }); S.perfis[me()] = { foto: f }; prev(); updateWho(); onData(); fm(f ? '✓ Foto salva.' : '✓ Foto removida.', true); } catch (x) { fm(errMsg(x)); } };
+      const salvar = async f => { try { await setDoc(doc(db, 'perfis', me()), { email: me(), nome: selfName(), foto: f, atualizadoAt: serverTimestamp() }, { merge: true }); S.perfis[me()] = { ...(S.perfis[me()] || {}), foto: f }; prev(); updateWho(); onData(); fm(f ? '✓ Foto salva.' : '✓ Foto removida.', true); } catch (x) { fm(errMsg(x)); } };
       $('#fIn', m).onchange = async e => { const file = e.target.files[0]; if (!file) return; try { await salvar(await reduzFoto(file)); } catch (x) { fm(x.message); } e.target.value = ''; };
       $('#fRm', m).onclick = () => salvar('');
+      $('#abRs', m).onclick = async () => { await salvarAbas([]); applyNavOrder(); fm('✓ Ordem das abas restaurada.', true); };
       $('[data-no]', m).onclick = c;
       $('#spF', m).onsubmit = async e => { e.preventDefault(); const f = e.target;
         if (f.n.value !== f.r.value) { $('#spE', m).textContent = 'As senhas novas não conferem.'; return; }

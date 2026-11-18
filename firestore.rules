@@ -27,8 +27,9 @@ service cloud.firestore {
     match /perfis/{pid} {
       allow read: if signedIn() && (isLawyer() || isTeam() || request.auth.token.email.lower() == pid);
       allow create, update: if signedIn() && (isLawyer() || (request.auth.token.email.lower() == pid
-                    && request.resource.data.keys().hasOnly(['email','nome','foto','atualizadoAt'])
-                    && request.resource.data.foto is string && request.resource.data.foto.size() < 60000));
+                    && request.resource.data.keys().hasOnly(['email','nome','foto','abas','atualizadoAt'])
+                    && (!('foto' in request.resource.data) || (request.resource.data.foto is string && request.resource.data.foto.size() < 60000))
+                    && (!('abas' in request.resource.data) || (request.resource.data.abas is list && request.resource.data.abas.size() <= 12))));
       allow delete: if isLawyer();
     }
     match /logs/{lid} {
