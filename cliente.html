@@ -37,7 +37,9 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:400}
 .nav{max-width:1100px;margin:auto;padding:0 1.5rem;display:flex;gap:.2rem;overflow-x:auto}
 .nav a{padding:.8rem 1rem;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap;display:flex;gap:.4rem;align-items:center}
 .nav a:hover{color:var(--cream)}
-.nav a{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:pan-x}
+.nav a{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.grip{flex:none;box-sizing:content-box;width:10px;height:18px;padding:4px 5px;margin:0 .15rem 0 -.7rem;border-radius:3px;cursor:grab;touch-action:none;opacity:.6;background:radial-gradient(circle,currentColor 1.2px,transparent 1.5px) 0 0/5px 6px content-box;background-clip:content-box;transition:opacity .15s}
+.nav a:hover .grip,.grip:hover{opacity:1;color:var(--gold)}.grip:active{cursor:grabbing}
 .nav a.drag{background:#ffffff14;color:var(--gold);box-shadow:0 4px 14px #0008;transform:translateY(-2px);cursor:grabbing;z-index:2}
 .nav[data-drag] a{cursor:grabbing}
 .nav a.on{color:var(--gold);border-bottom-color:var(--gold)}
@@ -508,7 +510,7 @@ function renderShell() {
     <a class="link-btn" href="index.html" id="siteLink">Site</a>
     <button class="link-btn" id="pwdBtn">Conta</button>
     <button class="link-btn" id="logout">Sair</button>
-  </div><div class="nav" id="nav">${nav.map((n, i) => `<a href="${n[0]}" data-nav="${n[0]}" data-i="${i}" title="Segure e arraste para mudar a ordem das abas">${n[1]}<span class="dot" data-dot="${n[0]}" hidden></span></a>`).join('')}</div>
+  </div><div class="nav" id="nav">${nav.map((n, i) => `<a href="${n[0]}" data-nav="${n[0]}" data-i="${i}"><span class="grip" title="Segure aqui e arraste para mudar a ordem das abas" aria-label="Arrastar aba ${n[1]}"></span>${n[1]}<span class="dot" data-dot="${n[0]}" hidden></span></a>`).join('')}</div>
   <div class="bell-box" id="bellBox" hidden></div></header>
   <main id="main"></main>`;
   $('#logout').onclick = () => { try { sessionStorage.removeItem('pr_edit'); } catch { /* ok */ } signOut(auth); };
@@ -693,16 +695,11 @@ function setupNavDrag() {
     salvarAbas([...nav.children].map(a => a.dataset.nav));
   };
   nav.addEventListener('pointerdown', e => {
-    const a = e.target.closest('a'); if (!a || (e.pointerType === 'mouse' && e.button !== 0)) return;
-    sx = e.clientX; sy = e.clientY; clearTimeout(timer);
-    if (e.pointerType === 'mouse') pend = a; else timer = setTimeout(() => start(a, e), 350);
+    const g = e.target.closest('.grip'); if (!g || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    e.preventDefault(); start(g.closest('a'), e);
   });
   nav.addEventListener('pointermove', e => {
-    if (!cur) {
-      const d = Math.hypot(e.clientX - sx, e.clientY - sy);
-      if (pend && d > 8) start(pend, e); else if (d > 10) clearTimeout(timer);
-      return;
-    }
+    if (!cur) return;
     e.preventDefault();
     const next = [...nav.children].filter(x => x !== cur).find(x => { const r = x.getBoundingClientRect(); return e.clientX < r.left + r.width / 2; });
     if (next !== cur.nextElementSibling) nav.insertBefore(cur, next || null);
@@ -726,7 +723,7 @@ function formSenha() {
     <h3 style="font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin:0 0 .7rem">Foto de perfil</h3>
     <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.2rem"><span id="fPrev"></span>
       <div><label class="btn ghost sm" style="cursor:pointer">Escolher foto<input type="file" id="fIn" accept="image/*" hidden></label> <button type="button" class="btn ghost sm" id="fRm">Remover</button><p class="hint" style="margin-top:.4rem">Aparece nas tarefas e no topo. <b>A foto é salva na hora</b>, sem precisar de senha.</p></div></div>
-    <p style="margin:0 0 .8rem"><button type="button" class="btn ghost sm" id="abRs">↺ Restaurar ordem padrão das abas</button><span class="hint" style="display:block;margin-top:.3rem">Dica: segure e arraste qualquer aba do menu para mudar a ordem.</span></p>
+    <p style="margin:0 0 .8rem"><button type="button" class="btn ghost sm" id="abRs">↺ Restaurar ordem padrão das abas</button><span class="hint" style="display:block;margin-top:.3rem">Dica: segure os seis pontinhos (⠿) à esquerda de cada aba e arraste para mudar a ordem.</span></p>
     <p id="fE" style="font-size:.78rem;min-height:1.1em;margin:0 0 .6rem"></p>
     <hr style="border:0;border-top:1px solid var(--border);margin:1rem 0">
     <h3 style="font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin:0 0 .3rem">Alterar senha</h3><p class="hint" style="margin-bottom:.7rem">Opcional — só preencha se quiser trocar a senha.</p>
