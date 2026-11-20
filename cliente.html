@@ -78,6 +78,7 @@ main{max-width:1100px;margin:auto;padding:2rem 1.5rem 5rem}
 .card{border:1px solid var(--border);background:var(--navy2);padding:1.4rem}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.8rem;margin-bottom:1.6rem}
 .stat{border:1px solid var(--border);background:var(--navy2);padding:1rem 1.2rem}
+.a.stat,a.stat{display:block;text-decoration:none;color:inherit;transition:border-color .15s,transform .15s}a.stat:hover{border-color:var(--gold);transform:translateY(-2px)}
 .stat b{display:block;font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:400;color:var(--gold);line-height:1}
 .stat span{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .list{display:flex;flex-direction:column;gap:.6rem}
@@ -429,12 +430,13 @@ const slug = e => (e || '').toLowerCase().replace(/[^a-z0-9]/g, '_');
 const dmId = (a, b) => [a, b].sort().join('__');
 const dmDe = outro => S.dms.find(d => d.id === dmId(me(), outro));
 const dmUnread = d => !!ms(d.ultimaMsgAt) && ms(d.ultimaMsgAt) > ms(d['lido_' + slug(me())]) && d.ultimaMsgPor !== me();
-const colegas = () => S.diretorio.filter(d => d.id !== me()).map(d => ({ email: d.id, nome: d.id === MAIN_ADMIN ? 'Dra. Poliana' : (d.nome || d.id) }));
+const colegas = () => { const m = new Map(); S.diretorio.forEach(d => m.set(d.id, { email: d.id, nome: d.id === MAIN_ADMIN ? 'Dra. Poliana' : (d.nome || d.id) })); S.equipe.forEach(x => { if (!m.has(x.id)) m.set(x.id, { email: x.id, nome: x.nome || x.id, funcao: x.funcao || '' }); });
+  if (S.team && !m.has(MAIN_ADMIN)) m.set(MAIN_ADMIN, { email: MAIN_ADMIN, nome: 'Dra. Poliana' }); m.delete(me()); m.delete('polireboucas@gmail.com'); return [...m.values()]; };
 const nomeColega = e => colegas().find(c => c.email === e)?.nome || (e === MAIN_ADMIN ? 'Dra. Poliana' : e);
 function unreadItems() {
   const it = [];
   S.chats.filter(chatUnread).forEach(c => it.push({ key: 'c' + c.id + ms(c.ultimaMsgAt), at: ms(c.ultimaMsgAt), title: (S.admin ? clienteNome(c.clienteUid) + ' · ' : '') + chatTitle(c), sub: c.ultimaMsgTexto || 'Nova mensagem', href: chatHref(c), kind: 'msg' }));
-  if (S.admin) S.dms.filter(dmUnread).forEach(d => { const o = d.membros.find(x => x !== me()); it.push({ key: 'dm' + d.id + ms(d.ultimaMsgAt), at: ms(d.ultimaMsgAt), title: nomeColega(o), sub: d.ultimaMsgTexto || 'Nova mensagem', href: '#/dm/' + o, kind: 'msg' }); });
+  if (S.admin || S.team) S.dms.filter(dmUnread).forEach(d => { const o = d.membros.find(x => x !== me()); it.push({ key: 'dm' + d.id + ms(d.ultimaMsgAt), at: ms(d.ultimaMsgAt), title: nomeColega(o), sub: d.ultimaMsgTexto || 'Nova mensagem', href: '#/dm/' + o, kind: 'msg' }); });
   S.processos.filter(procUnread).forEach(p => it.push({ key: 'p' + p.id + ms(p.atualizadoAt), at: ms(p.atualizadoAt), title: 'Processo ' + p.numero, sub: p.ultimoAviso || 'Atualização no processo', href: `#/p/${p.id}`, kind: 'proc' }));
   if (S.admin) Object.entries(S.docs).forEach(([pid, l]) => l.filter(d => d.status === 'enviado').forEach(d => it.push({ key: 'd' + d.id + ms(d.enviadoAt), at: ms(d.enviadoAt) || ms(d.criadoAt), title: 'Documento enviado: ' + d.titulo, sub: (S.processos.find(x => x.id === pid)?.numero || '') + ' · aguardando conferência', href: `#/p/${pid}/docs`, kind: 'doc' })));
   tkNovas().forEach(t => it.push({ key: 't' + t.id + (t.responsaveis || []).join(), at: ms(t.atualizadoAt) || ms(t.criadoAt), title: 'Nova tarefa: ' + t.titulo, sub: t.criadoPorNome ? 'Atribuída por ' + t.criadoPorNome : 'Atribuída a você', href: '#/tarefas', kind: 'task' }));
@@ -452,7 +454,7 @@ function renderBell() {
   if (S.seen) items.filter(i => !S.seen.has(i.key)).slice(0, 1).forEach(i => toast((i.kind === 'msg' ? '💬 Nova mensagem: ' : '📌 ') + i.title));
   S.seen = keys;
 }
-const stat = (n, l) => `<div class="stat"><b>${n}</b><span>${l}</span></div>`;
+const stat = (n, l, href) => href ? `<a class="stat" href="${href}"><b>${n}</b><span>${l}</span></a>` : `<div class="stat"><b>${n}</b><span>${l}</span></div>`;
 
 /* ---------- entrada ---------- */
 function viewAuth(mode = 'login') {
@@ -508,7 +510,7 @@ const selfName = () => S.profile?.nome || S.equipe.find(x => x.id === me())?.nom
 const whoHtml = () => `<b>${esc(selfName())}</b><small>${S.admin ? (S.main ? '⚖ Administradora principal' : '⚖ Advogado(a) · gestão') : S.team ? '👥 Equipe' : '👤 Cliente'}<span class="em"> · ${esc(S.user.email || '')}</span></small>`;
 function updateWho() { applyNavOrder(); const w = $('#who'); if (w) w.innerHTML = whoHtml(); const a = $('#myAv'); if (a) { a.innerHTML = avatar(me(), selfName(), 'me'); a.firstChild.onclick = formSenha; } }
 function renderShell() {
-  const nav = S.team ? [['#/tarefas', 'Tarefas']] : S.admin
+  const nav = S.team ? [['#/tarefas', 'Tarefas'], ['#/mensagens', 'Conversas']] : S.admin
     ? [['#/', 'Dashboard'], ['#/processos', 'Processos'], ['#/agenda', 'Agenda'], ['#/tarefas', 'Tarefas'], ['#/clientes', 'Clientes'], ['#/mensagens', 'Conversas'], ['#/logs', 'Registro'], ['#/config', 'Configurações']]
     : [['#/', 'Meus processos'], ['#/agenda', 'Agenda'], ['#/mensagens', 'Mensagens'], ['#/perfil', 'Meu perfil']];
   $('#root').innerHTML = `
@@ -531,7 +533,7 @@ function renderShell() {
   $('#bellBox').onclick = () => { $('#bellBox').hidden = true; };
 }
 function updateNavDots() {
-  const msgUn = S.chats.some(chatUnread) || (S.admin && S.dms.some(dmUnread)), procUn = S.processos.some(procUnread) || (S.admin && S.chats.some(c => c.processoId && chatUnread(c)));
+  const msgUn = S.chats.some(chatUnread) || ((S.admin || S.team) && S.dms.some(dmUnread)), procUn = S.processos.some(procUnread) || (S.admin && S.chats.some(c => c.processoId && chatUnread(c)));
   $$('[data-dot]').forEach(d => { const h = d.dataset.dot; d.hidden = !((h === '#/mensagens' && msgUn) || (h === '#/' && procUn && !S.admin && !S.team) || (h === '#/tarefas' && tkNovas().length)); });
 }
 function onData() { updateWho(); renderBell(); updateNavDots(); S.view?.refresh?.(); }
@@ -1042,7 +1044,7 @@ function viewClientHome() {
   const draw = () => {
     const ps = [...S.processos].sort((a, b) => ms(b.atualizadoAt) - ms(a.atualizadoAt));
     const nx = S.eventos.filter(evFuturo).sort((a, b) => evStart(a) - evStart(b));
-    $('#cs', box).innerHTML = (ps.length ? `<div class="cards">${stat(ps.filter(p => !['concluido', 'arquivado', 'inativo'].includes(p.status)).length, 'Processos ativos')}${stat(nx.length, 'Próximos compromissos')}${stat(ps.filter(procUnread).length, 'Novidades')}${stat(S.chats.filter(chatUnread).length, 'Mensagens novas')}${stat(ps.reduce((n, p) => n + docsPend(p.id), 0), 'Documentos pedidos')}</div>` : '') + (nx.length ? `<div class="sec-t">Próximos compromissos</div>${nx.slice(0, 3).map(evCard).join('')}<p style="margin:-.2rem 0 1rem"><a class="back" href="#/agenda" style="margin:0">Ver agenda completa →</a></p><div class="sec-t">Processos</div>` : '');
+    $('#cs', box).innerHTML = (ps.length ? `<div class="cards">${stat(ps.filter(p => !['concluido', 'arquivado', 'inativo'].includes(p.status)).length, 'Processos ativos')}${stat(nx.length, 'Próximos compromissos', '#/agenda')}${stat(ps.filter(procUnread).length, 'Novidades')}${stat(S.chats.filter(chatUnread).length, 'Mensagens novas', '#/mensagens')}${stat(ps.reduce((n, p) => n + docsPend(p.id), 0), 'Documentos pedidos')}</div>` : '') + (nx.length ? `<div class="sec-t">Próximos compromissos</div>${nx.slice(0, 3).map(evCard).join('')}<p style="margin:-.2rem 0 1rem"><a class="back" href="#/agenda" style="margin:0">Ver agenda completa →</a></p><div class="sec-t">Processos</div>` : '');
     $('#ls', box).innerHTML = ps.length ? ps.map(p => `<a class="item" href="#/p/${p.id}"><div class="main"><h3>${esc(p.numero)} ${procUnread(p) ? '<span class="dot"></span>' : ''}</h3><p>${esc(p.tipo || 'Processo')}${p.vara ? ' · ' + esc(p.vara) : ''}${docsPend(p.id) ? ` · <b class="dpend">📄 ${docsPend(p.id)} documento(s) pedido(s)</b>` : ''}</p></div><div class="side">${chip(p.status)}<span>Atualizado em ${fmtD(p.atualizadoAt)}</span></div></a>`).join('')
       : `<div class="empty"><b>Nenhum processo vinculado ainda</b>Assim que a advogada cadastrar seu processo, ele aparece aqui.<br>Enquanto isso, você pode enviar mensagens e documentos em “Mensagens”.</div>`;
   };
@@ -1348,7 +1350,7 @@ function viewDashboard() {
     const porAr = Object.entries(ar).sort((a, b) => b[1] - a[1]).slice(0, 6);
     const pNome = pid => S.processos.find(x => x.id === pid)?.numero || '';
     const mini = (arr, fn, vazio) => `<div class="mini">${arr.length ? arr.slice(0, 5).map(fn).join('') : `<div class="none">${vazio}</div>`}</div>`;
-    $('#dB', box).innerHTML = `<div class="cards">${stat(ativos.length, 'Processos ativos')}${stat(S.clientes.length, 'Clientes')}${stat(hoje.length, 'Compromissos hoje')}${stat(semana.length, 'Próximos 7 dias')}${stat(S.chats.filter(chatUnread).length, 'Mensagens novas')}${stat(revisar.length, 'Documentos a conferir')}${stat(S.tarefas.filter(t => t.status !== 'concluido').length, 'Tarefas em aberto')}</div>
+    $('#dB', box).innerHTML = `<div class="cards">${stat(ativos.length, 'Processos ativos', '#/processos/ativos')}${stat(S.clientes.length, 'Clientes', '#/clientes')}${stat(hoje.length, 'Compromissos hoje', '#/agenda')}${stat(semana.length, 'Próximos 7 dias', '#/agenda')}${stat(S.chats.filter(chatUnread).length + S.dms.filter(dmUnread).length, 'Mensagens novas', '#/mensagens')}${stat(revisar.length, 'Documentos a conferir', revisar.length ? '#/p/' + revisar[0].pid + '/docs' : '#/processos')}${stat(S.tarefas.filter(t => t.status !== 'concluido').length, 'Tarefas em aberto', '#/tarefas')}</div>
     <div class="dgrid">
       <div class="pnl"><h3>Próximos compromissos</h3>${mini(prox, e => `<a href="#/agenda"><span>${EV_TIPO[e.tipo] ? EV_TIPO[e.tipo].split(' ')[0] : '📅'} ${esc(e.titulo)}<br><small style="text-align:left">${esc(clienteNome(e.clienteUid))} · ${e.modo === 'virtual' ? 'virtual' : 'presencial'}</small></span><small>${fmtDia(evStart(e))}<br>${fmtHM(e.inicio)}</small></a>`, 'Nenhum compromisso marcado.')}</div>
       <div class="pnl"><h3>Precisa da sua atenção</h3><div class="mini">
@@ -1368,19 +1370,19 @@ function viewDashboard() {
   $('#dEv', box).onclick = () => formEvento(null); $('#dNp', box).onclick = () => formProcesso(null, null);
   draw(); return { refresh: draw };
 }
-function viewAdminHome() {
-  const box = $('#main'); let q = '', st = '';
+function viewAdminHome(init) {
+  const box = $('#main'); let q = '', st = init === 'ativos' ? '__ativos' : (STATUS.some(x => x[0] === init) ? init : '');
   box.innerHTML = `<div class="page-h"><div><div class="eyebrow">Painel</div><h1>Processos em <em>atuação</em></h1></div><div style="display:flex;gap:.5rem;flex-wrap:wrap"><button class="btn ghost" id="inv">Convidar cliente</button><button class="btn" id="np">＋ Novo processo</button></div></div>
-    <div id="cs"></div><div class="toolbar"><input id="q" placeholder="Buscar por número, cliente ou tipo…"><select id="st"><option value="">Todos os status</option>${STATUS.map(s => `<option value="${s[0]}">${s[1]}</option>`).join('')}</select></div><div class="list" id="ls"></div>`;
+    <div id="cs"></div><div class="toolbar"><input id="q" placeholder="Buscar por número, cliente ou tipo…"><select id="st"><option value="">Todos os status</option><option value="__ativos">Somente ativos</option>${STATUS.map(s => `<option value="${s[0]}">${s[1]}</option>`).join('')}</select></div><div class="list" id="ls"></div>`;
   const draw = () => {
     const ps = S.processos;
-    $('#cs', box).innerHTML = `<div class="cards">${stat(ps.filter(p => !['concluido', 'arquivado', 'inativo'].includes(p.status)).length, 'Processos ativos')}${stat(ps.filter(p => p.status === 'cliente').length, 'Aguardando cliente')}${stat(S.chats.filter(chatUnread).length, 'Mensagens novas')}${stat(S.clientes.length, 'Clientes')}</div>`;
+    $('#cs', box).innerHTML = `<div class="cards">${stat(ps.filter(p => !['concluido', 'arquivado', 'inativo'].includes(p.status)).length, 'Processos ativos', '#/processos/ativos')}${stat(ps.filter(p => p.status === 'cliente').length, 'Aguardando cliente', '#/processos/cliente')}${stat(S.chats.filter(chatUnread).length, 'Mensagens novas', '#/mensagens')}${stat(S.clientes.length, 'Clientes', '#/clientes')}</div>`;
     const t = q.toLowerCase();
-    const l = ps.filter(p => (!st || p.status === st) && (!t || [p.numero, p.tipo, p.vara, clienteNome(p.clienteUid)].join(' ').toLowerCase().includes(t))).sort((a, b) => ms(b.atualizadoAt) - ms(a.atualizadoAt));
+    const l = ps.filter(p => (!st || (st === '__ativos' ? !['concluido', 'arquivado', 'inativo'].includes(p.status) : p.status === st)) && (!t || [p.numero, p.tipo, p.vara, clienteNome(p.clienteUid)].join(' ').toLowerCase().includes(t))).sort((a, b) => ms(b.atualizadoAt) - ms(a.atualizadoAt));
     $('#ls', box).innerHTML = l.length ? l.map(p => { const c = S.chats.find(x => x.id === p.id); return `<a class="item" href="#/p/${p.id}"><div class="main"><h3>${esc(p.numero)} ${c && chatUnread(c) ? '<span class="dot" title="Mensagem nova"></span>' : ''}</h3><p>${esc(clienteNome(p.clienteUid))} · ${esc(p.tipo || 'Processo')}${p.vara ? ' · ' + esc(p.vara) : ''}</p></div><div class="side">${chip(p.status)}<span>${fmtD(p.atualizadoAt)}</span></div></a>`; }).join('')
       : `<div class="empty"><b>${ps.length ? 'Nada encontrado' : 'Nenhum processo cadastrado'}</b>${ps.length ? 'Ajuste a busca ou o filtro.' : 'Convide seus clientes e cadastre o primeiro processo.'}</div>`;
   };
-  $('#q', box).oninput = e => { q = e.target.value; draw(); }; $('#st', box).onchange = e => { st = e.target.value; draw(); };
+  $('#q', box).oninput = e => { q = e.target.value; draw(); }; $('#st', box).onchange = e => { st = e.target.value; draw(); }; $('#st', box).value = st;
   $('#np', box).onclick = () => formProcesso(null, null); $('#inv', box).onclick = convidar;
   draw(); return { refresh: draw };
 }
@@ -1418,12 +1420,13 @@ function viewClientDetail(uid) {
 }
 function viewAdminChats() {
   const box = $('#main');
-  box.innerHTML = `<div class="page-h"><div><div class="eyebrow">Atendimento</div><h1><em>Conversas</em></h1><p>Mensagens da equipe jurídica e dos clientes, gerais e por processo.</p></div></div>
+  box.innerHTML = `<div class="page-h"><div><div class="eyebrow">Atendimento</div><h1><em>Conversas</em></h1><p>${S.team ? 'Converse com os advogados e colegas do escritório.' : 'Mensagens da equipe jurídica e dos clientes, gerais e por processo.'}</p></div></div>
     <div class="eyebrow" style="margin:0 0 .6rem">Equipe jurídica</div><div class="list" id="dl" style="margin-bottom:1.6rem"></div>
-    <div class="eyebrow" style="margin:0 0 .6rem">Clientes</div><div class="list" id="ls"></div>`;
+    ${S.team ? '' : '<div class="eyebrow" style="margin:0 0 .6rem">Clientes</div><div class="list" id="ls"></div>'}`;
   const draw = () => {
     const col = colegas();
-    $('#dl', box).innerHTML = col.length ? col.map(c => { const d = dmDe(c.email); return `<a class="item" href="#/dm/${esc(c.email)}"><div style="margin-right:.8rem">${avatar(c.email, c.nome, 'lg')}</div><div class="main"><h3>${esc(c.nome)} ${d && dmUnread(d) ? '<span class="dot"></span>' : ''}</h3><p>${d?.ultimaMsgAt ? (d.ultimaMsgPor === me() ? 'Você: ' : '') + esc(d.ultimaMsgTexto || '') : 'Toque para iniciar uma conversa'}</p></div><div class="side">${d?.ultimaMsgAt ? fmtD(d.ultimaMsgAt) : ''}</div></a>`; }).join('') : '<div class="empty"><b>Nenhum outro advogado ainda</b>Cada advogado(a) aparece aqui depois do primeiro acesso ao sistema.</div>';
+    $('#dl', box).innerHTML = col.length ? col.map(c => { const d = dmDe(c.email); return `<a class="item" href="#/dm/${esc(c.email)}"><div style="margin-right:.8rem">${avatar(c.email, c.nome, 'lg')}</div><div class="main"><h3>${esc(c.nome)} ${d && dmUnread(d) ? '<span class="dot"></span>' : ''}</h3><p>${d?.ultimaMsgAt ? (d.ultimaMsgPor === me() ? 'Você: ' : '') + esc(d.ultimaMsgTexto || '') : 'Toque para iniciar uma conversa'}</p></div><div class="side">${d?.ultimaMsgAt ? fmtD(d.ultimaMsgAt) : ''}</div></a>`; }).join('') : '<div class="empty"><b>Nenhum outro advogado ainda</b>Advogados aparecem aqui depois do primeiro acesso ao sistema; a equipe cadastrada aparece sempre.</div>';
+    if (S.team) return;
     const l = S.chats.filter(c => c.ultimaMsgAt).sort((a, b) => ms(b.ultimaMsgAt) - ms(a.ultimaMsgAt));
     $('#ls', box).innerHTML = l.length ? l.map(c => `<a class="item" href="${chatHref(c)}"><div class="main"><h3>${esc(clienteNome(c.clienteUid))} ${chatUnread(c) ? '<span class="dot"></span>' : ''}</h3><p>${esc(chatTitle(c))} · ${c.ultimaMsgPor === 'adv' ? 'Você: ' : ''}${esc(c.ultimaMsgTexto || '')}</p></div><div class="side"><span>${fmtDT(c.ultimaMsgAt)}</span></div></a>`).join('') : '<div class="empty"><b>Nenhuma conversa ainda</b>Quando um cliente escrever, a conversa aparece aqui.</div>';
   };
@@ -1436,7 +1439,7 @@ function viewAdminChat(id) {
 }
 function viewDM(outro) {
   const box = $('#main'), nome = nomeColega(outro), id = dmId(me(), outro);
-  box.innerHTML = `<a class="back" href="#/mensagens">← Conversas</a><div class="page-h"><div><div class="eyebrow">Conversa entre advogados</div><h1 style="display:flex;align-items:center;gap:.7rem">${avatar(outro, nome, '')}${esc(nome)}</h1></div></div><div id="cb"></div>`;
+  box.innerHTML = `<a class="back" href="#/mensagens">← Conversas</a><div class="page-h"><div><div class="eyebrow">Conversa interna</div><h1 style="display:flex;align-items:center;gap:.7rem">${avatar(outro, nome, '')}${esc(nome)}</h1></div></div><div id="cb"></div>`;
   const un = mountChat($('#cb', box), id, '', { dm: true, outro }); return { destroy: un };
 }
 /* ---------- perfil (ao clicar na foto/iniciais) ---------- */
@@ -1449,7 +1452,7 @@ function openPerfil(email) {
   const eu = email === me();
   const acts = eu ? '<button class="btn sm" data-eu>Editar minha conta</button>'
     : S.admin && cli ? `<a class="btn sm" href="#/chat/${cli.id}">💬 Enviar mensagem</a><a class="btn ghost sm" href="#/c/${cli.id}">Ver cadastro</a>`
-    : S.admin && dirOk ? `<a class="btn sm" href="#/dm/${esc(email)}">💬 Enviar mensagem</a>` : '';
+    : (S.admin || S.team) && (dirOk || eq) ? `<a class="btn sm" href="#/dm/${esc(email)}">💬 Enviar mensagem</a>` : '';
   openModal(`<div style="text-align:center;padding:.4rem 0 .6rem"><div style="display:inline-block;margin-bottom:.6rem">${avatar(email, nome, 'lg')}</div>
     <h2 style="margin:0 0 .2rem">${esc(nome)}</h2><p style="font-size:.72rem;color:var(--gold);letter-spacing:.08em;margin:0 0 .3rem">${papel}</p>
     <p style="font-size:.78rem;color:var(--muted);margin:0 0 1.2rem">${esc(email)}${cli?.telefone ? '<br>' + esc(cli.telefone) : ''}</p>
@@ -1525,9 +1528,9 @@ function route() {
   const [r, a, b] = location.hash.replace(/^#\/?/, '').split('/');
   $$('[data-nav]').forEach(n => { const h = n.dataset.nav.replace('#/', ''); n.classList.toggle('on', h === (r === 'p' ? (S.admin ? 'processos' : '') : r === 'c' ? 'clientes' : r === 'chat' || r === 'dm' ? 'mensagens' : r || '')); });
   window.scrollTo(0, 0);
-  if (S.team) S.view = viewTarefas();
+  if (S.team) S.view = r === 'dm' && a ? viewDM(decodeURIComponent(a).toLowerCase()) : r === 'mensagens' ? viewAdminChats() : viewTarefas();
   else if (r === 'p' && a) S.view = viewProcess(a, b);
-  else if (S.admin) S.view = r === 'tarefas' ? viewTarefas() : r === 'processos' ? viewAdminHome() : r === 'agenda' ? viewAgenda() : r === 'clientes' ? viewClients() : r === 'c' && a ? viewClientDetail(a) : r === 'mensagens' ? viewAdminChats() : r === 'chat' && a ? viewAdminChat(a) : r === 'dm' && a ? viewDM(decodeURIComponent(a).toLowerCase()) : r === 'config' ? viewConfig() : r === 'logs' ? viewLogs() : viewDashboard();
+  else if (S.admin) S.view = r === 'tarefas' ? viewTarefas() : r === 'processos' ? viewAdminHome(a) : r === 'agenda' ? viewAgenda() : r === 'clientes' ? viewClients() : r === 'c' && a ? viewClientDetail(a) : r === 'mensagens' ? viewAdminChats() : r === 'chat' && a ? viewAdminChat(a) : r === 'dm' && a ? viewDM(decodeURIComponent(a).toLowerCase()) : r === 'config' ? viewConfig() : r === 'logs' ? viewLogs() : viewDashboard();
   else S.view = r === 'agenda' ? viewAgenda() : r === 'mensagens' ? viewClientChat() : r === 'perfil' ? viewProfile() : viewClientHome();
 }
 window.addEventListener('hashchange', route);
@@ -1582,6 +1585,7 @@ onAuthStateChanged(auth, async user => {
     } else if (S.team) {
       renderShell();
       listen(collection(db, 'diretorio'), s => { S.diretorio = docs(s); onData(); });
+      listen(query(collection(db, 'dms'), where('membros', 'array-contains', me())), s => { S.dms = docs(s); onData(); });
       listen(collection(db, 'perfis'), s => { S.perfis = Object.fromEntries(docs(s).map(p => [p.id, p])); onData(); updateWho(); });
       listen(collection(db, 'equipe'), s => { S.equipe = docs(s); onData(); });
       listen(collection(db, 'tarefas'), s => { S.tarefas = docs(s); onData(); });
