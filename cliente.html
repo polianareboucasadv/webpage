@@ -185,7 +185,8 @@ main{max-width:1100px;margin:auto;padding:2rem 1.5rem 5rem}
 .kb-f small{font-size:.64rem;color:var(--muted)}.kb-f small.late{color:#e0605c;font-weight:600}
 .av{display:inline-flex;width:24px;height:24px;border-radius:50%;background:var(--gold);color:#0d1821;font-size:.6rem;font-weight:700;align-items:center;justify-content:center;margin-left:-6px;border:2px solid var(--navy2)}
 .avs{display:flex;padding-left:6px}
-.av{position:relative;overflow:visible;flex:none}.av img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
+.av{position:relative;overflow:visible;flex:none;cursor:pointer}.av.lg{cursor:default}.av img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
+.tk-h{margin:.4rem 0 .6rem;border:1px solid var(--border);border-radius:3px;padding:.6rem .8rem;background:#ffffff08}.tk-h ul{list-style:none;margin:0;padding:0;max-height:150px;overflow:auto;font-size:.72rem;line-height:1.5;color:var(--cream)}.tk-h li{padding:.2rem 0;border-bottom:1px solid #ffffff0d}.tk-h li span{color:var(--muted);font-size:.64rem;margin-right:.3rem}
 .av.lg{width:40px;height:40px;font-size:.8rem;margin:0}.av.me{width:34px;height:34px;font-size:.7rem;margin:0 .2rem 0 0;border:1px solid var(--border);cursor:pointer}
 .av[data-tip]:hover::after,.av[data-tip]:focus::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);right:0;background:#000d;color:#fff;font-size:.68rem;font-weight:500;padding:.25rem .5rem;border-radius:3px;white-space:nowrap;z-index:30;pointer-events:none}
 .kb-by{position:absolute;top:.55rem;right:.6rem}.kb-by .av{margin:0}.kb-by .av[data-tip]:hover::after{bottom:auto;top:calc(100% + 6px)}
@@ -268,7 +269,7 @@ main{max-width:1100px;margin:auto;padding:2rem 1.5rem 5rem}
 import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, collection, query, where, orderBy, onSnapshot, serverTimestamp }
+import { getFirestore, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, collection, query, where, orderBy, onSnapshot, serverTimestamp, arrayUnion }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -335,7 +336,7 @@ const errMsg = e => ({
 }[e?.code] ?? 'Algo deu errado. Tente novamente.');
 
 /* ---------- estado ---------- */
-const S = { user: null, admin: false, profile: null, clientes: [], processos: [], chats: [], workerUrl: '', r2: false, unsubs: [], view: null, seen: null, bellOpen: false, pending: null, docs: {}, docSub: new Set(), eventos: [], logs: [], perfis: {}, agMes: null, agDia: '', team: false, equipe: [], tarefas: [], siteAdmin: false, main: false };
+const S = { user: null, admin: false, profile: null, clientes: [], processos: [], chats: [], workerUrl: '', r2: false, unsubs: [], view: null, seen: null, bellOpen: false, pending: null, docs: {}, docSub: new Set(), eventos: [], logs: [], perfis: {}, dms: [], diretorio: [], agMes: null, agDia: '', team: false, equipe: [], tarefas: [], siteAdmin: false, main: false };
 const clienteById = uid => S.clientes.find(c => c.id === uid);
 const clienteNome = uid => S.admin ? (clienteById(uid)?.nome || 'Cliente') : (S.profile?.nome || 'Você');
 
@@ -423,9 +424,17 @@ const chatUnread = c => { const last = ms(c.ultimaMsgAt), seen = ms(S.admin ? c.
 const procUnread = p => !S.admin && ms(p.atualizadoAt) > ms(p.lidoCliente);
 const chatTitle = c => c.processoId ? (S.processos.find(p => p.id === c.processoId)?.numero ? 'Processo ' + S.processos.find(p => p.id === c.processoId).numero : (c.titulo || 'Processo')) : 'Conversa geral';
 const chatHref = c => c.processoId ? `#/p/${c.processoId}/chat` : (S.admin ? `#/chat/${c.id}` : '#/mensagens');
+/* ---------- conversas entre advogados (dms) ---------- */
+const slug = e => (e || '').toLowerCase().replace(/[^a-z0-9]/g, '_');
+const dmId = (a, b) => [a, b].sort().join('__');
+const dmDe = outro => S.dms.find(d => d.id === dmId(me(), outro));
+const dmUnread = d => !!ms(d.ultimaMsgAt) && ms(d.ultimaMsgAt) > ms(d['lido_' + slug(me())]) && d.ultimaMsgPor !== me();
+const colegas = () => S.diretorio.filter(d => d.id !== me()).map(d => ({ email: d.id, nome: d.id === MAIN_ADMIN ? 'Dra. Poliana' : (d.nome || d.id) }));
+const nomeColega = e => colegas().find(c => c.email === e)?.nome || (e === MAIN_ADMIN ? 'Dra. Poliana' : e);
 function unreadItems() {
   const it = [];
   S.chats.filter(chatUnread).forEach(c => it.push({ key: 'c' + c.id + ms(c.ultimaMsgAt), at: ms(c.ultimaMsgAt), title: (S.admin ? clienteNome(c.clienteUid) + ' · ' : '') + chatTitle(c), sub: c.ultimaMsgTexto || 'Nova mensagem', href: chatHref(c), kind: 'msg' }));
+  if (S.admin) S.dms.filter(dmUnread).forEach(d => { const o = d.membros.find(x => x !== me()); it.push({ key: 'dm' + d.id + ms(d.ultimaMsgAt), at: ms(d.ultimaMsgAt), title: nomeColega(o), sub: d.ultimaMsgTexto || 'Nova mensagem', href: '#/dm/' + o, kind: 'msg' }); });
   S.processos.filter(procUnread).forEach(p => it.push({ key: 'p' + p.id + ms(p.atualizadoAt), at: ms(p.atualizadoAt), title: 'Processo ' + p.numero, sub: p.ultimoAviso || 'Atualização no processo', href: `#/p/${p.id}`, kind: 'proc' }));
   if (S.admin) Object.entries(S.docs).forEach(([pid, l]) => l.filter(d => d.status === 'enviado').forEach(d => it.push({ key: 'd' + d.id + ms(d.enviadoAt), at: ms(d.enviadoAt) || ms(d.criadoAt), title: 'Documento enviado: ' + d.titulo, sub: (S.processos.find(x => x.id === pid)?.numero || '') + ' · aguardando conferência', href: `#/p/${pid}/docs`, kind: 'doc' })));
   tkNovas().forEach(t => it.push({ key: 't' + t.id + (t.responsaveis || []).join(), at: ms(t.atualizadoAt) || ms(t.criadoAt), title: 'Nova tarefa: ' + t.titulo, sub: t.criadoPorNome ? 'Atribuída por ' + t.criadoPorNome : 'Atribuída a você', href: '#/tarefas', kind: 'task' }));
@@ -522,13 +531,13 @@ function renderShell() {
   $('#bellBox').onclick = () => { $('#bellBox').hidden = true; };
 }
 function updateNavDots() {
-  const msgUn = S.chats.some(chatUnread), procUn = S.processos.some(procUnread) || (S.admin && S.chats.some(c => c.processoId && chatUnread(c)));
+  const msgUn = S.chats.some(chatUnread) || (S.admin && S.dms.some(dmUnread)), procUn = S.processos.some(procUnread) || (S.admin && S.chats.some(c => c.processoId && chatUnread(c)));
   $$('[data-dot]').forEach(d => { const h = d.dataset.dot; d.hidden = !((h === '#/mensagens' && msgUn) || (h === '#/' && procUn && !S.admin && !S.team) || (h === '#/tarefas' && tkNovas().length)); });
 }
 function onData() { updateWho(); renderBell(); updateNavDots(); S.view?.refresh?.(); }
 
 /* ---------- conversa (reutilizável) ---------- */
-function mountChat(box, chatId, titulo) {
+function mountChat(box, chatId, titulo, opts = {}) {
   box.innerHTML = `<div class="chat"><div class="chat-list"></div>
     <form class="composer"><div class="chips"></div>
       <div class="r"><button type="button" class="btn ghost sm" data-attach title="Anexar arquivo">📎</button>
@@ -545,20 +554,22 @@ function mountChat(box, chatId, titulo) {
     let lastDay = '';
     list.innerHTML = msgs.length ? msgs.map(m => {
       const day = fmtD(m.criadoAt), sep = day !== lastDay ? `<div class="day">${day}</div>` : ''; lastDay = day;
-      const mine = m.autorTipo === myTipo;
-      return `${sep}<div class="bub ${mine ? 'me' : ''}">${mine ? '' : `<span class="who2">${m.autorTipo === 'adv' ? 'Advogada' : esc(m.autorNome)}</span>`}${esc(m.texto)}${attHtml(m.anexos)}<small>${fmtHM(m.criadoAt)}</small></div>`;
+      const mine = opts.dm ? m.autorUid === S.user.uid : m.autorTipo === myTipo;
+      return `${sep}<div class="bub ${mine ? 'me' : ''}">${mine ? '' : `<span class="who2">${!opts.dm && m.autorTipo === 'adv' ? 'Advogada' : esc(m.autorNome)}</span>`}${esc(m.texto)}${attHtml(m.anexos)}<small>${fmtHM(m.criadoAt)}</small></div>`;
     }).join('') : '<div class="empty" style="margin:auto;border:none"><b>Nenhuma mensagem ainda</b>Escreva abaixo para iniciar a conversa.</div>';
     if (near) list.scrollTop = list.scrollHeight;
   };
   const markRead = () => {
+    if (opts.dm) { const d = S.dms.find(x => x.id === chatId); if (d && dmUnread(d) && document.visibilityState === 'visible') updateDoc(doc(db, 'dms', chatId), { ['lido_' + slug(me())]: serverTimestamp() }).catch(() => {}); return; }
     const c = S.chats.find(x => x.id === chatId);
     if (c && chatUnread(c) && document.visibilityState === 'visible') updateDoc(doc(db, 'chats', chatId), { [S.admin ? 'lidoAdv' : 'lidoCliente']: serverTimestamp() }).catch(() => {});
   };
-  const unsub = onSnapshot(query(collection(db, 'chats', chatId, 'msgs'), orderBy('criadoAt', 'asc')), snap => {
+  const unsub = onSnapshot(query(collection(db, opts.dm ? 'dms' : 'chats', chatId, 'msgs'), orderBy('criadoAt', 'asc')), snap => {
     msgs = snap.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) })); draw(); markRead();
   }, () => { list.innerHTML = '<div class="empty" style="margin:auto;border:none">Não foi possível carregar a conversa.</div>'; });
   draw(); list.scrollTop = list.scrollHeight;
   const drawChips = () => { chips.innerHTML = files.map((f, i) => `<span>📎 ${esc(f.name)} (${fsize(f.size)})<button type="button" data-rm="${i}">✕</button></span>`).join(''); };
+  if (opts.dm) { $('[data-attach]', box).hidden = true; $('.hint', box).textContent = 'Enter envia · Shift+Enter quebra a linha · conversa privada entre vocês dois'; }
   $('[data-attach]', box).onclick = () => fileIn.click();
   fileIn.onchange = () => { acceptFiles(fileIn, files); drawChips(); };
   chips.onclick = e => { const b = e.target.closest('[data-rm]'); if (b) { files.splice(+b.dataset.rm, 1); drawChips(); } };
@@ -569,6 +580,12 @@ function mountChat(box, chatId, titulo) {
     const texto = ta.value.trim(); if (!texto && !files.length) return;
     sending = true; sendBtn.disabled = true; sendBtn.textContent = files.length ? 'Enviando…' : 'Enviar';
     try {
+      if (opts.dm) {
+        const outro = opts.outro, tx = texto.slice(0, 4000);
+        await setDoc(doc(db, 'dms', chatId), { membros: [me(), outro].sort(), ultimaMsgAt: serverTimestamp(), ultimaMsgPor: me(), ultimaMsgTexto: tx.slice(0, 90), ['lido_' + slug(me())]: serverTimestamp() }, { merge: true });
+        await addDoc(collection(db, 'dms', chatId, 'msgs'), { autorUid: S.user.uid, autorNome: personOf(me()).nome || S.user.displayName || me(), autorEmail: me(), texto: tx, criadoAt: serverTimestamp() });
+        ta.value = ''; ta.style.height = 'auto'; sending = false; sendBtn.disabled = false; sendBtn.textContent = 'Enviar'; return;
+      }
       const anexos = files.length ? await uploadFiles(files, 'c', chatId) : [];
       const nome = S.admin ? 'Advogada' : (S.profile?.nome || S.user.displayName || S.user.email);
       await addDoc(collection(db, 'chats', chatId, 'msgs'), { autorUid: S.user.uid, autorNome: nome, autorTipo: myTipo, texto: texto || '(arquivo)', anexos, criadoAt: serverTimestamp() });
@@ -1182,10 +1199,11 @@ const TK_COLS = [['afazer', 'A fazer'], ['andamento', 'Em andamento'], ['conclui
 const PRI = { alta: 'Alta', media: 'Média', baixa: 'Baixa' };
 const me = () => (S.user?.email || '').toLowerCase();
 const fotoOf = e => S.perfis[(e || '').toLowerCase()]?.foto || '';
-const avatar = (email, nome, cls = '') => { const f = fotoOf(email); return `<span class="av ${cls}" data-tip="${esc(nome || email)}" tabindex="0">${f ? `<img src="${esc(f)}" alt="">` : esc(iniciais(nome || email))}</span>`; };
+const avatar = (email, nome, cls = '') => { const f = fotoOf(email); return `<span class="av ${cls}" data-email="${esc((email || '').toLowerCase())}" data-tip="${esc(nome || email)}" tabindex="0">${f ? `<img src="${esc(f)}" alt="">` : esc(iniciais(nome || email))}</span>`; };
 const people = () => {
   const m = new Map(); m.set(MAIN_ADMIN, { email: MAIN_ADMIN, nome: 'Dra. Poliana', adv: true });
   S.equipe.forEach(x => m.set(x.id, { email: x.id, nome: x.nome || x.id, funcao: x.funcao || '' }));
+  S.diretorio.forEach(d => { if (!m.has(d.id) && d.id !== 'polireboucas@gmail.com') m.set(d.id, { email: d.id, nome: d.nome || d.id, adv: true }); });
   if (S.admin && !m.has(me())) m.set(me(), { email: me(), nome: S.profile?.nome || S.user.displayName || me(), adv: true });
   return [...m.values()];
 };
@@ -1193,6 +1211,40 @@ const personOf = e => people().find(p => p.email === e) || { email: e, nome: e }
 const iniciais = n => String(n || '?').trim().split(/\s+/).slice(0, 2).map(x => x[0]).join('').toUpperCase();
 const tkNovas = () => S.tarefas.filter(t => t.status !== 'concluido' && (t.responsaveis || []).includes(me()) && !(t.vistoPor || []).includes(me()) && t.criadoPor !== me());
 const tkLate = t => t.prazo && t.status !== 'concluido' && t.prazo < dayKey(Date.now());
+const TK_NOME = Object.fromEntries(TK_COLS.map(c => [c[0], c[1]]));
+function tkEntradas(old, nw) {
+  const por = me(), porNome = personOf(me()).nome || S.user.displayName || me(), em = Date.now(), out = [];
+  const E = (acao, o = {}) => out.push({ acao, por, porNome, em, ...o });
+  const oR = old?.responsaveis || [], nR = nw.responsaveis || [];
+  if (!old) E('criou');
+  nR.filter(x => !oR.includes(x)).forEach(x => E('atribuiu', { alvo: x, alvoNome: personOf(x).nome }));
+  oR.filter(x => !nR.includes(x)).forEach(x => E('desatribuiu', { alvo: x, alvoNome: personOf(x).nome }));
+  if (old && nw.status !== old.status) { E('moveu', { de: TK_NOME[old.status], para: TK_NOME[nw.status] }); if (nw.status === 'concluido') E('finalizou'); else if (old.status === 'concluido') E('reabriu'); }
+  if (!old && nw.status === 'concluido') E('finalizou');
+  if (old) { const ch = []; if ((old.titulo || '') !== (nw.titulo || '')) ch.push('título'); if ((old.descricao || '') !== (nw.descricao || '')) ch.push('descrição'); if ((old.prioridade || 'media') !== (nw.prioridade || 'media')) ch.push('prioridade'); if ((old.prazo || '') !== (nw.prazo || '')) ch.push('prazo'); if (nw.processoId !== undefined && (old.processoId || '') !== (nw.processoId || '')) ch.push('processo'); if (ch.length) E('editou', { detalhe: ch.join(', ') }); }
+  return out;
+}
+const tkFrase = h => {
+  const eu = h.alvo && h.alvo === h.por;
+  switch (h.acao) {
+    case 'criou': return 'criou a tarefa';
+    case 'atribuiu': return eu ? 'atribuiu a tarefa a si mesmo(a)' : `atribuiu a tarefa a <b>${esc(h.alvoNome || h.alvo)}</b>`;
+    case 'desatribuiu': return eu ? 'removeu a própria atribuição' : `desatribuiu <b>${esc(h.alvoNome || h.alvo)}</b>`;
+    case 'moveu': return `moveu de <b>${esc(h.de)}</b> para <b>${esc(h.para)}</b>`;
+    case 'finalizou': return '✅ finalizou a tarefa';
+    case 'reabriu': return 'reabriu a tarefa';
+    case 'revisou': return '✔ revisou a tarefa';
+    case 'desrevisou': return 'removeu a revisão da tarefa';
+    case 'editou': return `editou: ${esc(h.detalhe)}`;
+    default: return esc(h.acao);
+  }
+};
+function tkHistHtml(t) {
+  let l = [...(t.hist || [])];
+  if (!l.length) { if (t.criadoAt) l.push({ acao: 'criou', porNome: t.criadoPorNome || '—', em: ms(t.criadoAt) }); if (t.concluidoAt) l.push({ acao: 'finalizou', porNome: t.concluidoPorNome || '—', em: ms(t.concluidoAt) }); }
+  l = l.map((h, i) => ({ ...h, _i: i })).sort((a, b) => (b.em || 0) - (a.em || 0) || b._i - a._i);
+  return l.length ? l.map(h => `<li><span>${fmtD(h.em)} ${fmtHM(h.em)}</span> <b>${esc(h.porNome || h.por)}</b> ${tkFrase(h)}</li>`).join('') : '<li>Sem registros.</li>';
+}
 function formTarefa(t, status0) {
   const novo = !t, adv = S.admin, ps = people(), sel = new Set(t?.responsaveis || []);
   if (t && (t.responsaveis || []).includes(me()) && !(t.vistoPor || []).includes(me())) updateDoc(doc(db, 'tarefas', t.id), { vistoPor: [...(t.vistoPor || []), me()] }).catch(() => {});
@@ -1205,10 +1257,15 @@ function formTarefa(t, status0) {
     ${adv ? `<div class="field"><label>Processo (opcional)</label><select name="pr"><option value="">—</option>${S.processos.map(p => `<option value="${p.id}" data-n="${esc(p.numero)}" ${t?.processoId === p.id ? 'selected' : ''}>${esc(p.numero)}</option>`).join('')}</select></div>` : (t?.processoNum ? `<div class="field"><label>Processo</label><input value="${esc(t.processoNum)}" disabled></div>` : '<div></div>')}</div>
     <div class="field"><label>Responsáveis</label><div class="pp">${ps.map(p => `<label><input type="checkbox" name="r" value="${esc(p.email)}" ${sel.has(p.email) ? 'checked' : ''}> ${esc(p.nome)}${p.funcao ? ' <small style="color:var(--muted)">· ' + esc(p.funcao) + '</small>' : ''}</label>`).join('')}</div>
     ${!S.equipe.length && adv ? '<small style="color:var(--muted)">Cadastre a equipe em Configurações para poder designar tarefas.</small>' : ''}</div>
+    ${t ? `<div class="tk-h"><div class="eyebrow" style="margin:.2rem 0 .4rem">Histórico da tarefa${t.revisadoPor ? ` · ✔ revisada por ${esc(t.revisadoPorNome || t.revisadoPor)}` : ''}</div><ul>${tkHistHtml(t)}</ul></div>` : ''}
     ${t ? `<p style="font-size:.64rem;color:var(--muted)">Criada por ${esc(t.criadoPorNome || '—')} em ${fmtD(t.criadoAt)}${t.concluidoAt ? ' · concluída em ' + fmtD(t.concluidoAt) + (t.concluidoPorNome ? ' por ' + esc(t.concluidoPorNome) : '') : ''}</p>` : ''}
-    <p class="msg-err" id="tE"></p><div class="acts">${t && (adv || t.criadoPor === me()) ? '<button type="button" class="btn danger sm" data-del style="margin-right:auto">Excluir</button>' : ''}<button type="button" class="btn ghost sm" data-c>Cancelar</button><button class="btn sm">${novo ? 'Criar tarefa' : 'Salvar'}</button></div></form>`,
+    <p class="msg-err" id="tE"></p><div class="acts">${t && (adv || t.criadoPor === me()) ? '<button type="button" class="btn danger sm" data-del style="margin-right:auto">Excluir</button>' : ''}${t ? `<button type="button" class="btn ghost sm" data-rev>${t.revisadoPor ? 'Remover revisão' : '✔ Marcar como revisada'}</button>` : ''}<button type="button" class="btn ghost sm" data-c>Cancelar</button><button class="btn sm">${novo ? 'Criar tarefa' : 'Salvar'}</button></div></form>`,
   (m, close) => {
     const f = $('#tF', m); $('[data-c]', m).onclick = close;
+    const rv = $('[data-rev]', m); if (rv) rv.onclick = async () => {
+      const nomeMe = personOf(me()).nome || S.user.displayName || me(), tira = !!t.revisadoPor;
+      try { await updateDoc(doc(db, 'tarefas', t.id), tira ? { revisadoPor: '', revisadoPorNome: '', revisadoAt: null, atualizadoAt: serverTimestamp(), hist: arrayUnion({ acao: 'desrevisou', por: me(), porNome: nomeMe, em: Date.now() }) } : { revisadoPor: me(), revisadoPorNome: nomeMe, revisadoAt: serverTimestamp(), atualizadoAt: serverTimestamp(), hist: arrayUnion({ acao: 'revisou', por: me(), porNome: nomeMe, em: Date.now() }) }); close(); toast(tira ? 'Revisão removida.' : 'Tarefa marcada como revisada.'); } catch (x) { toast(errMsg(x), true); }
+    };
     const del = $('[data-del]', m); if (del) del.onclick = async () => { if (await confirmBox('Excluir a tarefa “' + esc(t.titulo) + '”?', 'Excluir')) { try { await deleteDoc(doc(db, 'tarefas', t.id)); close(); toast('Tarefa excluída.'); } catch (x) { toast(errMsg(x), true); } } };
     f.onsubmit = async e => {
       e.preventDefault(); const bt = $('.btn:not(.ghost):not(.danger)', f); bt.disabled = true;
@@ -1217,10 +1274,13 @@ function formTarefa(t, status0) {
         const opt = f.pr ? f.pr.selectedOptions[0] : null;
         const base = { titulo: f.t.value.trim(), descricao: f.d.value.trim(), status: st, prioridade: f.p.value, prazo: f.z.value, responsaveis: resp, atualizadoAt: serverTimestamp() };
         if (f.pr) { base.processoId = f.pr.value; base.processoNum = opt?.dataset.n || ''; }
-        if (novo) await addDoc(collection(db, 'tarefas'), { ...base, processoId: base.processoId || '', processoNum: base.processoNum || '', criadoPor: me(), criadoPorNome: nomeMe, criadoAt: serverTimestamp(), ordem: Date.now(), vistoPor: [me()], concluidoAt: st === 'concluido' ? serverTimestamp() : null, concluidoPorNome: st === 'concluido' ? nomeMe : '' });
+        const ent = tkEntradas(novo ? null : t, { ...base, processoId: f.pr ? f.pr.value : undefined });
+        if (novo) await addDoc(collection(db, 'tarefas'), { ...base, hist: ent, processoId: base.processoId || '', processoNum: base.processoNum || '', criadoPor: me(), criadoPorNome: nomeMe, criadoAt: serverTimestamp(), ordem: Date.now(), vistoPor: [me()], concluidoAt: st === 'concluido' ? serverTimestamp() : null, concluidoPorNome: st === 'concluido' ? nomeMe : '' });
         else {
           base.vistoPor = (t.vistoPor || []).filter(x => resp.includes(x));
           if (st !== t.status) { base.ordem = Date.now(); base.concluidoAt = st === 'concluido' ? serverTimestamp() : null; base.concluidoPorNome = st === 'concluido' ? nomeMe : ''; }
+          if (st !== t.status) { base.revisadoPor = ''; base.revisadoPorNome = ''; base.revisadoAt = null; }
+          if (ent.length) base.hist = arrayUnion(...ent);
           await updateDoc(doc(db, 'tarefas', t.id), base);
         }
         close(); toast(novo ? 'Tarefa criada.' : 'Tarefa atualizada.');
@@ -1231,7 +1291,7 @@ function formTarefa(t, status0) {
 async function moverTarefa(t, st) {
   if (!t || t.status === st) return;
   const nomeMe = personOf(me()).nome || S.user.displayName || me();
-  try { await updateDoc(doc(db, 'tarefas', t.id), { status: st, ordem: Date.now(), atualizadoAt: serverTimestamp(), concluidoAt: st === 'concluido' ? serverTimestamp() : null, concluidoPorNome: st === 'concluido' ? nomeMe : '' }); }
+  try { await updateDoc(doc(db, 'tarefas', t.id), { status: st, ordem: Date.now(), atualizadoAt: serverTimestamp(), concluidoAt: st === 'concluido' ? serverTimestamp() : null, concluidoPorNome: st === 'concluido' ? nomeMe : '', revisadoPor: '', revisadoPorNome: '', revisadoAt: null, hist: arrayUnion(...tkEntradas(t, { ...t, status: st })) }); }
   catch (x) { toast(errMsg(x), true); }
 }
 function viewTarefas() {
@@ -1248,7 +1308,7 @@ function viewTarefas() {
       const i = TK_COLS.findIndex(c => c[0] === k);
       return `<div class="kb-col" data-col="${k}"><div class="kb-h"><b>${nome}<small>${l.length}</small></b><button data-add="${k}" aria-label="Nova tarefa em ${nome}">+</button></div><div class="kb-l">${l.map(t => `<div class="kb-c ${k === 'concluido' ? 'done' : ''}" draggable="true" data-id="${t.id}">
         <span class="pri ${t.prioridade || 'media'}">${PRI[t.prioridade] || 'Média'}</span>${(t.responsaveis || []).includes(me()) && !(t.vistoPor || []).includes(me()) ? ' <span class="dot"></span>' : ''}<h4>${esc(t.titulo)}</h4>${t.descricao ? `<p>${esc(t.descricao)}</p>` : ''}
-        <div class="kb-f"><span>${t.prazo ? `<small class="${tkLate(t) ? 'late' : ''}">📅 ${fmtISO(t.prazo)}${tkLate(t) ? ' · atrasada' : ''}</small>` : ''}${t.processoNum ? ` <small>⚖ ${esc(t.processoNum)}</small>` : ''}</span>
+        <div class="kb-f"><span>${t.prazo ? `${t.revisadoPor ? `<small title="Revisada por ${esc(t.revisadoPorNome || t.revisadoPor)}">✔ revisada</small> ` : ''}<small class="${tkLate(t) ? 'late' : ''}">📅 ${fmtISO(t.prazo)}${tkLate(t) ? ' · atrasada' : ''}</small>` : ''}${t.processoNum ? ` <small>⚖ ${esc(t.processoNum)}</small>` : ''}</span>
         <span class="avs">${(t.responsaveis || []).slice(0, 4).map(e => avatar(e, personOf(e).nome)).join('')}</span></div>
         <div class="kb-mv">${i > 0 ? `<button data-mv="${TK_COLS[i - 1][0]}" aria-label="Mover para ${TK_COLS[i - 1][1]}">‹ ${TK_COLS[i - 1][1]}</button>` : ''}${i < 2 ? `<button data-mv="${TK_COLS[i + 1][0]}" aria-label="Mover para ${TK_COLS[i + 1][1]}">${TK_COLS[i + 1][1]} ›</button>` : ''}</div></div>`).join('') || '<p style="font-size:.7rem;color:var(--muted);text-align:center;padding:1rem 0">Nenhuma tarefa</p>'}</div></div>`; }).join('');
   };
@@ -1358,8 +1418,12 @@ function viewClientDetail(uid) {
 }
 function viewAdminChats() {
   const box = $('#main');
-  box.innerHTML = `<div class="page-h"><div><div class="eyebrow">Atendimento</div><h1><em>Conversas</em></h1><p>Mensagens dos clientes, gerais e por processo.</p></div></div><div class="list" id="ls"></div>`;
+  box.innerHTML = `<div class="page-h"><div><div class="eyebrow">Atendimento</div><h1><em>Conversas</em></h1><p>Mensagens da equipe jurídica e dos clientes, gerais e por processo.</p></div></div>
+    <div class="eyebrow" style="margin:0 0 .6rem">Equipe jurídica</div><div class="list" id="dl" style="margin-bottom:1.6rem"></div>
+    <div class="eyebrow" style="margin:0 0 .6rem">Clientes</div><div class="list" id="ls"></div>`;
   const draw = () => {
+    const col = colegas();
+    $('#dl', box).innerHTML = col.length ? col.map(c => { const d = dmDe(c.email); return `<a class="item" href="#/dm/${esc(c.email)}"><div style="margin-right:.8rem">${avatar(c.email, c.nome, 'lg')}</div><div class="main"><h3>${esc(c.nome)} ${d && dmUnread(d) ? '<span class="dot"></span>' : ''}</h3><p>${d?.ultimaMsgAt ? (d.ultimaMsgPor === me() ? 'Você: ' : '') + esc(d.ultimaMsgTexto || '') : 'Toque para iniciar uma conversa'}</p></div><div class="side">${d?.ultimaMsgAt ? fmtD(d.ultimaMsgAt) : ''}</div></a>`; }).join('') : '<div class="empty"><b>Nenhum outro advogado ainda</b>Cada advogado(a) aparece aqui depois do primeiro acesso ao sistema.</div>';
     const l = S.chats.filter(c => c.ultimaMsgAt).sort((a, b) => ms(b.ultimaMsgAt) - ms(a.ultimaMsgAt));
     $('#ls', box).innerHTML = l.length ? l.map(c => `<a class="item" href="${chatHref(c)}"><div class="main"><h3>${esc(clienteNome(c.clienteUid))} ${chatUnread(c) ? '<span class="dot"></span>' : ''}</h3><p>${esc(chatTitle(c))} · ${c.ultimaMsgPor === 'adv' ? 'Você: ' : ''}${esc(c.ultimaMsgTexto || '')}</p></div><div class="side"><span>${fmtDT(c.ultimaMsgAt)}</span></div></a>`).join('') : '<div class="empty"><b>Nenhuma conversa ainda</b>Quando um cliente escrever, a conversa aparece aqui.</div>';
   };
@@ -1367,9 +1431,32 @@ function viewAdminChats() {
 }
 function viewAdminChat(id) {
   const box = $('#main'), c = clienteById(id);
-  box.innerHTML = `<a class="back" href="#/mensagens">← Conversas</a><div class="page-h"><div><div class="eyebrow">Conversa geral</div><h1>${esc(c?.nome || 'Cliente')}</h1></div>${c ? `<a class="btn ghost" href="#/c/${id}">Ver cadastro</a>` : ''}</div><div id="cb"></div>`;
+  box.innerHTML = `<a class="back" href="#/mensagens">← Conversas</a><div class="page-h"><div><div class="eyebrow">Conversa geral</div><h1 style="display:flex;align-items:center;gap:.7rem">${c ? avatar(c.email, c.nome, '') : ''}${esc(c?.nome || 'Cliente')}</h1></div>${c ? `<a class="btn ghost" href="#/c/${id}">Ver cadastro</a>` : ''}</div><div id="cb"></div>`;
   const un = mountChat($('#cb', box), id); return { destroy: un };
 }
+function viewDM(outro) {
+  const box = $('#main'), nome = nomeColega(outro), id = dmId(me(), outro);
+  box.innerHTML = `<a class="back" href="#/mensagens">← Conversas</a><div class="page-h"><div><div class="eyebrow">Conversa entre advogados</div><h1 style="display:flex;align-items:center;gap:.7rem">${avatar(outro, nome, '')}${esc(nome)}</h1></div></div><div id="cb"></div>`;
+  const un = mountChat($('#cb', box), id, '', { dm: true, outro }); return { destroy: un };
+}
+/* ---------- perfil (ao clicar na foto/iniciais) ---------- */
+function openPerfil(email) {
+  email = (email || '').toLowerCase();
+  const cli = S.clientes.find(c => (c.email || '').toLowerCase() === email), eq = S.equipe.find(x => x.id === email);
+  const dirOk = email === MAIN_ADMIN || S.diretorio.some(d => d.id === email);
+  const nome = cli?.nome || (email === MAIN_ADMIN ? 'Dra. Poliana' : '') || S.diretorio.find(d => d.id === email)?.nome || eq?.nome || email;
+  const papel = email === MAIN_ADMIN ? '⚖ Administradora principal' : dirOk ? '⚖ Advogado(a)' : eq ? '👥 Equipe' + (eq.funcao ? ' · ' + esc(eq.funcao) : '') : cli ? '👤 Cliente' : '';
+  const eu = email === me();
+  const acts = eu ? '<button class="btn sm" data-eu>Editar minha conta</button>'
+    : S.admin && cli ? `<a class="btn sm" href="#/chat/${cli.id}">💬 Enviar mensagem</a><a class="btn ghost sm" href="#/c/${cli.id}">Ver cadastro</a>`
+    : S.admin && dirOk ? `<a class="btn sm" href="#/dm/${esc(email)}">💬 Enviar mensagem</a>` : '';
+  openModal(`<div style="text-align:center;padding:.4rem 0 .6rem"><div style="display:inline-block;margin-bottom:.6rem">${avatar(email, nome, 'lg')}</div>
+    <h2 style="margin:0 0 .2rem">${esc(nome)}</h2><p style="font-size:.72rem;color:var(--gold);letter-spacing:.08em;margin:0 0 .3rem">${papel}</p>
+    <p style="font-size:.78rem;color:var(--muted);margin:0 0 1.2rem">${esc(email)}${cli?.telefone ? '<br>' + esc(cli.telefone) : ''}</p>
+    <div class="acts" style="justify-content:center;flex-wrap:wrap">${acts}<button class="btn ghost sm" data-no>Fechar</button></div></div>`,
+    (m, c) => { $('[data-no]', m).onclick = c; $$('a', m).forEach(a => a.addEventListener('click', c)); const b = $('[data-eu]', m); if (b) b.onclick = () => { c(); formSenha(); }; });
+}
+document.addEventListener('click', e => { const a = e.target.closest?.('.av[data-email]'); if (!a || a.classList.contains('lg') || a.classList.contains('me') || !S.user) return; e.preventDefault(); e.stopPropagation(); openPerfil(a.dataset.email); }, true);
 function viewConfig() {
   const box = $('#main');
   box.innerHTML = `<div class="page-h"><div><div class="eyebrow">Sistema</div><h1><em>Configurações</em></h1></div></div>
@@ -1401,7 +1488,7 @@ function viewConfig() {
       } catch (x) { $('#acL', ac).innerHTML = `<p class="msg-err">${esc(errMsg(x))}</p>`; }
     };
     loadAc();
-    ac.onclick = async e => { const r = e.target.closest('[data-rs]'); if (r) { try { await sendPasswordResetEmail(auth, r.dataset.rs); toast('Link para criar nova senha enviado para ' + r.dataset.rs); } catch (x) { toast(errMsg(x), true); } return; } const b = e.target.closest('[data-rm]'); if (!b) return; if (await confirmBox('Remover o acesso de <b>' + esc(b.dataset.rm) + '</b>?', 'Remover')) { try { await Promise.all([deleteDoc(doc(db, 'admins', b.dataset.rm)), deleteDoc(doc(db, 'advogados', b.dataset.rm))]); toast('Acesso removido.'); loadAc(); } catch (x) { toast(errMsg(x), true); } } };
+    ac.onclick = async e => { const r = e.target.closest('[data-rs]'); if (r) { try { await sendPasswordResetEmail(auth, r.dataset.rs); toast('Link para criar nova senha enviado para ' + r.dataset.rs); } catch (x) { toast(errMsg(x), true); } return; } const b = e.target.closest('[data-rm]'); if (!b) return; if (await confirmBox('Remover o acesso de <b>' + esc(b.dataset.rm) + '</b>?', 'Remover')) { try { await Promise.all([deleteDoc(doc(db, 'admins', b.dataset.rm)), deleteDoc(doc(db, 'advogados', b.dataset.rm)), deleteDoc(doc(db, 'diretorio', b.dataset.rm)).catch(() => {})]); toast('Acesso removido.'); loadAc(); } catch (x) { toast(errMsg(x), true); } } };
     $('#acF', ac).onsubmit = async e => { e.preventDefault(); const f = e.target, em = f.e.value.trim().toLowerCase(), perfil = f.p.value;
       try { const senha = f.s.value; const dup = await duplicado(em); if (dup) throw new Error(dup); const res = await criarConta(em, senha, f.n.value.trim()); await setDoc(doc(db, 'advogados', em), { email: em, perfil, criadoAt: serverTimestamp() }); if (perfil === 'adm') await setDoc(doc(db, 'admins', em), { email: em, criadoAt: serverTimestamp() }); else await deleteDoc(doc(db, 'admins', em)).catch(() => {}); f.reset(); f.s.value = genSenha(); $('#acE', ac).textContent = ''; mostrarAcesso(f.n.value || em, em, senha, res); loadAc(); } catch (x) { $('#acE', ac).textContent = x.message && !x.code ? x.message : errMsg(x); } };
   }
@@ -1436,11 +1523,11 @@ function route() {
   if (!S.user || !$('#main')) return;
   S.view?.destroy?.(); S.view = null;
   const [r, a, b] = location.hash.replace(/^#\/?/, '').split('/');
-  $$('[data-nav]').forEach(n => { const h = n.dataset.nav.replace('#/', ''); n.classList.toggle('on', h === (r === 'p' ? (S.admin ? 'processos' : '') : r === 'c' ? 'clientes' : r === 'chat' ? 'mensagens' : r || '')); });
+  $$('[data-nav]').forEach(n => { const h = n.dataset.nav.replace('#/', ''); n.classList.toggle('on', h === (r === 'p' ? (S.admin ? 'processos' : '') : r === 'c' ? 'clientes' : r === 'chat' || r === 'dm' ? 'mensagens' : r || '')); });
   window.scrollTo(0, 0);
   if (S.team) S.view = viewTarefas();
   else if (r === 'p' && a) S.view = viewProcess(a, b);
-  else if (S.admin) S.view = r === 'tarefas' ? viewTarefas() : r === 'processos' ? viewAdminHome() : r === 'agenda' ? viewAgenda() : r === 'clientes' ? viewClients() : r === 'c' && a ? viewClientDetail(a) : r === 'mensagens' ? viewAdminChats() : r === 'chat' && a ? viewAdminChat(a) : r === 'config' ? viewConfig() : r === 'logs' ? viewLogs() : viewDashboard();
+  else if (S.admin) S.view = r === 'tarefas' ? viewTarefas() : r === 'processos' ? viewAdminHome() : r === 'agenda' ? viewAgenda() : r === 'clientes' ? viewClients() : r === 'c' && a ? viewClientDetail(a) : r === 'mensagens' ? viewAdminChats() : r === 'chat' && a ? viewAdminChat(a) : r === 'dm' && a ? viewDM(decodeURIComponent(a).toLowerCase()) : r === 'config' ? viewConfig() : r === 'logs' ? viewLogs() : viewDashboard();
   else S.view = r === 'agenda' ? viewAgenda() : r === 'mensagens' ? viewClientChat() : r === 'perfil' ? viewProfile() : viewClientHome();
 }
 window.addEventListener('hashchange', route);
@@ -1487,10 +1574,14 @@ onAuthStateChanged(auth, async user => {
       listen(collection(db, 'chats'), s => { S.chats = docs(s); onData(); });
       listen(collection(db, 'equipe'), s => { S.equipe = docs(s); onData(); });
       listen(collection(db, 'logs'), s => { S.logs = docs(s); onData(); });
+      listen(query(collection(db, 'dms'), where('membros', 'array-contains', me())), s => { S.dms = docs(s); onData(); });
+      listen(collection(db, 'diretorio'), s => { S.diretorio = docs(s); onData(); });
+      setDoc(doc(db, 'diretorio', me()), { email: me(), nome: S.main ? 'Dra. Poliana' : (S.user.displayName || S.profile?.nome || me().split('@')[0]), atualizadoAt: serverTimestamp() }).catch(() => {});
       listen(collection(db, 'perfis'), s => { S.perfis = Object.fromEntries(docs(s).map(p => [p.id, p])); onData(); updateWho(); });
       listen(collection(db, 'tarefas'), s => { S.tarefas = docs(s); onData(); });
     } else if (S.team) {
       renderShell();
+      listen(collection(db, 'diretorio'), s => { S.diretorio = docs(s); onData(); });
       listen(collection(db, 'perfis'), s => { S.perfis = Object.fromEntries(docs(s).map(p => [p.id, p])); onData(); updateWho(); });
       listen(collection(db, 'equipe'), s => { S.equipe = docs(s); onData(); });
       listen(collection(db, 'tarefas'), s => { S.tarefas = docs(s); onData(); });

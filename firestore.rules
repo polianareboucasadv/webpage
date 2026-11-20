@@ -32,6 +32,33 @@ service cloud.firestore {
                     && (!('abas' in request.resource.data) || (request.resource.data.abas is list && request.resource.data.abas.size() <= 12))));
       allow delete: if isLawyer();
     }
+    // Diretório dos advogados (cada um se registra ao entrar; a administradora principal remove)
+    match /diretorio/{e} {
+      allow read: if isLawyer() || isTeam();
+      allow create, update: if isLawyer() && request.auth.token.email.lower() == e
+                    && request.resource.data.keys().hasOnly(['email','nome','atualizadoAt']);
+      allow delete: if isMain() || (request.auth != null && request.auth.token.email.lower() == e);
+    }
+
+    // Conversas privadas entre advogados
+    match /dms/{did} {
+      allow read: if isLawyer() && request.auth.token.email.lower() in resource.data.membros;
+      allow create: if isLawyer() && request.resource.data.membros.size() == 2
+                    && request.auth.token.email.lower() in request.resource.data.membros;
+      allow update: if isLawyer() && request.auth.token.email.lower() in resource.data.membros
+                    && request.resource.data.membros == resource.data.membros;
+      allow delete: if false;
+      match /msgs/{mid} {
+        allow read: if isLawyer() && request.auth.token.email.lower() in get(/databases/$(database)/documents/dms/$(did)).data.membros;
+        allow create: if isLawyer() && request.auth.token.email.lower() in get(/databases/$(database)/documents/dms/$(did)).data.membros
+                      && request.resource.data.keys().hasOnly(['autorUid','autorNome','autorEmail','texto','criadoAt'])
+                      && request.resource.data.autorUid == request.auth.uid
+                      && request.resource.data.texto is string && request.resource.data.texto.size() <= 4000
+                      && request.resource.data.criadoAt == request.time;
+        allow update, delete: if false;
+      }
+    }
+
     match /logs/{lid} {
       allow read: if isLawyer();
       allow create: if isLawyer() && request.resource.data.usuario == request.auth.token.email.lower();
